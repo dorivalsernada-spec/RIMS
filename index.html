@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101b1c">
+  <title>RIMS One | Acesso</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: "Segoe UI", Arial, sans-serif;
+      background: #101b1c;
+      color: #eef5f3;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      display: grid;
+      min-height: 100vh;
+      margin: 0;
+      padding: 24px;
+      place-items: center;
+      background:
+        radial-gradient(ellipse at 50% 0, rgb(0 191 255 / 13%), transparent 48%),
+        #101b1c;
+    }
+
+    main {
+      width: min(100%, 560px);
+      padding: clamp(28px, 7vw, 52px);
+      border: 1px solid rgb(0 191 255 / 42%);
+      border-radius: 18px;
+      background: rgb(18 32 33 / 94%);
+      box-shadow: 0 24px 80px rgb(0 0 0 / 35%);
+    }
+
+    .eyebrow {
+      margin: 0 0 12px;
+      color: #00bfff;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(32px, 7vw, 46px);
+      line-height: 1.08;
+    }
+
+    .intro {
+      margin: 18px 0 26px;
+      color: #b8c8c5;
+      line-height: 1.65;
+    }
+
+    .access-link {
+      display: inline-flex;
+      min-height: 48px;
+      align-items: center;
+      justify-content: center;
+      padding: 0 20px;
+      border-radius: 8px;
+      background: #00bfff;
+      color: #061416;
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    .access-link:hover,
+    .access-link:focus-visible {
+      background: #55d5ff;
+    }
+
+    .notice {
+      margin-top: 28px;
+      padding: 16px;
+      border-left: 3px solid #00bfff;
+      border-radius: 4px;
+      background: rgb(0 191 255 / 7%);
+      color: #d3dfdc;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .notice strong {
+      color: #fff;
+    }
+
+    code {
+      color: #73dcff;
+      overflow-wrap: anywhere;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <p class="eyebrow">Sistema Integrado de Manutenção</p>
+    <h1>RIMS One</h1>
+    <p class="intro">
+      Acesse o planejamento de paradas e as ferramentas de manutenção da sua
+      instalação.
+    </p>
+    <a class="access-link" href="http://127.0.0.1:8765/login">
+      Abrir sistema neste computador
+    </a>
+    <aside class="notice">
+      <strong>Antes de acessar:</strong> inicie
+      <code>Módulo Planejamento e Programação\SAP PM Web\iniciar.bat</code>
+      no computador que executa o SAP GUI. O login e as operações SAP são
+      protegidos pelo servidor local; o Vercel publica somente esta página
+      inicial.
+    </aside>
+  </main>
+</body>
+</html>

@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#17292a">
+  <title>Manutenção Entressafra</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" rel="stylesheet">
+  <link href="https://unpkg.com/tabulator-tables@6.3.1/dist/css/tabulator.min.css" rel="stylesheet">
+  <link href="styles.css?v=7" rel="stylesheet">
+  <link href="features.css?v=72" rel="stylesheet">
+</head>
+<body>
+  <!-- Cabeçalho com contexto, estado de salvamento e alternância de tema. -->
+  <header class="topbar">
+    <a class="brand" href="#" aria-label="Usina da Pedra"><span class="brand-mark"><i class="fa-solid fa-industry"></i></span><span class="brand-copy"><strong>USINA DA PEDRA</strong><small>PLANEJAMENTO DE PARADA</small></span></a>
+    <div class="topbar-divider"></div><div class="project-context"><span>PLANEJAMENTO DE PARADA</span><strong>Manutenção Entressafra</strong></div><strong class="maintenance-heading">PLANEJAMENTO E CONTROLE DE MANUTENÇÃO</strong>
+    <div class="topbar-right"><span class="save-state"><span class="status-dot"></span><span id="saveStatus">Salvo localmente</span></span><button id="themeToggle" class="icon-button" type="button" title="Alternar tema" aria-label="Alternar tema"><i class="fa-solid fa-moon"></i></button><span class="user-avatar">PL</span></div>
+  </header>
+  <main class="app-shell">
+    <!-- Indicadores de gestão consolidados a partir das atividades do cronograma. -->
+    <section class="dashboard" aria-label="Indicadores do cronograma">
+      <div class="kpi-grid">
+        <button type="button" class="kpi-card accent-teal kpi-filter" id="statusFilterAll" title="Limpar filtro de status"><div class="kpi-top"><span>Total de atividades</span><i class="fa-solid fa-list-check"></i></div><strong id="kpiTotal">0</strong><small>no cronograma</small></button>
+        <button type="button" class="kpi-card accent-green kpi-filter" data-status-filter="Concluído" aria-pressed="false" title="Filtrar atividades concluídas"><div class="kpi-top"><span>Concluídas</span><i class="fa-solid fa-circle-check"></i></div><strong id="kpiDone">0</strong><small>100% executadas</small></button>
+        <button type="button" class="kpi-card accent-blue kpi-filter" data-status-filter="Em Andamento" aria-pressed="false" title="Filtrar atividades em andamento"><div class="kpi-top"><span>Em andamento</span><i class="fa-solid fa-arrow-trend-up"></i></div><strong id="kpiActive">0</strong><small>com início realizado</small></button>
+        <button type="button" class="kpi-card accent-red kpi-filter" data-status-filter="Atraso" aria-pressed="false" title="Filtrar atividades não concluídas com início ou fim realizado depois do planejado"><div class="kpi-top"><span>Atrasadas</span><i class="fa-solid fa-triangle-exclamation"></i></div><strong id="kpiLate">0</strong><small>não concluídas com atraso realizado</small></button>
+        <button type="button" class="kpi-card accent-slate kpi-filter" data-status-filter="Pendente" aria-pressed="false" title="Filtrar atividades pendentes"><div class="kpi-top"><span>Pendentes</span><i class="fa-regular fa-clock"></i></div><strong id="kpiPending">0</strong><small>sem início realizado</small></button>
+        <article class="kpi-card accent-teal" title="Total de horas disponíveis com os filtros de setor e equipe selecionados"><div class="kpi-top"><span>HH disponível</span><i class="fa-regular fa-clock"></i></div><strong id="kpiAvailableHours">0</strong><small id="kpiAvailableHoursDetail">horas de setor e equipe</small></article>
+        <article class="kpi-card accent-orange"><div class="kpi-top"><span>HH previstas</span><i class="fa-regular fa-calendar"></i></div><strong id="kpiPlannedHours">0</strong><small>horas de trabalho</small></article>
+        <article class="kpi-card accent-cyan"><div class="kpi-top"><span>HH realizadas</span><i class="fa-solid fa-helmet-safety"></i></div><strong id="kpiActualHours">0</strong><small>horas apontadas</small></article>
+        <article class="kpi-card accent-blue" title="HH previstas divididas por HH disponível"><div class="kpi-top"><span>% Planejado</span><i class="fa-solid fa-chart-pie"></i></div><strong id="kpiPlannedPercent">—</strong><small>HH previstas / HH disponível</small></article>
+        <article class="kpi-card accent-lime"><div class="kpi-top"><span>Conclusão</span><i class="fa-solid fa-gauge-high"></i></div><strong id="kpiCompletion">0%</strong><small>avanço médio ponderado</small></article>
+        <article class="kpi-card accent-slate"><div class="kpi-top"><span>SPI</span><i class="fa-solid fa-scale-balanced"></i></div><strong id="kpiSpi">—</strong><small>índice de prazo</small></article>
+      </div>
+    </section>
+    <section class="workspace" aria-label="Planejamento e análise">
+      <div class="workspace-heading">
+        <ul class="nav nav-tabs app-tabs" id="mainTabs" role="tablist">
+          <li class="nav-item" role="presentation"><button class="nav-link active" id="planning-tab" data-bs-toggle="tab" data-bs-target="#planningPane" type="button" role="tab"><i class="fa-solid fa-table-list"></i> Planejamento & Gantt</button></li>
+          <li class="nav-item" role="presentation"><button class="nav-link" id="curve-tab" data-bs-toggle="tab" data-bs-target="#curvePane" type="button" role="tab"><i class="fa-solid fa-chart-area"></i> Curva S</button></li>
+          <li class="nav-item" role="presentation"><button class="nav-link" id="resources-tab" data-bs-toggle="tab" data-bs-target="#resourcesPane" type="button" role="tab" aria-controls="resourcesPane" aria-selected="false"><i class="fa-solid fa-chart-column"></i> Nivelamento de Recursos</button></li>
+          <li class="nav-item" role="presentation"><button class="nav-link" id="improvement-tab" data-bs-toggle="tab" data-bs-target="#improvementPane" type="button" role="tab"><i class="fa-solid fa-lightbulb"></i> Ações de Melhoria</button></li>
+          <li class="nav-item" role="presentation"><button class="nav-link" id="assistant-tab" data-bs-toggle="tab" data-bs-target="#assistantPane" type="button" role="tab"><i class="fa-regular fa-comments"></i> Perguntas</button></li>
+        </ul>
+          <div class="toolbar-actions"><label class="current-week d-flex align-items-center gap-1">Semana atual <select id="currentWeek" class="form-select form-select-sm w-auto" aria-label="Semana atual"><option value="1">01</option><option value="2">02</option><option value="3">03</option><option value="4">04</option><option value="5">05</option><option value="6">06</option><option value="7">07</option><option value="8">08</option><option value="9">09</option><option value="10">10</option><option value="11">11</option><option value="12">12</option></select></label><button id="importButton" class="btn btn-light action-button" type="button"><i class="fa-solid fa-file-import"></i><span>Importar XLS</span></button><input id="fileInput" type="file" accept=".xlsx,.xls,.csv" hidden><button id="updateDataButton" class="btn btn-primary action-button" type="button" title="Salvar as alterações no armazenamento local"><i class="fa-solid fa-rotate"></i><span>Atualizar</span></button><button id="exportButton" class="btn btn-light action-button" type="button"><i class="fa-solid fa-file-export"></i><span>Exportar XLS</span></button><button id="printButton" class="btn btn-dark action-button" type="button"><i class="fa-solid fa-file-pdf"></i><span>Exportar PDF</span></button><button id="weekTableImportButton" class="btn btn-light action-button" type="button" title="Importar Excel com colunas Data, Semana e Dia útil"><i class="fa-solid fa-calendar-days"></i><span>Importar Tab Sem</span></button><input id="weekTableFileInput" type="file" accept=".xlsx,.xls" hidden><span id="weekTableStatus" class="week-table-status" role="status" aria-live="polite"></span></div>
+      </div>
+      <div class="tab-content">
+        <!-- Divisão ajustável entre a tabela operacional e o cronograma Gantt. -->
+        <section class="tab-pane fade show active" id="planningPane" role="tabpanel" aria-labelledby="planning-tab">
+          <p id="allocationSyncWarning" class="allocation-sync-warning" role="alert" hidden></p>
+          <div class="planning-toolbar"><div class="table-actions"><button id="addRowButton" class="btn btn-primary action-button" type="button"><i class="fa-solid fa-plus"></i> Nova atividade</button><button id="createStagesButton" class="btn btn-light action-button" type="button"><i class="fa-solid fa-layer-group"></i><span>Gerar 3 atividades</span></button><button id="duplicateButton" class="btn btn-light action-button" type="button"><i class="fa-regular fa-copy"></i><span class="optional-label">Duplicar</span></button><button id="deleteButton" class="btn btn-light action-button danger-action" type="button"><i class="fa-regular fa-trash-can"></i><span class="optional-label">Excluir</span></button><button id="dependencyButton" class="btn btn-light action-button" type="button"><i class="fa-solid fa-link"></i><span class="optional-label">Vínculo</span></button><button id="baselineButton" class="btn btn-light action-button" type="button"><i class="fa-solid fa-thumbtack"></i><span class="optional-label">Congelar baseline</span></button><button id="criticalButton" class="btn btn-light action-button" type="button" aria-pressed="false"><i class="fa-solid fa-route"></i><span class="optional-label">Caminho crítico</span></button><button id="deviationListButton" class="btn btn-light action-button" type="button"><i class="fa-solid fa-list"></i><span>Lista de Desvios</span></button></div><div class="table-tools"><div id="filterControls" class="filter-controls" aria-label="Filtros de atividades"></div><label class="search-box"><i class="fa-solid fa-magnifying-glass"></i><input id="globalSearch" type="search" placeholder="Buscar atividades..." aria-label="Buscar atividades"></label><button id="clearFiltersButton" class="icon-button subtle-button" type="button" title="Limpar filtros" aria-label="Limpar filtros"><i class="fa-solid fa-filter-circle-xmark"></i></button></div></div>
+          <div class="split-workspace" id="splitWorkspace">
+            <section class="grid-panel" aria-label="Tabela de planejamento"><div class="panel-title"><div><strong>Planejamento de atividades</strong><span id="rowCount">0 atividades</span></div><div class="column-tools"><div class="hierarchy-tools" role="group" aria-label="Controles da hierarquia"><button id="hierarchyExpandAllButton" class="icon-button subtle-button" type="button" title="Expandir Hierarquia Total" aria-label="Expandir Hierarquia Total"><i class="fa-solid fa-angles-down"></i></button><button id="hierarchyCollapseAllButton" class="icon-button subtle-button" type="button" title="Diminuir Hierarquia Total" aria-label="Diminuir Hierarquia Total"><i class="fa-solid fa-angles-up"></i></button><button id="hierarchyExpandStepButton" class="icon-button subtle-button" type="button" title="Expandir Gradativo Hierarquia Total" aria-label="Expandir Gradativo Hierarquia Total"><i class="fa-solid fa-angle-down"></i></button><button id="hierarchyCollapseStepButton" class="icon-button subtle-button" type="button" title="Diminuir Gradativo Hierarquia Total" aria-label="Diminuir Gradativo Hierarquia Total"><i class="fa-solid fa-angle-up"></i></button></div><div class="dropdown"><button id="columnsButton" class="icon-button subtle-button" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Mostrar ou ocultar colunas" aria-label="Mostrar ou ocultar colunas"><i class="fa-solid fa-table-columns"></i></button><div id="columnsMenu" class="dropdown-menu dropdown-menu-end column-menu" aria-labelledby="columnsButton"></div></div></div></div><div id="activityTable"></div></section>
+            <div class="splitter" id="splitter" role="separator" aria-label="Redimensionar tabela e Gantt" aria-orientation="vertical" tabindex="0"></div>
+            <section class="gantt-panel" aria-label="Gráfico de Gantt"><div class="panel-title gantt-panel-title"><div class="gantt-title-copy"><strong id="ganttRangeTitle">Cronograma · Semanas 01–12</strong><div class="gantt-title-hint"><span>Arraste barras para ajustar semanas</span><div class="gantt-zoom-controls" aria-label="Zoom do gráfico de Gantt"><button id="ganttZoomOutButton" class="icon-button subtle-button" type="button" title="Reduzir zoom" aria-label="Reduzir zoom"><i class="fa-solid fa-magnifying-glass-minus"></i></button><span id="ganttZoomLabel" aria-live="polite">100%</span><button id="ganttZoomInButton" class="icon-button subtle-button" type="button" title="Aumentar zoom" aria-label="Aumentar zoom"><i class="fa-solid fa-magnifying-glass-plus"></i></button></div></div></div><div class="gantt-tools"><button id="milestoneButton" class="icon-button subtle-button" type="button" title="Adicionar marco" aria-label="Adicionar marco"><i class="fa-regular fa-diamond"></i></button><span id="ganttRangeBadge" class="badge text-bg-light week-range-badge">12 SEMANAS</span></div></div><div id="ganttHost"><svg id="gantt"></svg></div><div class="gantt-legend"><span><i class="legend-dot priority-high"></i>Alta</span><span><i class="legend-dot priority-medium"></i>Média</span><span><i class="legend-dot priority-low"></i>Baixa</span><span><i class="baseline-key"></i>Baseline</span><span class="legend-note"><i class="fa-solid fa-diamond"></i> Marco</span></div></section>
+          </div>
+        </section>
+        <!-- Curva S ocupa toda a largura e permite alternar a métrica analisada. -->
+        <section class="tab-pane fade" id="curvePane" role="tabpanel" aria-labelledby="curve-tab">
+          <div class="curve-heading"><div><span class="eyebrow">DESEMPENHO DO PROJETO</span><h2>Curva S do Projeto</h2></div><div class="curve-filter-actions"><label class="curve-select">Indicador<select id="curveMetric" class="form-select form-select-sm"><option value="physical">Avanço Físico (%)</option><option value="hours">HH Acumulada</option><option value="cost">Custo Acumulado</option></select></label><button id="indicatorFiltersButton" class="btn btn-light action-button" type="button" aria-label="Filtrar indicadores"><i class="fa-solid fa-filter"></i> Filtros <span id="indicatorFilterCount"></span></button></div></div>
+          <div class="curve-indicators"><div class="curve-stat"><span>Planejado</span><strong id="curvePlanned">0%</strong><small>valor acumulado</small></div><div class="curve-stat"><span>Realizado</span><strong id="curveActual">0%</strong><small>valor acumulado</small></div><div class="curve-stat"><span>Desvio</span><strong id="curveVariance">0 p.p.</strong><small>realizado − planejado</small></div><div class="curve-stat"><span>SPI</span><strong id="curveSpi">—</strong><small>índice de prazo</small></div><div class="curve-stat"><span>CPI</span><strong id="curveCpi">—</strong><small>índice de custo</small></div><div class="curve-stat"><span>HH prevista</span><strong id="curveHoursPlanned">0</strong><small>horas de trabalho</small></div><div class="curve-stat"><span>HH realizada</span><strong id="curveHoursActual">0</strong><small>horas apontadas</small></div></div>
+          <div class="chart-surface"><div class="chart-caption"><div><strong id="curveChartTitle">Avanço acumulado</strong><span>Planejamento versus execução</span></div><span class="chart-period" id="chartPeriod">Semanas 01–12</span></div><div class="chart-scroll"><div class="chart-wrap"><canvas id="sCurveChart" aria-label="Gráfico da Curva S"></canvas></div></div></div>
+          <div class="curve-heading"><div><span class="eyebrow">CAPACIDADE E CARGA SEMANAL</span><h2>Evolução e nivelamento de HH</h2></div><div class="capacity-upload"><span id="capacityFileStatus">Carregue um XLS de capacidade semanal.</span><button id="capacityImportButton" class="btn btn-light action-button" type="button"><i class="fa-solid fa-file-import"></i> Carregar XLS de HH disponível</button><input id="capacityFileInput" type="file" accept=".xlsx,.xls,.csv" hidden></div></div>
+          <div class="chart-surface"><div class="chart-caption"><span class="chart-period" id="levelingPeriod" style="margin-left:auto">Semanas 01–12</span></div><div class="chart-scroll"><div class="chart-wrap"><canvas id="levelingChart" aria-label="Gráfico de barras de HH disponível, previsto e realizado por semana"></canvas></div></div></div>
+          <p id="capacityFilterNotice" class="curve-footnote" role="status" aria-live="polite"></p>
+          <p class="curve-footnote"><i class="fa-solid fa-circle-info"></i> Use “Funcionários”, “Setor” (opcional), “Equipe”, “Responsável” e as colunas de semanas. Também é aceito o formato com “Semana” e “HH Disponível”. Os dados são armazenados neste navegador.</p>
+        </section>
+        <section class="tab-pane fade" id="resourcesPane" role="tabpanel" aria-labelledby="resources-tab">
+          <div class="resource-heading">
+            <div><h2>Tabela de Recursos</h2></div>
+          </div>
+          <div class="resource-panels">
+            <div class="resource-panel">
+              <h3 class="resource-workload-title">CARGA DE TRABALHO PLANEJADA</h3>
+              <div class="resource-table-scroll">
+                <table class="resource-table resource-workload-table" aria-label="Carga de trabalho planejada">
+                  <thead><tr><th scope="col"><label>Setor<select data-workload-filter="setor" aria-label="Filtrar Setor"><option value="">Todos</option></select></label></th><th scope="col"><label>Área<select data-workload-filter="area" aria-label="Filtrar Área"><option value="">Todos</option></select></label></th><th scope="col"><label>Família<select data-workload-filter="familia" aria-label="Filtrar Família"><option value="">Todos</option></select></label></th><th scope="col"><label>Equipe<select data-workload-filter="equipe" aria-label="Filtrar Equipe"><option value="">Todos</option></select></label></th><th scope="col"><label>Atividade<select data-workload-filter="atividade" aria-label="Filtrar Atividade"><option value="">Todos</option></select></label></th><th scope="col"><label>Sem Ini (Planejado)<select data-workload-filter="planIni" aria-label="Filtrar semana inicial planejada"><option value="">Todos</option></select></label></th><th scope="col"><label>HH Prev.<select data-workload-filter="hhPrev" aria-label="Filtrar saldo de HH Prev."><option value="">Todos</option></select></label></th></tr></thead>
+                  <tbody id="resourceWorkloadRows"><tr><td class="resource-empty" colspan="7">Carregando atividades do planejamento...</td></tr></tbody>
+                </table>
+              </div>
+              <p id="allocationHint" class="resource-allocation-hint" role="status" aria-live="polite">Arraste o saldo de HH Prev. para uma célula P, ou selecione o saldo e clique em P.</p>
+              <button id="selectFilteredHours" class="btn btn-light action-button" type="button" draggable="true" title="Filtre a carga de trabalho e arraste os saldos para uma equipe" disabled>Selecionar HH filtrados</button>
+              <button id="manageAllocationsButton" class="btn btn-light action-button" type="button" data-bs-toggle="modal" data-bs-target="#allocationsModal">Gerenciar alocações</button>
+            </div>
+            <div class="resource-panel">
+              <div class="resource-workload-title resource-availability-title">
+                <h3>CARGA DE DISPONIBILIDADE DE RECURSOS · SEMANAS</h3>
+                <button class="btn btn-light action-button" type="button" data-bs-toggle="modal" data-bs-target="#resourceFieldsModal"><i class="fa-solid fa-table-columns"></i> Campos visíveis</button>
+              </div>
+              <div class="resource-table-scroll"><table id="resourceTable" class="resource-table" aria-label="Carga de disponibilidade de recursos e semanas"></table></div>
+              <div class="resource-table-tools">
+                <p id="resourceTableStatus" class="resource-table-status" role="status" aria-live="polite">Carregue uma planilha para visualizar a disponibilidade.</p>
+              </div>
+              <section class="resource-chart" aria-labelledby="resourceChartTitle">
+                <div class="resource-workload-title resource-chart-header">
+                  <h3 id="resourceChartTitle">EVOLUÇÃO E NIVELAMENTO DE HH</h3>
+                  <div id="resourceChartLegend" class="resource-chart-legend" role="group" aria-label="Legenda do gráfico de horas"></div>
+                </div>
+                <div class="resource-chart-wrap"><canvas id="resourceLevelingChart" role="img" aria-label="HH disponível, previsto e realizado por semana, conforme o planejamento"></canvas></div>
+                <p id="resourceChartNotice" class="resource-chart-notice" role="status" aria-live="polite"></p>
+              </section>
+            </div>
+          </div>
+          <div class="resource-footer">
+            <div class="resource-actions">
+              <button id="resourceImportButton" class="btn btn-primary action-button" type="button"><i class="fa-solid fa-file-import"></i> Carregar planilha</button>
+              <input id="resourceFileInput" type="file" accept=".xlsx,.xls" hidden>
+              <button id="resourceExportButton" class="btn btn-light action-button" type="button" disabled><i class="fa-solid fa-file-export"></i> Exportar planilha original</button>
+            </div>
+            <p id="resourceStatus" class="resource-status" role="status" aria-live="polite">Carregando planilha armazenada...</p>
+          </div>
+        </section>
+        <section class="tab-pane fade" id="improvementPane" role="tabpanel" aria-labelledby="improvement-tab">
+          <div class="improvement-heading">
+            <div><h2>Ações de Melhoria</h2></div>
+            <div class="improvement-actions"><button id="addImprovement" class="btn btn-primary action-button" type="button"><i class="fa-solid fa-plus"></i> Nova ação</button><button id="exportImprovements" class="btn btn-light action-button" type="button"><i class="fa-solid fa-file-excel"></i> Exportar Excel</button><button id="printImprovements" class="btn btn-light action-button" type="button"><i class="fa-solid fa-print"></i> Imprimir</button></div>
+          </div>
+          <p id="improvementMessage" class="improvement-message" role="status" aria-live="polite"></p>
+          <div class="improvement-table-wrap">
+            <table class="improvement-table">
+              <thead><tr><th scope="col">ET</th><th scope="col">Setor</th><th scope="col">Área</th><th scope="col">Conjunto</th><th scope="col">Equipamento</th><th scope="col">Responsável</th><th scope="col">Status</th><th scope="col">Prioridade</th><th scope="col">Custo (R$)</th><th scope="col">Observações</th><th scope="col"><span class="visually-hidden">Excluir</span></th></tr></thead>
+              <tbody id="improvementRows"></tbody>
+              <tfoot><tr><th colspan="8" scope="row">Total geral</th><td id="improvementTotal">R$ 0,00</td><td colspan="2"></td></tr></tfoot>
+            </table>
+          </div>
+        </section>
+        <section class="tab-pane fade" id="assistantPane" role="tabpanel" aria-labelledby="assistant-tab">
+          <div class="assistant-surface"><div><span class="eyebrow">AGENTE LOCAL DE PESQUISA</span><h2>Pergunte sobre as atividades</h2><p>O agente consulta somente os dados da tabela e as informações desta página. As respostas são processadas neste navegador; nenhuma pergunta ou dado do cronograma é enviado a serviços externos.</p></div><form id="assistantForm" class="assistant-form"><label class="visually-hidden" for="assistantQuestion">Digite sua pergunta</label><input id="assistantQuestion" class="form-control" type="text" placeholder="Ex.: Quais tarefas estão atrasadas?" autocomplete="off" required><button class="btn btn-primary action-button" type="submit"><i class="fa-solid fa-paper-plane"></i> Perguntar</button></form><div id="assistantAnswer" class="assistant-answer" aria-live="polite"></div></div>
+        </section>
+      </div>
+    </section>
+    <footer class="app-footer"><span>Dados armazenados neste navegador <i class="fa-solid fa-shield-halved"></i></span></footer>
+  </main>
+  <div class="modal fade" id="indicatorFiltersModal" tabindex="-1" aria-labelledby="indicatorFiltersTitle" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable"><div class="modal-content">
+      <div class="modal-header"><h2 class="modal-title" id="indicatorFiltersTitle">Filtros dos indicadores</h2><button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Fechar"></button></div>
+      <div class="modal-body"><p class="modal-hint">Selecione uma ou mais opções por campo. Sem seleção, todas as opções são consideradas. Os filtros não alteram a tabela do Gantt.</p><div id="indicatorFilterFields" class="indicator-filter-fields"></div></div>
+      <div class="modal-footer"><button id="clearIndicatorFilters" class="btn btn-light" type="button">Limpar filtros</button><button class="btn btn-light" type="button" data-bs-dismiss="modal">Cancelar</button><button id="applyIndicatorFilters" class="btn btn-primary" type="button">Aplicar</button></div>
+    </div></div>
+  </div>
+  <section id="improvementPrint" class="improvement-print" aria-label="Impressão de ações de melhoria"></section>
+  <div class="modal fade" id="deviationModal" tabindex="-1" aria-labelledby="deviationTitle" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable"><div class="modal-content">
+      <div class="modal-header"><h2 class="modal-title" id="deviationTitle">Lista de Desvios</h2><button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Fechar"></button></div>
+      <div class="modal-body">
+        <p class="modal-hint">Atividades com desvio preenchido, incluindo as que estão fora dos filtros atuais.</p>
+        <div class="deviation-table-wrap"><table class="deviation-table">
+          <thead><tr><th scope="col" rowspan="2">ET</th><th scope="col" rowspan="2">Projeto</th><th scope="colgroup" colspan="2">Planejado</th><th scope="colgroup" colspan="2">Realizado</th><th scope="col" rowspan="2">Avanço</th><th scope="col" rowspan="2">Desvio</th><th scope="col" rowspan="2">PD</th></tr><tr><th scope="col">Sem. Ini</th><th scope="col">Sem. Fim</th><th scope="col">Sem. Ini</th><th scope="col">Sem. Fim</th></tr></thead>
+          <tbody id="deviationRows"></tbody>
+        </table></div>
+      </div>
+      <div class="modal-footer"><button id="printDeviationButton" class="btn btn-primary" type="button"><i class="fa-solid fa-print"></i> Imprimir</button><button class="btn btn-light" type="button" data-bs-dismiss="modal">Fechar</button></div>
+    </div></div>
+  </div>
+  <div class="modal fade" id="resourceFieldsModal" tabindex="-1" aria-labelledby="resourceFieldsTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered"><div class="modal-content">
+      <div class="modal-header"><h2 class="modal-title" id="resourceFieldsTitle">Campos visíveis</h2><button class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button></div>
+      <div class="modal-body">
+        <p class="modal-hint">Selecione os campos de identificação que deseja exibir. Ao ocultar um campo, seu filtro será limpo. As semanas D e P não são alteradas.</p>
+        <div id="resourceFieldsOptions" class="resource-fields-options"></div>
+        <p id="resourceFieldsError" class="resource-fields-error" role="alert"></p>
+      </div>
+      <div class="modal-footer"><button class="btn btn-light" data-bs-dismiss="modal" type="button">Cancelar</button><button id="resourceFieldsApply" class="btn btn-primary" type="button">Aplicar</button></div>
+    </div></div>
+  </div>
+      <div class="modal fade" id="allocationModal" tabindex="-1" aria-labelledby="allocationTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered"><div class="modal-content">
+          <div class="modal-header"><h2 class="modal-title" id="allocationTitle">Programar horas</h2><button class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button></div>
+          <div class="modal-body">
+            <p id="allocationDetails" class="modal-hint"></p>
+            <label class="form-label" for="allocationAmount">HH a programar</label>
+            <input id="allocationAmount" class="form-control" type="text" inputmode="decimal" autocomplete="off">
+            <fieldset id="allocationOverflow" hidden><legend class="fs-6">A quantidade excede a capacidade livre. Distribuir a diferença na semana seguinte?</legend><label class="form-check"><input class="form-check-input" type="radio" name="allocationSplit" value="yes"><span class="form-check-label">Sim</span></label><label class="form-check"><input class="form-check-input" type="radio" name="allocationSplit" value="no"><span class="form-check-label">Não, devolver a diferença ao saldo</span></label></fieldset>
+            <p id="allocationError" class="resource-fields-error" role="alert"></p>
+          </div>
+          <div class="modal-footer"><button class="btn btn-light" data-bs-dismiss="modal" type="button">Cancelar</button><button id="allocationApply" class="btn btn-primary" type="button">Programar</button></div>
+        </div></div>
+      </div>
+  <div class="modal fade" id="batchAllocationModal" tabindex="-1" aria-labelledby="batchAllocationTitle" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered"><div class="modal-content">
+      <div class="modal-header"><h2 class="modal-title" id="batchAllocationTitle">Programar atividades filtradas</h2><button class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button></div>
+      <div class="modal-body">
+        <p id="batchAllocationDetails" class="modal-hint"></p>
+        <fieldset id="batchAllocationOverflow" hidden><legend class="fs-6">A primeira semana não comporta o total. Distribuir a diferença nas demais semanas carregadas?</legend><label class="form-check"><input class="form-check-input" type="radio" name="batchAllocationSplit" value="yes"><span class="form-check-label">Sim</span></label><label class="form-check"><input class="form-check-input" type="radio" name="batchAllocationSplit" value="no"><span class="form-check-label">Não, devolver a diferença ao saldo</span></label></fieldset>
+        <div id="batchAllocationPreview" class="batch-allocation-preview" aria-live="polite"></div>
+        <p id="batchAllocationError" class="resource-fields-error" role="alert"></p>
+      </div>
+      <div class="modal-footer"><button class="btn btn-light" data-bs-dismiss="modal" type="button">Cancelar</button><button id="batchAllocationApply" class="btn btn-primary" type="button">Programar</button></div>
+    </div></div>
+  </div>
+      <div class="modal fade" id="allocationsModal" tabindex="-1" aria-labelledby="allocationsTitle" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered"><div class="modal-content">
+          <div class="modal-header"><h2 class="modal-title" id="allocationsTitle">Alocações programadas</h2><button class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button></div>
+          <div class="modal-body"><p class="modal-hint">Remova uma alocação para devolver suas horas ao saldo da atividade. Dados incompatíveis com a planilha ou o planejamento são sinalizados.</p><div id="allocationsList"></div><p id="allocationsError" class="resource-fields-error" role="alert"></p></div>
+          <div class="modal-footer"><button class="btn btn-light" data-bs-dismiss="modal" type="button">Fechar</button></div>
+        </div></div>
+      </div>
+  <div class="modal fade" id="reversalModal" tabindex="-1" aria-labelledby="reversalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered"><div class="modal-content">
+      <div class="modal-header"><h2 class="modal-title" id="reversalTitle">Estornar horas</h2><button class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button></div>
+      <div class="modal-body"><p id="reversalDetails"></p><div id="reversalList" class="reversal-list"></div><p id="reversalTotal" class="modal-hint" aria-live="polite"></p><p id="reversalError" class="resource-fields-error" role="alert"></p></div>
+      <div class="modal-footer"><button class="btn btn-light" data-bs-dismiss="modal" type="button">Cancelar</button><button id="reversalConfirm" class="btn btn-primary" type="button">Estornar</button></div>
+    </div></div>
+  </div>
+  <!-- Formulário de vínculo com os quatro tipos de relação entre atividades. -->
+  <div class="modal fade" id="dependencyModal" tabindex="-1" aria-labelledby="dependencyTitle" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header"><div><span class="eyebrow">LÓGICA DO CRONOGRAMA</span><h2 class="modal-title" id="dependencyTitle">Criar vínculo</h2></div><button class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button></div><div class="modal-body"><label class="form-label">Atividade predecessora<select id="dependencyFrom" class="form-select"></select></label><div class="relation-choice"><label class="form-label">Tipo de vínculo<select id="dependencyType" class="form-select"><option value="TI">TI · Término para Início</option><option value="II">II · Início para Início</option><option value="TT">TT · Término para Término</option><option value="IT">IT · Início para Término</option></select></label><i class="fa-solid fa-arrow-right-long"></i><label class="form-label">Atividade sucessora<select id="dependencyTo" class="form-select"></select></label></div><p class="modal-hint">O tipo fica registrado na atividade; o Frappe Gantt desenha a conexão entre tarefas.</p></div><div class="modal-footer"><button class="btn btn-light" data-bs-dismiss="modal" type="button">Cancelar</button><button id="saveDependencyButton" class="btn btn-primary" type="button">Adicionar vínculo</button></div></div></div></div>
+  <!-- Assistente de importação para mapear nomes de colunas do arquivo Excel. -->
+  <div class="modal fade" id="importModal" tabindex="-1" aria-labelledby="importTitle" aria-hidden="true"><div class="modal-dialog modal-lg modal-dialog-centered"><div class="modal-content"><div class="modal-header"><div><span class="eyebrow">IMPORTAÇÃO DE PLANILHA</span><h2 class="modal-title" id="importTitle">Mapear colunas</h2></div><button class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button></div><div class="modal-body"><p class="modal-hint" id="importFileName">Selecione quais colunas correspondem ao cronograma.</p><div id="mappingGrid" class="mapping-grid"></div><label class="form-check import-mode"><input class="form-check-input" type="checkbox" id="replaceImport"><span class="form-check-label">Substituir atividades atuais</span></label></div><div class="modal-footer"><button class="btn btn-light" data-bs-dismiss="modal" type="button">Cancelar</button><button id="confirmImportButton" class="btn btn-primary" type="button">Importar atividades</button></div></div></div></div>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://unpkg.com/tabulator-tables@6.3.1/dist/js/tabulator.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <script src="app.js?v=133"></script>
+    <script src="improvements.js?v=6"></script>
+    <script src="allocations.js?v=14"></script>
+    <script src="resources.js?v=28"></script>
+</body>
+</html>

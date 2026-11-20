@@ -1,0 +1,1183 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Planejamento SAP PM</title>
+  <style>
+    :root {
+      font-family: "Segoe UI", Arial, sans-serif;
+      color: #172b4d;
+      background: #f3f6fa;
+      font-synthesis: none;
+    }
+
+    * { box-sizing: border-box; }
+
+    body { zoom: 90%; min-width: 360px; margin: 0; }
+
+    button, input, select, textarea { font: inherit; }
+
+    .topbar {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 20px;
+      padding: 26px clamp(18px, 4vw, 48px);
+      background: #102b46;
+      color: #fff;
+    }
+
+    .brand { display: flex; align-items: center; gap: 13px; }
+    .topbar-title { grid-column: 2; grid-row: 1; margin: 0; color: #fff; font-size: 1.1rem; text-align: left; justify-self: start; margin-left: 24px; }
+
+    .brand-mark {
+      display: grid;
+      width: 42px;
+      height: 42px;
+      place-items: center;
+      border-radius: 12px;
+      background: #087e8b;
+      color: #fff;
+      font-weight: 800;
+    }
+
+    .brand-name { margin: 0; font-size: 1rem; }
+    .brand-caption { margin: 4px 0 0; color: #b7c8d8; font-size: 0.8rem; }
+
+    .top-actions { display: flex; flex-wrap: wrap; justify-self: end; align-items: center; gap: 10px; }
+    .refresh-control { position: relative; display: grid; justify-items: stretch; gap: 4px; }
+    .refresh-control #refresh { box-sizing: border-box; width: 110px; height: 40px; padding: 9px 10px; font-size: 0.85rem; }
+    .refresh-progress { position: absolute; top: 100%; left: 0; display: grid; width: 100%; margin-top: 4px; gap: 3px; color: #d7e4ee; font-size: 0.62rem; }
+    .refresh-progress-label { text-align: center; }
+    .refresh-progress-track { overflow: hidden; height: 5px; border-radius: 99px; background: #425b70; }
+    .refresh-progress-value { width: 0; height: 100%; border-radius: inherit; background: #46c2a8; transition: width 250ms ease; }
+    .refresh-progress[data-state="error"] .refresh-progress-value { background: #ff887d; }
+    .page-nav { overflow-x: auto; border-bottom: 1px solid #dfe6ee; background: #fff; scrollbar-width: thin; }
+    .page-nav-inner { display: flex; width: min(1800px, 100%); min-width: max-content; margin: 0 auto; padding: 0 clamp(16px, 3vw, 40px); }
+    .page-tab { position: relative; display: inline-flex; min-height: 44px; align-items: center; justify-content: center; padding: 0 15px; border-bottom: 3px solid transparent; color: #52647a; font-size: 0.78rem; font-weight: 650; text-decoration: none; white-space: nowrap; }
+    .page-tab:hover { background: #f3f8f8; color: #087e8b; }
+    .page-tab[aria-current="page"] { border-bottom-color: #087e8b; color: #087e8b; }
+    .page-tab:focus-visible { outline: 2px solid #087e8b; outline-offset: -2px; }
+
+    button {
+      min-height: 40px;
+      padding: 9px 14px;
+      border: 1px solid transparent;
+      border-radius: 7px;
+      background: #087e8b;
+      color: white;
+      cursor: pointer;
+      font-weight: 650;
+    }
+
+    button:hover:not(:disabled) { background: #066a75; }
+    button:disabled { cursor: wait; opacity: 0.65; }
+
+    button.secondary {
+      border-color: #638099;
+      background: transparent;
+    }
+
+    button.secondary:hover:not(:disabled) { background: #25415a; }
+
+    button.light {
+      border-color: #d6e0e9;
+      background: white;
+      color: #193651;
+    }
+
+    button.light:hover:not(:disabled) { background: #eef4f7; }
+    #export { box-sizing: border-box; width: 110px; height: 40px; min-height: 40px; padding: 9px 10px; font-size: 0.85rem; }
+
+    .layout {
+      width: min(1800px, 100%);
+      margin: 0 auto;
+      padding: 30px clamp(16px, 3vw, 40px) 48px;
+    }
+
+    main { min-width: 0; }
+    .page-heading { display: flex; flex-wrap: wrap; align-items: end; justify-content: end; gap: 18px; margin-bottom: 14px; }
+    .subtitle { margin: 8px 0 0; color: #67788e; }
+
+    .source-select { display: grid; gap: 6px; min-width: 220px; color: #52647a; font-size: 0.82rem; font-weight: 650; }
+
+    select, input, textarea {
+      width: 100%;
+      min-height: 40px;
+      padding: 9px 11px;
+      border: 1px solid #d5dee8;
+      border-radius: 7px;
+      background: #fff;
+      color: #172b4d;
+    }
+
+    .cards { display: grid; grid-template-columns: repeat(4, minmax(0, 190px)); justify-content: start; gap: 8px; margin-top: 0; margin-bottom: 12px; }
+    .card { min-height: 58px; padding: 7px 10px; border: 1px solid #e2e8ef; border-radius: 7px; background: #fff; }
+    .card-label { margin: 0; color: #52647a; font-size: 0.68rem; }
+    .card-value { margin: 2px 0 0; font-size: 1.05rem; font-weight: 750; }
+    .card-value.small { font-size: 0.78rem; }
+    .card-updated { width: 150px; min-height: 42px; padding: 5px 8px; }
+    .card-updated .card-value { margin-top: 1px; }
+    .page-footer { display: flex; justify-content: flex-end; margin-top: 10px; }
+    .card-open { border-color: #f0b4b4; background: #fdeaea; }
+    .card-open .card-label, .card-open .card-value { color: #b42318; }
+    .card-scheduled { border-color: #f0dc91; background: #fff8df; }
+    .card-scheduled .card-label, .card-scheduled .card-value { color: #795b00; }
+    .card-progress { border-color: #b8d5f3; background: #eaf3fc; }
+    .card-progress .card-label, .card-progress .card-value { color: #1762a5; }
+    .card-closed { border-color: #b7dfc8; background: #eaf6ee; }
+    .card-closed .card-label, .card-closed .card-value { color: #18794e; }
+
+    .panel { overflow: hidden; border: 1px solid #e2e8ef; border-radius: 10px; background: #fff; }
+    .toolbar { display: grid; grid-template-columns: minmax(220px, 1fr) auto; align-items: end; gap: 12px; padding: 16px; border-bottom: 1px solid #e8edf2; }
+    .search-field { width: 50%; }
+    .filter-grid { display: grid; grid-column: 1; grid-row: 2; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
+    .location-priority-group { display: grid; grid-column: span 2; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; min-width: 0; }
+    .bulk-controls { display: flex; grid-column: 2; grid-row: 1; align-self: start; justify-content: flex-end; }
+    #bulk-adjust { white-space: nowrap; }
+    .filter-grid .field { gap: 3px; font-size: 0.62rem; font-weight: 600; }
+    .multi-filter { position: relative; min-width: 0; font-size: 0.68rem; }
+    .multi-filter summary { overflow: hidden; min-height: 30px; padding: 7px 24px 7px 8px; border: 1px solid #d5dee8; border-radius: 6px; background: #fff; color: #172b4d; cursor: pointer; font-weight: 400; text-overflow: ellipsis; white-space: nowrap; }
+    .multi-filter[aria-disabled="true"] summary { background: #f3f6fa; color: #718198; cursor: not-allowed; }
+    .multi-filter-options { position: absolute; top: calc(100% + 3px); left: 0; z-index: 5; display: grid; width: max(100%, 190px); max-height: 260px; gap: 5px; overflow: auto; padding: 8px; border: 1px solid #d5dee8; border-radius: 7px; background: #fff; box-shadow: 0 8px 20px rgb(16 43 70 / 16%); }
+    .multi-filter-actions { display: flex; justify-content: space-between; gap: 8px; padding-bottom: 5px; border-bottom: 1px solid #e8edf2; }
+    .multi-filter-actions button { min-height: 24px; padding: 3px 4px; border: 0; background: transparent; color: #087e8b; font-size: 0.62rem; font-weight: 600; }
+    .multi-filter-actions button:hover:not(:disabled) { background: #eaf5f6; }
+    .multi-filter-option { display: flex; align-items: flex-start; gap: 6px; color: #34475d; font-size: 0.68rem; font-weight: 400; overflow-wrap: anywhere; }
+    .multi-filter-option input { width: 14px; min-height: 14px; height: 14px; margin: 0; padding: 0; accent-color: #087e8b; }
+    .field { display: grid; flex: 1 1 190px; gap: 6px; color: #52647a; font-size: 0.8rem; font-weight: 650; }
+    .result-count { grid-column: 2; grid-row: 2; align-self: end; margin-left: auto; padding-bottom: 10px; color: #718198; font-size: 0.83rem; white-space: nowrap; }
+
+    .horizontal-scrollbar { display: none; overflow-x: scroll; overflow-y: hidden; height: 18px; background: #f7f9fb; border-bottom: 1px solid #e8edf2; }
+    .horizontal-scrollbar.visible { display: block; }
+    .horizontal-scrollbar-spacer { height: 1px; }
+    .table-wrap { overflow: auto; max-height: 72vh; }
+    table { width: max-content; min-width: 100%; border-collapse: collapse; text-align: left; text-transform: uppercase; }
+    th { position: sticky; top: 0; z-index: 1; background: #f7f9fb; color: #68798e; font-size: 0.55rem; font-weight: 700; letter-spacing: 0.02em; text-transform: uppercase; white-space: nowrap; }
+    th, td { max-width: 190px; padding: 4px 6px; border-bottom: 1px solid #edf1f5; vertical-align: top; }
+    td { overflow-wrap: anywhere; color: #34475d; font-size: 0.6rem; }
+    th.installation-column, td.installation-column { width: 42px; min-width: 42px; max-width: 42px; padding-right: 2px; padding-left: 2px; }
+    th.installation-column { white-space: normal; overflow-wrap: anywhere; }
+    td.installation-column { white-space: nowrap; overflow-wrap: normal; }
+    th.status-column, td.status-column { width: 62px; min-width: 62px; max-width: 62px; padding-right: 3px; padding-left: 3px; }
+    th.status-column { white-space: normal; overflow-wrap: anywhere; }
+    td.status-column { overflow-wrap: anywhere; }
+    td.status-code-enc { color: #18794e; font-weight: 750; }
+    td.status-code-and { color: #1769aa; font-weight: 750; }
+    td.status-code-pen { color: #c46a12; font-weight: 750; }
+    td.priority-high { color: #c62828; font-weight: 800; }
+    td.priority-medium { color: #e87500; font-weight: 800; }
+    td.priority-low { color: #21834a; font-weight: 800; }
+    td.primary { color: #183853; font-weight: 700; white-space: nowrap; }
+    .description-cell { max-width: 240px; line-height: 1.4; }
+    .executor-cell { max-width: 155px; }
+    .badge { display: inline-block; padding: 2px 4px; border-radius: 99px; background: #eef2f6; color: #52647a; font-size: 0.55rem; font-weight: 650; white-space: nowrap; }
+    .badge.high { background: #fff0e8; color: #a64b13; }
+    .badge.medium { background: #fff8df; color: #795b00; }
+    .badge.low { background: #e8f5ed; color: #18794e; }
+    .row-action { min-height: 24px; padding: 3px 6px; border-color: #d6e0e9; background: white; color: #087e8b; font-size: 0.6rem; white-space: nowrap; }
+    .row-action:hover:not(:disabled) { background: #eaf5f6; }
+    .row-flag-cell, .row-flag-heading { width: 34px; min-width: 34px; max-width: 34px; padding-right: 2px; padding-left: 2px; text-align: center; }
+    .row-flag { min-height: 24px; padding: 2px 5px; border: 0; background: transparent; color: #8795a5; font-size: 1rem; line-height: 1; }
+    .row-flag:hover:not(:disabled), .row-flag[aria-pressed="true"] { background: #fff3cc; color: #b77900; }
+    .row-flag:focus-visible { outline: 2px solid #087e8b; outline-offset: 1px; }
+    .empty { padding: 42px 18px; color: #718198; text-align: center; }
+
+    #status { min-height: 24px; margin: 12px 0 0; color: #52647a; font-size: 0.85rem; }
+    #status[data-state="done"] { color: #18794e; }
+    #status[data-state="error"] { color: #b42318; }
+
+    dialog { width: min(540px, calc(100% - 28px)); padding: 0; border: 0; border-radius: 12px; box-shadow: 0 24px 80px rgb(16 43 70 / 28%); }
+    dialog::backdrop { background: rgb(16 43 70 / 48%); }
+    .dialog-content { padding: 24px; }
+    .dialog-content h2 { margin: 0; }
+    .dialog-content .subtitle { margin-bottom: 20px; }
+    .edit-fields { display: grid; gap: 14px; }
+    .edit-fields textarea { min-height: 96px; resize: vertical; }
+    .edit-fields .check-field { display: flex; align-items: center; gap: 8px; }
+    .edit-fields .check-field input { width: 16px; min-height: 16px; height: 16px; margin: 0; padding: 0; accent-color: #087e8b; }
+    .dialog-actions { display: flex; justify-content: end; gap: 10px; margin-top: 22px; }
+
+    @media (max-width: 950px) {
+      .cards { grid-template-columns: repeat(2, minmax(0, 190px)); }
+    }
+
+    @media (max-width: 600px) {
+      .topbar { grid-template-columns: 1fr auto; align-items: start; }
+      .topbar-title { grid-column: 1 / -1; grid-row: 1; justify-self: center; font-size: 1.1rem; }
+      .brand { grid-column: 1; grid-row: 2; }
+      .top-actions { grid-column: 1 / -1; grid-row: 3; justify-self: stretch; width: 100%; }
+      .refresh-control { flex: 1 1 100%; }
+      .refresh-control #refresh { flex: 1; }
+      .top-actions > #export { flex: 0 0 auto; align-self: start; }
+      .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
+      .card { min-height: 54px; padding: 6px 8px; }
+      .toolbar { grid-template-columns: 1fr; }
+      .search-field { width: 100%; }
+      .filter-grid { grid-row: auto; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .location-priority-group { grid-column: span 2; }
+      .bulk-controls { grid-column: 1; grid-row: auto; justify-content: stretch; }
+      #bulk-adjust { width: 100%; }
+      .result-count { grid-column: 1; grid-row: auto; justify-self: end; }
+    }
+    :root { font-size: 12px; color: #263634; background: #f3f5f3; }
+    .topbar { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 12px; min-height: 48px; padding: 6px clamp(14px, 2.4vw, 32px); background: #142c2a; }
+    .brand { gap: 8px; }
+    .brand-mark { width: 28px; height: 28px; border-radius: 5px; background: #287c70; }
+    .brand-name { font-size: 0.68rem; font-weight: 750; text-transform: uppercase; }
+    .brand-caption { margin-top: 2px; color: #a7c0bb; font-size: 0.48rem; }
+    .topbar-title { grid-column: 2; grid-row: 1; justify-self: center; margin: 0; font-size: 1.15rem; font-weight: 750; text-align: center; white-space: nowrap; }
+    .top-actions { grid-column: 3; grid-row: 1; flex-wrap: nowrap; gap: 5px; }
+    .top-actions .dashboard-link { width: auto; height: 28px; min-height: 28px; padding: 4px 8px; border-color: #53726c; border-radius: 4px; font-size: 0.62rem; }
+    .refresh-control #refresh { width: 92px; height: 28px; min-height: 28px; padding: 4px 8px; font-size: 0.62rem; }
+    #export { width: 52px; height: 28px; min-height: 28px; padding: 4px 8px; font-size: 0.62rem; }
+    .page-nav-inner { width: min(1800px, 100%); }
+    .page-tab { min-height: 34px; padding: 0 12px; border-bottom-width: 2px; font-size: 0.68rem; }
+    .layout { padding-top: 12px; }
+    @media (max-width: 760px) {
+      .topbar { grid-template-columns: minmax(0, 1fr) auto; }
+      .brand { grid-column: 1; grid-row: 1; }
+      .topbar-title { grid-column: 1 / -1; grid-row: 2; justify-self: center; font-size: 1rem; }
+      .top-actions { grid-column: 2; grid-row: 1; max-width: 52vw; overflow-x: auto; }
+    }
+    @media (max-width: 440px) {
+      .topbar { gap: 7px 10px; padding: 6px 10px; }
+      .brand-name { font-size: 0.62rem; }
+      .brand-caption { font-size: 0.44rem; }
+      .topbar-title { font-size: 0.85rem; }
+      .page-tab { padding: 0 10px; }
+    }
+    .refresh-control:has(> #refresh-progress) { display: flex; align-items: center; gap: 5px; }
+    #refresh-progress { position: relative; inset: auto; display: none; flex: 0 0 40px; width: 40px; height: 40px; margin: 0; place-items: center; color: #fff; font-size: 0.62rem; }
+    #refresh-progress:not([data-state="idle"]) { display: grid; }
+    #refresh-progress .refresh-progress-label { position: relative; z-index: 1; font-weight: 700; }
+    #refresh-progress .refresh-progress-track { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; background: none; }
+    #refresh-progress .refresh-progress-track::before { content: ""; display: block; width: 100%; height: 100%; background: center / contain no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3Cpath id='p' d='M50 6v11' stroke='%2318d9c2' stroke-width='9' stroke-linecap='round'/%3E%3C/defs%3E%3Cuse href='%23p' opacity='.18'/%3E%3Cuse href='%23p' transform='rotate(30 50 50)' opacity='.25'/%3E%3Cuse href='%23p' transform='rotate(60 50 50)' opacity='.32'/%3E%3Cuse href='%23p' transform='rotate(90 50 50)' opacity='.39'/%3E%3Cuse href='%23p' transform='rotate(120 50 50)' opacity='.46'/%3E%3Cuse href='%23p' transform='rotate(150 50 50)' opacity='.53'/%3E%3Cuse href='%23p' transform='rotate(180 50 50)' opacity='.6'/%3E%3Cuse href='%23p' transform='rotate(210 50 50)' opacity='.67'/%3E%3Cuse href='%23p' transform='rotate(240 50 50)' opacity='.74'/%3E%3Cuse href='%23p' transform='rotate(270 50 50)' opacity='.81'/%3E%3Cuse href='%23p' transform='rotate(300 50 50)' opacity='.9'/%3E%3Cuse href='%23p' transform='rotate(330 50 50)'/%3E%3C/svg%3E"); }
+    #refresh-progress[data-state="running"] .refresh-progress-track::before { animation: iw28-spin 1s steps(12) infinite; }
+    #refresh-progress[data-state="error"] .refresh-progress-label { color: #ffaaa4; }
+    #refresh-progress .refresh-progress-value { display: none; }
+    @keyframes iw28-spin { to { transform: rotate(360deg); } }
+    @media (prefers-reduced-motion: reduce) { #refresh-progress[data-state="running"] .refresh-progress-track::before { animation: none; } }
+  </style>
+  <script src="/sidebar.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><img src="/rims-one-logo.png" alt="RIMS One — Robotic Integrated Maintenance System One" style="display:block;width:min(180px, 100%);height:auto"></div>
+    <h1 class="topbar-title">SISTEMA INTEGRADO DE MANUTENÇÃO ROBÓTICA</h1>
+    <div class="top-actions">
+      <div class="refresh-control">
+        <button class="secondary" id="refresh" type="button">SAP (IW28)</button>
+        <div class="refresh-progress" id="refresh-progress" data-state="idle" title="Estimativa durante a execução; 100% somente após conclusão">
+          <span class="refresh-progress-label" id="refresh-progress-label">0%</span>
+          <div class="refresh-progress-track" role="progressbar" aria-label="Progresso da atualização IW28" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+            <div class="refresh-progress-value" id="refresh-progress-value"></div>
+          </div>
+        </div>
+      </div>
+      <button class="light" id="export" type="button" aria-label="Exportar planejamento em CSV compatível com Excel" title="Exporta um arquivo CSV compatível com Excel">XLS</button>
+    </div>
+  </header>
+
+  <nav class="page-nav" aria-label="Navegação principal">
+    <div class="page-nav-inner">
+      <a class="page-tab" href="/" aria-current="page">Painel de notas</a>
+      <a class="page-tab" href="/dashboard">Dashboard</a>
+      <a class="page-tab" href="/gantt">Gantt semanal</a>
+      <a class="page-tab" href="/kanban">Kanban</a>
+      <a class="page-tab" href="/nivelamento">Nivelamento</a>
+      <a class="page-tab" href="/confiabilidade">Confiabilidade</a>
+    </div>
+  </nav>
+
+  <div class="layout">
+    <main>
+      <select id="source" hidden aria-hidden="true" tabindex="-1"></select>
+
+      <section class="cards" aria-label="Resumo">
+        <article class="card card-open"><p class="card-label">Notas Abertas</p><p class="card-value" id="total">—</p></article>
+        <article class="card card-scheduled"><p class="card-label">Notas Programadas</p><p class="card-value" id="assigned">—</p></article>
+        <article class="card card-progress"><p class="card-label">Em Andamento</p><p class="card-value" id="unassigned">—</p></article>
+        <article class="card card-closed"><p class="card-label">Notas Encerradas</p><p class="card-value" id="closed">—</p></article>
+      </section>
+
+      <section class="panel" aria-label="Lista de notas e ordens">
+        <div class="toolbar">
+          <label class="field search-field" for="search">Pesquisar nota, ordem, texto ou equipamento
+            <input id="search" type="search" placeholder="Digite para filtrar…">
+          </label>
+          <div class="bulk-controls">
+            <button class="light" id="bulk-adjust" type="button" disabled>Ajuste em Massa (0)</button>
+          </div>
+          <div class="filter-grid" id="column-filters"></div>
+          <span class="result-count" id="result-count" aria-live="polite"></span>
+        </div>
+        <div class="horizontal-scrollbar" id="horizontal-scrollbar" aria-label="Rolagem horizontal das colunas" tabindex="0">
+          <div class="horizontal-scrollbar-spacer" id="horizontal-scrollbar-spacer"></div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr id="record-columns"></tr>
+            </thead>
+            <tbody id="records"></tbody>
+          </table>
+          <div class="empty" id="empty" hidden>Nenhum registro encontrado. Confira o filtro ou selecione outro arquivo.</div>
+        </div>
+      </section>
+
+
+      <footer class="page-footer">
+        <article class="card card-updated"><p class="card-label">Última atualização</p><p class="card-value small" id="updated">—</p></article>
+      </footer>
+      <p id="status" role="status" aria-live="polite">Carregando os arquivos disponíveis…</p>
+    </main>
+  </div>
+
+  <dialog id="edit-dialog">
+    <form class="dialog-content" id="edit-form">
+      <h2>Editar planejamento</h2>
+      <p class="subtitle" id="dialog-subtitle"></p>
+      <div class="edit-fields">
+        <label class="field" for="edit-executor">Executante
+          <input id="edit-executor" name="executor" maxlength="160" placeholder="Nome do executante">
+        </label>
+        <label class="field" for="edit-priority">Prioridade
+          <select id="edit-priority" name="priority">
+            <option value="">Selecione</option>
+            <option value="Alta">Alta</option>
+            <option value="Média">Média</option>
+            <option value="Baixa">Baixa</option>
+          </select>
+        </label>
+        <label class="field" for="edit-desired-start">Início desejado
+          <input id="edit-desired-start" name="desiredStart" type="date">
+        </label>
+        <label class="field" for="edit-desired-completion">Conclusão Desejada
+          <input id="edit-desired-completion" name="desiredCompletion" type="date">
+        </label>
+        <label class="field" for="edit-shutdown-duration">DuraçParada
+          <input id="edit-shutdown-duration" name="shutdownDuration" maxlength="40">
+        </label>
+        <label class="check-field" for="edit-shutdown">
+          <input id="edit-shutdown" name="shutdown" type="checkbox">
+          Parada
+        </label>
+        <label class="field" for="edit-sap-description">Descrição
+          <textarea id="edit-sap-description" name="sapDescription" maxlength="40"></textarea>
+        </label>
+      </div>
+      <div class="dialog-actions">
+        <button class="light" id="cancel-edit" type="button">Cancelar</button>
+        <button id="submit-edit" type="submit">Salvar ajuste e gravar no SAP</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script>
+    const sourceSelect = document.querySelector("#source");
+    const recordsBody = document.querySelector("#records");
+    const recordsHead = document.querySelector("#record-columns");
+    const columnFilters = document.querySelector("#column-filters");
+    const tableWrap = document.querySelector(".table-wrap");
+    const horizontalScrollbar = document.querySelector("#horizontal-scrollbar");
+    const horizontalScrollbarSpacer = document.querySelector("#horizontal-scrollbar-spacer");
+    const statusLine = document.querySelector("#status");
+    const editDialog = document.querySelector("#edit-dialog");
+    let records = [];
+    let sources = [];
+    const flaggedRecordIds = new Set();
+    const preferencesKey = "sap-pm-notas-preferences";
+    const savedPreferences = (() => {
+      try {
+        const parsed = JSON.parse(localStorage.getItem(preferencesKey) || "{}");
+        return parsed && typeof parsed === "object" ? parsed : {};
+      } catch (error) {
+        return {};
+      }
+    })();
+    (savedPreferences.flagged || []).forEach((id) => flaggedRecordIds.add(id));
+    document.querySelector("#search").value = savedPreferences.search || "";
+
+    function savePreferences() {
+      const filters = {};
+      for (const id of [...filterDefinitions.map((definition) => definition.id), "priority"]) {
+        if (document.querySelector(`#filter-${id}`)) filters[id] = selectedFilterValues(id);
+      }
+      localStorage.setItem(preferencesKey, JSON.stringify({
+        source: sourceSelect.value,
+        search: document.querySelector("#search").value,
+        filters,
+        flagged: [...flaggedRecordIds]
+      }));
+    }
+    let editingRecord = null;
+    let editingRecords = [];
+    let bulkEditing = false;
+    let currentRunTimer;
+    let reconnectTimer;
+    let refreshStartedAt = 0;
+    const refreshProgress = document.querySelector("#refresh-progress");
+    const refreshProgressLabel = document.querySelector("#refresh-progress-label");
+    const refreshProgressTrack = refreshProgress.querySelector('[role="progressbar"]');
+    const refreshProgressValue = document.querySelector("#refresh-progress-value");
+    const filterDefinitions = [
+      { id: "work-center", label: "Centro de Trabalho", columns: ["CenTrabRes", "CenTrabOp.", "CenOper."] },
+      { id: "note-type", label: "Tipo de Nota", columns: ["Tp.", "Tipo de nota", "Tipo Nota"] },
+      { id: "shutdown", label: "Parada", columns: ["P", "Parada"] },
+      { id: "start-date", label: "Inicio desejado", columns: ["Iníc.nec.", "Início desejado", "InícioBase"] },
+      { id: "finish-date", label: "Conclusão Desejada", columns: ["Concl.desj", "Conclusão Desejada", "Fim-base"] },
+      { id: "executor", label: "Denominação Executor", columns: ["Denominação executor", "Recebedor", "Executante"] },
+      { id: "system-status", label: "Status do Sistema", columns: ["Status sistema", "Status do sistema", "StatSist"] },
+      { id: "installation", label: "Local de instalação", columns: ["Local de instalação"] }
+    ];
+    const editableSourceColumns = {
+      "Texto": "priority",
+      "Prioridade": "priority",
+      "Iníc.nec.": "desiredStart",
+      "Início desejado": "desiredStart",
+      "InícioBase": "desiredStart",
+      "Concl.desj": "desiredCompletion",
+      "Conclusão Desejada": "desiredCompletion",
+      "Fim-base": "desiredCompletion",
+      "DuraçParad": "shutdownDuration",
+      "P": "shutdown",
+      "Parada": "shutdown",
+      "Descrição": "sapDescription"
+    };
+
+    function setStatus(state, message) {
+      statusLine.dataset.state = state;
+      statusLine.textContent = message;
+    }
+
+    function setRefreshProgress(value, state, label = `${value}%`) {
+      const progress = Math.max(0, Math.min(100, value));
+      refreshProgress.dataset.state = state;
+      refreshProgressLabel.textContent = label;
+      refreshProgressTrack.setAttribute("aria-valuenow", String(progress));
+      refreshProgressValue.style.width = `${progress}%`;
+    }
+
+    function updateEstimatedProgress() {
+      if (!refreshStartedAt) refreshStartedAt = Date.now();
+      const elapsed = Date.now() - refreshStartedAt;
+      const estimate = Math.min(95, Math.floor((elapsed / 60000) * 95));
+      setRefreshProgress(estimate, "running", `${estimate}%`);
+    }
+
+    function scheduleReconnect() {
+      if (reconnectTimer) return;
+      setStatus("error", "Não foi possível conectar ao serviço local. Tentando novamente em 3 segundos…");
+      reconnectTimer = window.setTimeout(() => {
+        reconnectTimer = null;
+        loadSources();
+      }, 3000);
+    }
+
+    function escapeText(value) {
+      return String(value || "");
+    }
+
+    function formatDate(value) {
+      if (!value) return "—";
+      const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+      return match ? `${match[3]}.${match[2]}.${match[1]}` : value;
+    }
+
+    function toInputDate(value) {
+      const date = String(value || "").trim();
+      if (/^\d{4}-\d{2}-\d{2}$/.test(date)) return date;
+      const match = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(date);
+      return match ? `${match[3]}-${match[2]}-${match[1]}` : "";
+    }
+
+    function priorityClass(value) {
+      const priority = String(value || "").trim().toLocaleLowerCase("pt-BR");
+      if (priority === "alta") return "high";
+      if (priority === "média" || priority === "media") return "medium";
+      if (priority === "baixa") return "low";
+      return "";
+    }
+
+    function sourceColumn(record, candidates) {
+      for (const column of candidates) {
+        const override = editableSourceColumns[column];
+        if (override && Object.hasOwn(record, override)) {
+          return String(record[override] || "").trim();
+        }
+        if (Object.hasOwn(record.sourceColumns || {}, column)) {
+          return String(record.sourceColumns[column] || "").trim();
+        }
+      }
+      return "";
+    }
+
+    function filterColumnValue(record, definition) {
+      const value = sourceColumn(record, definition.columns);
+      if (definition.id === "system-status" && value.toLocaleUpperCase("pt-BR") === "AND"
+        && sourceColumn(record, ["P", "Parada"]).toLocaleUpperCase("pt-BR") !== "X") {
+        return "PEN";
+      }
+      return definition.id === "installation" && value.length >= 7 ? value.slice(4, 7) : value;
+    }
+
+    function selectedFilterValues(id) {
+      return [...document.querySelectorAll(`#filter-${id} input[type="checkbox"]:checked`)]
+        .map((checkbox) => checkbox.value);
+    }
+
+    function createMultiFilter(id, labelText, values, selectedValues, available = true) {
+      const field = document.createElement("div");
+      field.className = "field multi-filter-field";
+      const label = document.createElement("span");
+      label.textContent = labelText;
+      const details = document.createElement("details");
+      details.className = "multi-filter";
+      details.id = `filter-${id}`;
+      details.setAttribute("aria-disabled", String(!available));
+      const summary = document.createElement("summary");
+      const updateSummary = () => {
+        const selectedCount = details.querySelectorAll('.multi-filter-options input[type="checkbox"]:checked').length;
+        summary.textContent = !available
+          ? "Não disponível"
+          : selectedCount
+            ? `${selectedCount} selecionado${selectedCount === 1 ? "" : "s"}`
+            : "Todos";
+      };
+      summary.textContent = "Todos";
+      details.append(summary);
+
+      const options = document.createElement("div");
+      options.className = "multi-filter-options";
+      options.addEventListener("click", (event) => event.stopPropagation());
+      const actions = document.createElement("div");
+      actions.className = "multi-filter-actions";
+      for (const [text, selectAll] of [["Marcar todos", true], ["Limpar", false]]) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.textContent = text;
+        button.addEventListener("click", () => {
+          options.querySelectorAll('input[type="checkbox"]').forEach((checkbox) => {
+            checkbox.checked = selectAll;
+          });
+          updateSummary();
+          renderRecords();
+        });
+        actions.append(button);
+      }
+      options.append(actions);
+
+      if (!available) {
+        const unavailable = document.createElement("span");
+        unavailable.textContent = "Não disponível";
+        options.append(unavailable);
+      } else {
+        values.forEach((value, index) => {
+          const option = document.createElement("label");
+          option.className = "multi-filter-option";
+          const checkbox = document.createElement("input");
+          checkbox.type = "checkbox";
+          checkbox.value = value;
+          checkbox.checked = selectedValues.includes(value);
+          checkbox.id = `${id}-option-${index}`;
+          checkbox.addEventListener("change", () => {
+            updateSummary();
+            if (id === "work-center") refreshExecutorFilter();
+            renderRecords();
+          });
+          const text = document.createElement("span");
+          text.textContent = value;
+          option.append(checkbox, text);
+          options.append(option);
+        });
+      }
+      details.append(options);
+      details.addEventListener("toggle", () => {
+        if (details.open) {
+          document.querySelectorAll(".multi-filter[open]").forEach((other) => {
+            if (other !== details) other.open = false;
+          });
+        }
+      });
+      updateSummary();
+      field.append(label, details);
+      return field;
+    }
+
+    function executorFilterField(selectedValues) {
+      const definition = filterDefinitions.find((item) => item.id === "executor");
+      const centerDefinition = filterDefinitions.find((item) => item.id === "work-center");
+      const centers = selectedFilterValues("work-center");
+      const availableColumn = records.some((record) =>
+        definition.columns.some((column) => Object.hasOwn(record.sourceColumns || {}, column))
+      );
+      const values = [...new Set(records
+        .filter((record) => !centers.length || centers.includes(filterColumnValue(record, centerDefinition)))
+        .map((record) => filterColumnValue(record, definition))
+        .filter(Boolean))]
+        .sort((a, b) => a.localeCompare(b, "pt-BR"));
+      return createMultiFilter(definition.id, definition.label, values, selectedValues, availableColumn);
+    }
+
+    function refreshExecutorFilter() {
+      const current = document.querySelector("#filter-executor");
+      if (!current) return;
+      current.closest(".multi-filter-field").replaceWith(executorFilterField(selectedFilterValues("executor")));
+    }
+
+    function renderColumnFilters() {
+      const definitions = [
+        ...filterDefinitions,
+        { id: "priority", label: "Prioridade" }
+      ];
+      const previousValues = new Map(definitions.map((definition) => [
+        definition.id,
+        document.querySelector(`#filter-${definition.id}`)
+          ? selectedFilterValues(definition.id)
+          : savedPreferences.filters?.[definition.id] || []
+      ]));
+      columnFilters.replaceChildren();
+      for (const definition of filterDefinitions.filter((item) => item.id !== "installation")) {
+        if (definition.id === "executor") {
+          columnFilters.append(executorFilterField(previousValues.get("executor")));
+          continue;
+        }
+        const availableColumn = records.some((record) =>
+          definition.columns.some((column) => Object.hasOwn(record.sourceColumns || {}, column))
+        );
+        const values = [...new Set(records
+          .map((record) => filterColumnValue(record, definition))
+          .filter(Boolean))]
+          .sort((a, b) => a.localeCompare(b, "pt-BR"));
+        columnFilters.append(createMultiFilter(
+          definition.id,
+          definition.label,
+          values,
+          previousValues.get(definition.id),
+          availableColumn
+        ));
+      }
+      const installationDefinition = filterDefinitions.find((item) => item.id === "installation");
+      if (installationDefinition) {
+        const availableColumn = records.some((record) =>
+          installationDefinition.columns.some((column) => Object.hasOwn(record.sourceColumns || {}, column))
+        );
+        const values = [...new Set(records
+          .map((record) => filterColumnValue(record, installationDefinition))
+          .filter(Boolean))]
+          .sort((a, b) => a.localeCompare(b, "pt-BR"));
+        const installationFilter = createMultiFilter(
+          installationDefinition.id,
+          installationDefinition.label,
+          values,
+          previousValues.get(installationDefinition.id),
+          availableColumn
+        );
+        const priorities = [...new Set(records.map((record) => record.priority.trim()).filter(Boolean))]
+          .sort((a, b) => a.localeCompare(b, "pt-BR"));
+        const priorityFilter = createMultiFilter(
+          "priority",
+          "Prioridade",
+          priorities,
+          previousValues.get("priority")
+        );
+        const pairedFilters = document.createElement("div");
+        pairedFilters.className = "location-priority-group";
+        pairedFilters.append(installationFilter, priorityFilter);
+        columnFilters.append(pairedFilters);
+      }
+    }
+
+    function updateHorizontalScrollbar() {
+      const table = tableWrap.querySelector("table");
+      const hasOverflow = table.scrollWidth > tableWrap.clientWidth;
+      horizontalScrollbar.classList.toggle("visible", hasOverflow);
+      horizontalScrollbarSpacer.style.width = `${table.scrollWidth}px`;
+      if (!hasOverflow) {
+        horizontalScrollbar.scrollLeft = 0;
+        tableWrap.scrollLeft = 0;
+      }
+    }
+
+    function renderSummary() {
+      const selected = sources.find((source) => source.id === sourceSelect.value);
+      document.querySelector("#updated").textContent = selected ? selected.updated : "—";
+
+      renderColumnFilters();
+    }
+
+    function renderSummaryCounts(filteredRecords) {
+      const scheduled = filteredRecords.filter((record) => {
+        const order = String(record.order || "").trim().replace(/[.,\s]/g, "");
+        return /^\d+$/.test(order) && Number(order) > 10;
+      }).length;
+      const inProgress = filteredRecords.filter((record) =>
+        sourceColumn(record, ["P", "Parada"]).toLocaleUpperCase("pt-BR") === "X"
+      ).length;
+      const closed = filteredRecords.filter((record) =>
+        (record.status || sourceColumn(record, ["StatSist"])) === "ENC"
+      ).length;
+      document.querySelector("#total").textContent = filteredRecords.length.toLocaleString("pt-BR");
+      document.querySelector("#assigned").textContent = scheduled.toLocaleString("pt-BR");
+      document.querySelector("#unassigned").textContent =
+        inProgress.toLocaleString("pt-BR");
+      document.querySelector("#closed").textContent = closed.toLocaleString("pt-BR");
+    }
+
+    function renderRecords() {
+      const query = document.querySelector("#search").value.trim().toLocaleLowerCase("pt-BR");
+      const visible = records.filter((record) => {
+        const searchable = [
+          record.note, record.order, record.description, record.equipment,
+          record.technicalObject, record.executor, record.priority, record.planningDescription, record.desiredStart,
+          record.desiredCompletion, record.shutdownDuration, record.shutdown, record.sapDescription,
+          ...Object.values(record.sourceColumns || {})
+        ].join(" ").toLocaleLowerCase("pt-BR");
+        return (!query || searchable.includes(query))
+          && filterDefinitions.every((definition) => {
+            const selectedValues = selectedFilterValues(definition.id);
+            return !selectedValues.length || selectedValues.includes(filterColumnValue(record, definition));
+          })
+          && (!selectedFilterValues("priority").length
+            || selectedFilterValues("priority").includes(record.priority));
+      });
+
+      renderSummaryCounts(visible);
+      recordsBody.replaceChildren();
+      recordsHead.replaceChildren();
+      const sourceColumns = records[0]
+        ? Object.keys(records[0].sourceColumns || {}).filter((key) => !/^Coluna [123]$/.test(key) && key !== "Contador")
+        : [];
+      const columns = [
+        ...sourceColumns.map((key) => ({
+          label: key === "Local de instalação" ? "Local" : key === "Status sistema" ? "Status" : key,
+          className: key === "Local de instalação"
+            ? "installation-column"
+            : key === "Status sistema"
+              ? "status-column"
+              : "",
+          key,
+          value: (record) => {
+            const override = editableSourceColumns[key];
+            const value = override && Object.hasOwn(record, override)
+              ? String(record[override] || "")
+              : record.sourceColumns[key] || "";
+            if (["Iníc.nec.", "Início desejado", "InícioBase", "Concl.desj", "Conclusão Desejada", "Fim-base"].includes(key)) {
+              return value ? formatDate(value) : "";
+            }
+            if (["StatSist", "Status sistema", "Status do sistema"].includes(key)
+              && value.toLocaleUpperCase("pt-BR") === "AND"
+              && sourceColumn(record, ["P", "Parada"]).toLocaleUpperCase("pt-BR") !== "X") {
+              return "PEN";
+            }
+            return key === "Local de instalação" && value.length >= 7 ? value.slice(4, 7) : value;
+          }
+        }))
+      ];
+      const flagColumn = { label: "Flag", className: "row-flag-heading", isSelection: true };
+      const centerColumnIndex = columns.findIndex((column) => column.key === "CenTrabRes");
+      columns.splice(centerColumnIndex < 0 ? 0 : centerColumnIndex, 0, flagColumn);
+      for (const column of columns) {
+        const heading = document.createElement("th");
+        heading.scope = "col";
+        heading.className = column.className || "";
+        if (column.isSelection) {
+          const allFlagged = visible.length > 0 && visible.every((record) => flaggedRecordIds.has(record.id));
+          const selectAll = document.createElement("button");
+          selectAll.type = "button";
+          selectAll.className = "row-flag";
+          selectAll.textContent = "⚑";
+          selectAll.setAttribute("aria-pressed", String(allFlagged));
+          selectAll.setAttribute("aria-label", allFlagged ? "Remover bandeira de todas as notas visíveis" : "Marcar todas as notas visíveis");
+          selectAll.title = allFlagged ? "Desmarcar todos" : "Selecionar todos";
+          selectAll.disabled = visible.length === 0;
+          selectAll.addEventListener("click", () => {
+            visible.forEach((record) => {
+              if (allFlagged) flaggedRecordIds.delete(record.id);
+              else flaggedRecordIds.add(record.id);
+            });
+            renderRecords();
+          });
+          heading.append(selectAll);
+          recordsHead.append(heading);
+          continue;
+        }
+        heading.textContent = column.label;
+        recordsHead.append(heading);
+      }
+      const actionHeading = document.createElement("th");
+      actionHeading.scope = "col";
+      actionHeading.textContent = "Ação";
+      recordsHead.append(actionHeading);
+
+      for (const record of visible) {
+        const row = document.createElement("tr");
+        const cell = (text, className = "") => {
+          const element = document.createElement("td");
+          element.className = className;
+          element.textContent = escapeText(text) || "—";
+          return element;
+        };
+        for (const column of columns) {
+          if (column.isSelection) {
+            const flagCell = document.createElement("td");
+            flagCell.className = "row-flag-cell";
+            const flagButton = document.createElement("button");
+            const isFlagged = flaggedRecordIds.has(record.id);
+            flagButton.type = "button";
+            flagButton.className = "row-flag";
+            flagButton.textContent = "⚑";
+            flagButton.setAttribute("aria-pressed", String(isFlagged));
+            flagButton.setAttribute("aria-label", `${isFlagged ? "Remover bandeira da" : "Marcar"} nota ${record.note || "sem número"}`);
+            flagButton.title = isFlagged ? "Remover seleção" : "Selecionar linha";
+            flagButton.addEventListener("click", () => {
+              if (flaggedRecordIds.has(record.id)) flaggedRecordIds.delete(record.id);
+              else flaggedRecordIds.add(record.id);
+              renderRecords();
+            });
+            flagCell.append(flagButton);
+            row.append(flagCell);
+            continue;
+          }
+          const value = column.value(record);
+          const priority = ["Texto", "Prioridade"].includes(column.key)
+            ? priorityClass(value)
+            : "";
+          const statusCode = column.key === "StatSist"
+            ? `status-code-${String(value).toLocaleLowerCase("pt-BR")}`
+            : "";
+          row.append(cell(value, [column.className, priority && `priority-${priority}`, statusCode].filter(Boolean).join(" ")));
+        }
+        const actionCell = document.createElement("td");
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "row-action";
+        button.textContent = "Ajustar";
+        button.addEventListener("click", () => openEditor(record));
+        actionCell.append(button);
+        row.append(actionCell);
+        recordsBody.append(row);
+      }
+
+      document.querySelector("#empty").hidden = visible.length > 0;
+      savePreferences();
+      document.querySelector("#result-count").textContent =
+        `${visible.length.toLocaleString("pt-BR")} de ${records.length.toLocaleString("pt-BR")} registros`;
+      const bulkButton = document.querySelector("#bulk-adjust");
+      const flaggedCount = records.filter((record) => flaggedRecordIds.has(record.id)).length;
+      bulkButton.textContent = `Ajuste em Massa (${flaggedCount})`;
+      bulkButton.disabled = flaggedCount === 0 || sourceSelect.value !== "iw28";
+      requestAnimationFrame(updateHorizontalScrollbar);
+    }
+
+    async function loadSources(preferredSource = sourceSelect.value) {
+      setStatus("loading", "Localizando arquivos de notas e ordens…");
+      try {
+        const response = await fetch("/api/sources", { cache: "no-store" });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.message || "Não foi possível localizar os arquivos.");
+        sources = result.sources;
+        if (!sources.length) {
+          throw new Error("Nenhuma exportação encontrada. Gere ou copie um arquivo IW28 para a pasta SAP GUI.");
+        }
+        sourceSelect.replaceChildren();
+        for (const source of sources) {
+          sourceSelect.add(new Option(`${source.label} · ${source.count}`, source.id));
+        }
+        sourceSelect.value = sources.some((source) => source.id === preferredSource)
+          ? preferredSource
+          : sources[0].id;
+        return await loadRecords();
+      } catch (error) {
+        setStatus("error", error.message);
+        if (error instanceof TypeError) scheduleReconnect();
+        return false;
+      }
+    }
+
+    async function loadRecords() {
+      const selectedSource = sourceSelect.value;
+      if (!selectedSource) return;
+      setStatus("loading", "Carregando registros e ajustes salvos…");
+      try {
+        const response = await fetch(`/api/data?source=${encodeURIComponent(selectedSource)}`, { cache: "no-store" });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.message || "Falha ao carregar o arquivo.");
+        records = result.records;
+        renderSummary();
+        renderRecords();
+        setStatus("done", `${records.length.toLocaleString("pt-BR")} registros carregados de ${result.file}.`);
+        if (reconnectTimer) {
+          window.clearTimeout(reconnectTimer);
+          reconnectTimer = null;
+        }
+        return true;
+      } catch (error) {
+        setStatus("error", error.message);
+        if (error instanceof TypeError) scheduleReconnect();
+        return false;
+      }
+    }
+
+    function openEditor(record) {
+      bulkEditing = false;
+      editingRecords = [];
+      editingRecord = record;
+      document.querySelector("#edit-dialog h2").textContent = "Editar planejamento";
+      document.querySelector("#dialog-subtitle").textContent =
+        `Nota ${record.note || "—"} · Ordem ${record.order || "—"}`;
+      document.querySelector("#submit-edit").textContent = "Salvar ajuste e gravar no SAP";
+      document.querySelector("#edit-executor").value = record.executor || "";
+      const prioritySelect = document.querySelector("#edit-priority");
+      const priority = record.priority || "";
+      prioritySelect.value = ["Alta", "Média", "Baixa"].includes(priority) ? priority : "";
+      document.querySelector("#edit-desired-start").value = toInputDate(
+        sourceColumn(record, ["Iníc.nec.", "Início desejado", "InícioBase"])
+      );
+      document.querySelector("#edit-desired-completion").value = toInputDate(
+        sourceColumn(record, ["Concl.desj", "Conclusão Desejada", "Fim-base"])
+      );
+      document.querySelector("#edit-shutdown-duration").value = sourceColumn(record, ["DuraçParad"]);
+      document.querySelector("#edit-shutdown").checked =
+        sourceColumn(record, ["P", "Parada"]).toLocaleUpperCase("pt-BR") === "X";
+      document.querySelector("#edit-sap-description").value = sourceColumn(record, ["Descrição"]);
+      editDialog.showModal();
+    }
+
+    function openBulkEditor() {
+      if (sourceSelect.value !== "iw28") {
+        setStatus("error", "Selecione a exportação IW28 para gravar alterações em massa pelo SAP.");
+        return;
+      }
+      editingRecords = records.filter((record) => flaggedRecordIds.has(record.id));
+      if (!editingRecords.length) {
+        setStatus("error", "Marque pelo menos uma linha antes de iniciar o ajuste em massa.");
+        return;
+      }
+      bulkEditing = true;
+      editingRecord = editingRecords[0];
+      document.querySelector("#edit-dialog h2").textContent = "Ajuste em massa";
+      const noteList = editingRecords.slice(0, 5).map((record) => record.note).join(", ");
+      const additionalCount = editingRecords.length - 5;
+      document.querySelector("#dialog-subtitle").textContent =
+        `${editingRecords.length} notas marcadas. Os valores informados serão aplicados a todas. ` +
+        `Notas: ${noteList}${additionalCount > 0 ? ` e mais ${additionalCount}` : ""}.`;
+      document.querySelector("#submit-edit").textContent = "Aplicar às notas marcadas";
+      document.querySelector("#edit-executor").value = editingRecord.executor || "";
+      const prioritySelect = document.querySelector("#edit-priority");
+      const priority = editingRecord.priority || "";
+      prioritySelect.value = ["Alta", "Média", "Baixa"].includes(priority) ? priority : "";
+      document.querySelector("#edit-desired-start").value = toInputDate(
+        sourceColumn(editingRecord, ["Iníc.nec.", "Início desejado", "InícioBase"])
+      );
+      document.querySelector("#edit-desired-completion").value = toInputDate(
+        sourceColumn(editingRecord, ["Concl.desj", "Conclusão Desejada", "Fim-base"])
+      );
+      document.querySelector("#edit-shutdown-duration").value = sourceColumn(editingRecord, ["DuraçParad"]);
+      document.querySelector("#edit-shutdown").checked =
+        sourceColumn(editingRecord, ["P", "Parada"]).toLocaleUpperCase("pt-BR") === "X";
+      document.querySelector("#edit-sap-description").value = sourceColumn(editingRecord, ["Descrição"]);
+      editDialog.showModal();
+    }
+
+    document.querySelector("#edit-form").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      if (!editingRecord || (bulkEditing && !editingRecords.length)) return;
+      if (sourceSelect.value !== "iw28") {
+        setStatus("error", "Selecione a exportação IW28 para gravar alterações na nota pelo SAP.");
+        return;
+      }
+      const submit = event.submitter;
+      submit.disabled = true;
+      try {
+        const updates = {
+          executor: document.querySelector("#edit-executor").value.trim(),
+          priority: document.querySelector("#edit-priority").value,
+          desiredStart: document.querySelector("#edit-desired-start").value,
+          desiredCompletion: document.querySelector("#edit-desired-completion").value,
+          shutdownDuration: document.querySelector("#edit-shutdown-duration").value.trim(),
+          shutdown: document.querySelector("#edit-shutdown").checked ? "X" : "",
+          sapDescription: document.querySelector("#edit-sap-description").value.trim()
+        };
+        const confirmed = window.confirm(
+          `Confirma gravar as alterações no SAP PM (IW22), nota ${editingRecord.note}?\n\n` +
+          `Prioridade: ${updates.priority || "sem alteração"}\n` +
+          `Início desejado: ${updates.desiredStart || "em branco (limpar campo)"}\n` +
+          `Conclusão desejada: ${updates.desiredCompletion || "em branco (limpar campo)"}\n` +
+          `Duração da parada: ${updates.shutdownDuration || "em branco (limpar campo)"}\n` +
+          `Parada: ${updates.shutdown ? "Sim" : "Não"}\n` +
+          `Descrição: ${updates.sapDescription || "em branco (limpar campo)"}\n\n` +
+          "O executante será salvo somente no planejamento local." +
+          (bulkEditing
+            ? `\n\nEsses valores serão aplicados a ${editingRecords.length} notas, em sequência: ` +
+              `${editingRecords.slice(0, 5).map((record) => record.note).join(", ")}` +
+              `${editingRecords.length > 5 ? ` e mais ${editingRecords.length - 5}` : ""}. ` +
+              "Deixe o SAP na tela Easy Access antes de confirmar. Se uma gravação SAP falhar, as seguintes ficarão pendentes."
+            : "")
+        );
+        if (!confirmed) return;
+        if (bulkEditing) {
+          const batchRecords = [...editingRecords];
+          editDialog.close();
+          let completed = 0;
+          let failedRecord = null;
+          let failureMessage = "";
+          for (const record of batchRecords) {
+            setStatus("loading", `Ajuste em massa: gravando nota ${record.note} (${completed + 1} de ${batchRecords.length})…`);
+            try {
+              const response = await fetch("/api/plan", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  source: sourceSelect.value,
+                  id: record.id,
+                  updates,
+                  bulk: true
+                })
+              });
+              const result = await response.json();
+              if (!response.ok) {
+                if (result.localSaved && result.record) Object.assign(record, result.record);
+                throw new Error(result.message || "Não foi possível salvar o ajuste.");
+              }
+              Object.assign(record, result.record);
+              flaggedRecordIds.delete(record.id);
+              completed += 1;
+              renderRecords();
+            } catch (error) {
+              failedRecord = record;
+              failureMessage = error.message;
+              break;
+            }
+          }
+          editingRecord = null;
+          editingRecords = [];
+          bulkEditing = false;
+          renderSummary();
+          renderRecords();
+          if (failedRecord) {
+            const pending = batchRecords.length - completed;
+            setStatus(
+              "error",
+              `Ajuste em massa interrompido: ${completed} de ${batchRecords.length} notas confirmadas. ` +
+              `Falha na nota ${failedRecord.note}; ${pending} nota(s) permanecem marcadas. ${failureMessage}`
+            );
+            return;
+          }
+          setStatus("done", `Ajuste em massa concluído: ${completed} notas gravadas e confirmadas no SAP.`);
+          return;
+        }
+        setStatus("loading", `Salvando ajustes localmente e gravando a nota ${editingRecord.note} no SAP…`);
+        const response = await fetch("/api/plan", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ source: sourceSelect.value, id: editingRecord.id, updates })
+        });
+        const result = await response.json();
+        if (!response.ok) {
+          if (result.localSaved && result.record) {
+            Object.assign(editingRecord, result.record);
+            renderSummary();
+            renderRecords();
+          }
+          throw new Error(result.message || "Não foi possível salvar o ajuste.");
+        }
+        Object.assign(editingRecord, result.record);
+        editDialog.close();
+        renderSummary();
+        renderRecords();
+        setStatus("done", result.sapMessage || "Ajuste salvo localmente e gravado no SAP PM.");
+      } catch (error) {
+        setStatus("error", error.message);
+      } finally {
+        submit.disabled = false;
+      }
+    });
+
+    async function refreshScriptStatus() {
+      try {
+        const response = await fetch("/api/status", { cache: "no-store" });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.message || "Não foi possível consultar a execução SAP.");
+        setStatus(result.state, result.message);
+        if (result.state === "queued" || result.state === "running") {
+          updateEstimatedProgress();
+          document.querySelector("#refresh").disabled = true;
+          currentRunTimer = window.setTimeout(refreshScriptStatus, 1000);
+        } else if (result.state === "done") {
+          currentRunTimer = null;
+          refreshStartedAt = 0;
+          setRefreshProgress(100, "done", "100%");
+          setStatus("loading", "Exportação concluída. Atualizando a lista e os cards da IW28…");
+          const refreshed = await loadSources("iw28");
+          document.querySelector("#refresh").disabled = false;
+          if (refreshed) {
+            setStatus("done", "Exportação concluída; lista, indicadores e data da IW28 atualizados.");
+          }
+        } else {
+          currentRunTimer = null;
+          refreshStartedAt = 0;
+          if (result.state === "error") setRefreshProgress(0, "error", "Falha");
+          document.querySelector("#refresh").disabled = false;
+        }
+      } catch (error) {
+        currentRunTimer = null;
+        refreshStartedAt = 0;
+        setRefreshProgress(0, "error", "Falha");
+        document.querySelector("#refresh").disabled = false;
+        setStatus("error", error.message);
+      }
+    }
+
+    document.querySelector("#refresh").addEventListener("click", async () => {
+      const button = document.querySelector("#refresh");
+      button.disabled = true;
+      refreshStartedAt = Date.now();
+      setRefreshProgress(0, "running", "0%");
+      setStatus("queued", "Solicitando exportação IW28 pelo SAP GUI…");
+      try {
+        const response = await fetch("/api/run", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: "{}"
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.message || "Não foi possível iniciar a exportação.");
+        setStatus(result.state, result.message);
+        if (currentRunTimer) window.clearTimeout(currentRunTimer);
+        currentRunTimer = window.setTimeout(refreshScriptStatus, 1000);
+      } catch (error) {
+        refreshStartedAt = 0;
+        setRefreshProgress(0, "error", "Falha");
+        button.disabled = false;
+        setStatus("error", error.message);
+      }
+    });
+
+    document.querySelector("#export").addEventListener("click", () => {
+      if (!sourceSelect.value) return;
+      window.location.href = `/api/export?source=${encodeURIComponent(sourceSelect.value)}`;
+    });
+
+    document.querySelector("#cancel-edit").addEventListener("click", () => editDialog.close());
+    document.querySelector("#bulk-adjust").addEventListener("click", openBulkEditor);
+    sourceSelect.addEventListener("change", loadRecords);
+    document.querySelector("#search").addEventListener("input", renderRecords);
+    horizontalScrollbar.addEventListener("scroll", () => {
+      if (tableWrap.scrollLeft !== horizontalScrollbar.scrollLeft) {
+        tableWrap.scrollLeft = horizontalScrollbar.scrollLeft;
+      }
+    });
+    tableWrap.addEventListener("scroll", () => {
+      if (horizontalScrollbar.scrollLeft !== tableWrap.scrollLeft) {
+        horizontalScrollbar.scrollLeft = tableWrap.scrollLeft;
+      }
+    });
+    window.addEventListener("resize", updateHorizontalScrollbar);
+
+    loadSources(savedPreferences.source || "");
+  </script>
+</body>
+</html>

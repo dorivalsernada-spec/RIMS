@@ -1,0 +1,1361 @@
+﻿<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gantt semanal · Planejamento SAP PM</title>
+  <style>
+    :root {
+      font-size: 12px;
+      font-family: "Segoe UI", Arial, sans-serif;
+      color: #172b4d;
+      background: #f3f6fa;
+      font-synthesis: none;
+    }
+
+    * { box-sizing: border-box; }
+    body { min-width: 360px; margin: 0; }
+    button, a { font: inherit; }
+    .topbar {
+      zoom: 0.9;
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 20px;
+      padding: 26px clamp(18px, 4vw, 48px);
+      background: #102b46;
+      color: #fff;
+    }
+    .brand { display: flex; align-items: center; gap: 13px; }
+    .brand-mark {
+      display: grid;
+      width: 42px;
+      height: 42px;
+      place-items: center;
+      border-radius: 12px;
+      background: #087e8b;
+      color: #fff;
+      font-weight: 800;
+    }
+    .brand-name { margin: 0; font-size: 1rem; }
+    .brand-caption { margin: 4px 0 0; color: #b7c8d8; font-size: 0.8rem; }
+    .topbar-title {
+      grid-column: 2;
+      grid-row: 1;
+      margin: 0;
+      color: #fff;
+      font-size: 1.4rem;
+      text-align: left;
+      justify-self: start;
+      margin-left: 24px;
+    }
+    .top-actions { display: flex; flex-wrap: wrap; justify-self: end; align-items: center; gap: 10px; }
+    .nav-link {
+      box-sizing: border-box;
+      display: inline-flex;
+      width: 110px;
+      height: 40px;
+      min-height: 40px;
+      align-items: center;
+      justify-content: center;
+      padding: 9px 10px;
+      border: 1px solid #638099;
+      border-radius: 7px;
+      color: #fff;
+      font-weight: 650;
+      font-size: 0.85rem;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .nav-link:hover { background: #25415a; }
+    .nav-link[aria-current="page"] { border-color: #46c2a8; background: #087e8b; }
+    .page-nav { overflow-x: auto; border-bottom: 1px solid #dfe6ee; background: #fff; scrollbar-width: thin; }
+    .page-nav-inner { display: flex; width: min(1800px, 100%); min-width: max-content; margin: 0 auto; padding: 0 12px; }
+    .page-tab { display: inline-flex; min-height: 44px; align-items: center; justify-content: center; padding: 0 15px; border-bottom: 3px solid transparent; color: #52647a; font-size: 0.78rem; font-weight: 650; text-decoration: none; white-space: nowrap; }
+    .page-tab:hover { background: #f3f8f8; color: #087e8b; }
+    .page-tab[aria-current="page"] { border-bottom-color: #087e8b; color: #087e8b; }
+    .page-tab:focus-visible { outline: 2px solid #087e8b; outline-offset: -2px; }
+    .layout { box-sizing: border-box; width: min(1800px, 100%); margin: 0 auto; padding: 28px 0 48px; }
+    .intro { display: flex; align-items: center; margin-bottom: 12px; }
+    .intro h2 { margin: 0; font-size: 1.05rem; }
+    .intro p { margin: 5px 0 0; color: #67788e; font-size: 0.72rem; }
+    .week-controls { display: flex; width: 100%; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 8px; }
+    .week-controls { position: relative; z-index: 100; }
+    .filter-controls { position: relative; flex-wrap: wrap; z-index: 101; }
+    .dropdown-filter, .dropdown-root, .dropdown-options { pointer-events: auto; }
+    .dropdown-filter { position: relative; z-index: 102; }
+    .dropdown-root { position: relative; }
+    .notes-card { display: grid; width: 105px; height: 32px; margin: 0; align-content: center; justify-items: center; padding: 3px 5px; border: 1px solid #b8d5f3; border-radius: 7px; background: #eaf3fc; }
+    .notes-card-label { display: none; }
+    .notes-card-value { color: #1762a5; font-size: 0.64rem; line-height: 1; white-space: nowrap; font-weight: 750; }
+    .filter-controls, .period-controls { display: flex; align-items: flex-end; gap: 8px; }
+    .period-controls { padding: 6px 10px; border: 1px solid rgb(23 105 170 / 35%); border-radius: 12px; background: rgb(23 105 170 / 5%); align-items: center; }
+    .week-controls button {
+      min-height: 32px;
+      padding: 6px 9px;
+      border: 1px solid #d5dee8;
+      border-radius: 7px;
+      background: #fff;
+      color: #193651;
+      cursor: pointer;
+      font-weight: 650;
+      font-size: 0.68rem;
+    }
+    .week-controls button:hover { border-color: #087e8b; background: #eaf5f6; }
+    #week-label { display: inline-flex; min-width: 165px; min-height: 32px; align-items: center; justify-content: center; color: #34475d; font-size: 0.72rem; font-weight: 700; text-align: center; }
+    .work-center-filter { display: grid; gap: 2px; min-width: 145px; color: #52647a; font-size: 0.62rem; font-weight: 650; }
+    .work-center-filter select { min-height: 32px; height: 32px; padding: 5px 8px; border: 1px solid #d5dee8; border-radius: 7px; background: #fff; color: #193651; font-size: 0.68rem; }
+    .dropdown-filter { display: grid; gap: 2px; min-width: 145px; color: #52647a; font-size: 0.62rem; font-weight: 650; }
+    .dropdown-filter { position: relative; z-index: 102; }
+    .dropdown-filter.open { z-index: 1300; }
+    .dropdown-filter .dropdown-trigger { position: relative; z-index: 2; display: block; width: 145px; min-height: 32px; height: 32px; overflow: hidden; padding: 7px 24px 7px 8px; border: 1px solid #d5dee8; border-radius: 7px; background: #fff; color: #193651; cursor: pointer; font-size: 0.68rem; font-weight: 400; text-overflow: ellipsis; white-space: nowrap; text-align: left; }
+    .dropdown-options { position: fixed; inset: auto; z-index: 1200; width: 145px; max-height: 220px; margin: 0; padding: 7px; border: 1px solid #d5dee8; border-radius: 7px; background: #fff; box-shadow: 0 8px 20px rgb(16 43 70 / 12%); overflow-y: auto; }
+    .dropdown-option { position: relative; z-index: 1201; display: flex; align-items: center; gap: 6px; color: #193651; font-size: 0.68rem; font-weight: 400; pointer-events: auto; }
+    .dropdown-option input { position: relative; z-index: 1202; width: 13px; min-height: 13px; margin: 0; pointer-events: auto; }
+    .dropdown-filter:has(#executor-filter) { min-width: 260px; }
+    .select-all-button { display: block; width: 100%; margin: 0 0 5px; padding: 5px 6px; border: 1px solid #d5dee8; border-radius: 6px; background: #eaf5f6; color: #087e8b; cursor: pointer; font-size: 0.68rem; font-weight: 700; text-align: center; }
+    .select-all-button:hover { background: #d9eef0; }
+    #executor-filter .dropdown-trigger, #executor-options { width: 260px; }
+    .status-options { display: grid; width: 145px; gap: 3px; margin-top: 3px; padding: 7px; border: 1px solid #d5dee8; border-radius: 7px; background: #fff; box-shadow: 0 8px 20px rgb(16 43 70 / 12%); }
+    .status-option { display: flex; align-items: center; gap: 6px; padding: 3px 2px; color: #193651; font-size: 0.68rem; font-weight: 400; }
+    .gantt-panel { width: 100%; overflow: hidden; border: 1px solid #e2e8ef; border-radius: 12px; background: #fff; box-shadow: 0 4px 14px rgb(16 43 70 / 4%); }
+    .gantt-scroll { max-height: 75vh; overflow: auto; }
+    .gantt-grid { width: 100%; min-width: 1070px; margin-left: auto; }
+    .gantt-header, .task-row {
+      display: grid;
+      grid-template-columns: 90px 34px 38px minmax(130px, 1fr) minmax(115px, 1fr) minmax(130px, 1fr) 40px 60px 60px 48px 45px 280px;
+      align-items: stretch;
+    }
+    .gantt-header { position: sticky; top: 0; z-index: 2; background: #f7f9fb; }
+    .gantt-header > div { display: flex; min-width: 0; align-items: center; justify-content: center; padding: 4px 2px; border-bottom: 1px solid #dfe6ee; color: #68798e; font-size: 0.55rem; font-weight: 750; text-transform: uppercase; text-align: center; }
+    .gantt-header .day-headings { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); padding: 0; }
+    .day-heading { display: grid; align-content: center; justify-items: center; gap: 1px; padding: 2px; border-left: 1px solid #e5ebf1; }
+    .day-heading.today { background: rgba(100, 116, 139, .1); }
+    .day-heading span { color: #718198; font-size: 0.62rem; }
+    .day-heading strong { color: #34475d; font-size: 0.62rem; }
+    .task-row { min-height: 22px; }
+    .task-row > div { display: flex; min-width: 0; align-items: center; justify-content: flex-start; padding: 0 2px; border-bottom: 1px solid #edf1f5; color: #34475d; font-size: 0.55rem; line-height: 1.1; overflow-wrap: anywhere; text-align: left; }
+    .task-row:nth-child(even) { background: #fbfcfd; }
+    .task-row.executor-group-start > div { border-top: 2px solid rgb(154 175 193 / 45%); }
+    .task-row.high-priority > div:not(.status-cell) { color: #d10000; font-weight: 700; }
+    .task-row > div:first-child { border-bottom-color: transparent; }
+    .task-row > .executor-empty { border-bottom-color: transparent; }
+    .task-row .created-cell,
+    .task-row .priority-cell,
+    .task-row .local-cell,
+    .task-row .note-cell,
+    .task-row .order-cell,
+    .task-row .duration-cell,
+    .task-row .status-cell { justify-content: center; text-align: center; }
+    .task-row .order-cell { font-weight: 750; font-variant-numeric: tabular-nums; }
+    .task-row .duration-cell { white-space: nowrap; font-variant-numeric: tabular-nums; }
+    .task-row .status-text-closed { color: #18794e; font-weight: 750; }
+    .task-row .status-text-progress { color: #1762a5; font-weight: 750; }
+    .task-row .status-text-scheduled { color: #b38600; font-weight: 750; }
+    .task-row .status-text-open { color: #b42318; font-weight: 750; }
+    .total-row { min-height: 24px; background: #eef4f7; border-top: 1px solid #cbd7e1; }
+    .total-row > div { display: flex; align-items: center; font-weight: 750; }
+    .total-row .total-label { justify-content: flex-end !important; grid-column: 1 / 10; padding-right: 8px; }
+    .total-row .duration-cell { justify-content: center; }
+    .timeline-track {
+      position: relative;
+      overflow: hidden;
+      margin-left: 8px;
+      padding: 0 !important;
+      background-image: linear-gradient(to right, transparent calc(100% - 1px), #e5ebf1 calc(100% - 1px));
+      background-size: 14.285714% 100%;
+    }
+    .today-marker { position: absolute; top: 0; bottom: 0; width: calc(100% / 7); margin-left: calc(100% / -14); background: rgba(100, 116, 139, .1); pointer-events: none; }
+    .task-bar {
+      position: absolute;
+      top: 50%;
+      display: flex;
+      height: 16px;
+      align-items: center;
+      overflow: hidden;
+      justify-content: center;
+      padding: 0 2px;
+      transform: translateY(-50%);
+      border: 1px solid #087e8b;
+      border-radius: 6px;
+      background: linear-gradient(90deg, #087e8b, #42aa9d);
+      color: #fff;
+      font-size: 0.55rem;
+      font-weight: 700;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      box-shadow: 0 2px 6px rgb(8 126 139 / 20%);
+      cursor: grab;
+      touch-action: none;
+    }
+    .task-bar:active { cursor: grabbing; }
+    .task-bar .resize-handle { position: absolute; top: 0; bottom: 0; z-index: 1; width: 9px; cursor: ew-resize; }
+    .task-bar .resize-left { left: 0; }
+    .task-bar .resize-right { right: 0; }
+    .task-bar:hover .resize-handle { background: rgb(255 255 255 / 35%); }
+    .task-bar.bar-closed { border-color: #18794e; background: linear-gradient(90deg, #18794e, #3fae7a); box-shadow: 0 2px 6px rgb(24 121 78 / 20%); }
+    .task-bar.bar-progress { border-color: #1769aa; background: linear-gradient(90deg, #1769aa, #4a9ad9); box-shadow: 0 2px 6px rgb(23 105 170 / 20%); }
+    .task-bar.bar-scheduled { border-color: #d4a017; background: linear-gradient(90deg, #f2c200, #ffd84d); color: #3d2e00; box-shadow: 0 2px 6px rgb(212 160 23 / 25%); }
+    .task-bar.bar-open { border-color: #e08a8a; background: linear-gradient(90deg, #e57373, #f4a3a3); box-shadow: 0 2px 6px rgb(180 35 24 / 20%); }
+    .task-bar.bar-high-priority { border: 2px solid #d10000; box-shadow: 0 0 0 1px #fff, 0 2px 6px rgb(209 0 0 / 35%); }
+    .task-bar.bar-pending { border: 1px solid #737b84; background: #89919a; color: #fff; box-shadow: 0 2px 6px rgb(73 80 87 / 25%); }
+    .task-tooltip { position: fixed; z-index: 1400; display: grid; gap: 4px; max-width: min(320px, calc(100vw - 16px)); padding: 9px 11px; border: 1px solid #d5dee8; border-radius: 7px; background: #fff; color: #193651; box-shadow: 0 8px 20px rgb(16 43 70 / 18%); font-size: 0.68rem; line-height: 1.35; white-space: pre-line; pointer-events: none; }
+    .task-tooltip[hidden] { display: none; }
+    .undated { display: flex; align-items: center; padding-left: 8px !important; color: #8795a5 !important; font-size: 0.68rem !important; font-style: italic; }
+    .empty-state { padding: 34px 18px; color: #718198; text-align: center; }
+    .gantt-legend { display: flex; flex-wrap: wrap; justify-content: flex-start; align-items: center; gap: 14px; margin: 8px 2px 0; color: #34475d; font-size: 0.68rem; }
+    .gantt-legend span { display: inline-flex; align-items: center; gap: 6px; }
+    .gantt-legend i { width: 12px; height: 12px; border-radius: 3px; }
+    .legend-open { background: #e57373; }
+    .legend-scheduled { background: #f2c200; }
+    .legend-progress { background: #1769aa; }
+    .legend-closed { background: #18794e; }
+    #status { min-height: 18px; margin: 9px 2px 0; color: #52647a; font-size: 0.68rem; }
+    #status[data-state="error"] { color: #b42318; }
+    #gantt-edit-dialog { width: min(620px, calc(100% - 28px)); max-height: calc(100% - 32px); overflow-y: auto; }
+    .gantt-dialog-content { padding: 22px; }
+    .gantt-dialog-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+    .gantt-dialog-heading h2 { margin: 0; font-size: 1.1rem; }
+    .gantt-dialog-close { min-width: 30px; min-height: 30px; padding: 0; border: 0; background: transparent; color: #52647a; font-size: 1.5rem; line-height: 1; }
+    .gantt-dialog-subtitle { margin: 6px 0 18px; color: #67788e; }
+    .gantt-dialog-status { min-height: 1.2em; color: #52647a; }
+    .gantt-dialog-status[data-state="error"] { color: #b42318; }
+    .gantt-dialog-status[data-state="done"] { color: #18794e; }
+    .gantt-edit-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .gantt-edit-field { display: grid; align-content: start; gap: 4px; color: #52647a; font-size: .72rem; font-weight: 650; }
+    .gantt-edit-field input, .gantt-edit-field select { width: 100%; min-height: 34px; padding: 6px 8px; border: 1px solid #d5dee8; border-radius: 6px; background: #fff; color: #193651; font: inherit; }
+    .gantt-edit-field input[readonly] { background: #f3f6fa; color: #52647a; }
+    .gantt-edit-shutdown { display: flex; align-items: center; gap: 8px; align-self: end; min-height: 34px; color: #52647a; font-weight: 650; }
+    .gantt-edit-shutdown input { width: 16px; min-height: 16px; height: 16px; margin: 0; accent-color: #087e8b; }
+    .gantt-dialog-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+    .gantt-dialog-actions button { width: 120px; min-height: 34px; padding: 7px 8px; border: 1px solid #d5dee8; border-radius: 7px; background: #fff; color: #193651; cursor: pointer; font-weight: 650; }
+    .gantt-dialog-actions button[type="submit"] { border-color: #087e8b; background: #087e8b; color: #fff; }
+    .gantt-dialog-actions #gantt-cancel-action { border-color: #b42318; background: #b42318; color: #fff; }
+    .gantt-dialog-actions #gantt-close-note { border-color: #18794e; background: #18794e; color: #fff; }
+    .gantt-dialog-actions #gantt-reopen-note { border-color: #1769aa; background: #1769aa; color: #fff; }
+    .gantt-dialog-actions #gantt-cancel-action:hover:not(:disabled) { background: #921d14; }
+    .gantt-dialog-actions #gantt-close-note:hover:not(:disabled) { background: #12623e; }
+    .gantt-dialog-actions #gantt-reopen-note:hover:not(:disabled) { background: #125487; }
+    .gantt-dialog-actions button:disabled { cursor: wait; opacity: .65; }
+    @media (max-width: 850px) {
+      .topbar { grid-template-columns: 1fr auto; align-items: start; }
+      .topbar-title { grid-column: 1 / -1; grid-row: 1; justify-self: center; }
+      .brand { grid-column: 1; grid-row: 2; }
+      .top-actions { grid-column: 1 / -1; grid-row: 3; justify-self: stretch; flex-wrap: wrap; }
+    }
+    @media (max-width: 520px) {
+      .topbar { gap: 12px; padding: 15px; }
+      .brand { gap: 8px; }
+      .brand-mark { width: 36px; height: 36px; }
+      .brand-name { font-size: 0.78rem; }
+      .brand-caption { font-size: 0.62rem; }
+      .nav-link { min-height: 32px; padding: 6px 8px; font-size: 0.67rem; }
+      .week-controls { width: 100%; justify-content: space-between; }
+      #week-label { min-width: 0; }
+    }
+    @media (max-width: 520px) {
+      .gantt-edit-fields { grid-template-columns: 1fr; }
+      .gantt-dialog-actions { flex-wrap: wrap; }
+    }
+  .refresh-control { position: relative; display: grid; }
+    .refresh-control #refresh { background: transparent; cursor: pointer; }
+    .refresh-control #refresh:hover:not(:disabled) { background: #25415a; }
+    .refresh-control #refresh:disabled { cursor: wait; opacity: 0.65; }
+    .refresh-progress { position: absolute; top: 100%; left: 0; display: grid; width: 100%; margin-top: 4px; gap: 3px; color: #d7e4ee; font-size: 0.62rem; }
+    .refresh-progress-label { text-align: center; }
+    .refresh-progress-track { overflow: hidden; height: 5px; border-radius: 99px; background: #425b70; }
+    .refresh-progress-value { width: 0; height: 100%; border-radius: inherit; background: #46c2a8; transition: width 250ms ease; }
+    .refresh-progress[data-state="error"] .refresh-progress-value { background: #ff887d; }
+    :root { color: #263634; background: #f3f5f3; }
+    .topbar { zoom: 1; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 12px; min-height: 48px; padding: 6px clamp(14px, 2.4vw, 32px); background: #142c2a; }
+    .brand { gap: 8px; }
+    .brand-mark { width: 28px; height: 28px; border-radius: 5px; background: #287c70; }
+    .brand-name { font-size: 0.68rem; font-weight: 750; text-transform: uppercase; }
+    .brand-caption { margin-top: 2px; color: #a7c0bb; font-size: 0.48rem; }
+    .topbar-title { grid-column: 2; grid-row: 1; justify-self: center; margin: 0; font-size: 1.15rem; font-weight: 750; text-align: center; white-space: nowrap; }
+    .top-actions { grid-column: 3; grid-row: 1; flex-wrap: nowrap; gap: 5px; }
+    .top-actions .nav-link, .top-actions button, .top-actions a { width: auto; height: 28px; min-height: 28px; padding: 4px 8px; border-color: #53726c; border-radius: 4px; font-size: 0.62rem; }
+    .page-nav-inner { width: min(1800px, 100%); }
+    .page-tab { min-height: 34px; padding: 0 12px; border-bottom-width: 2px; font-size: 0.68rem; }
+    .layout { padding-top: 12px; }
+    @media (max-width: 760px) {
+      .topbar { grid-template-columns: minmax(0, 1fr) auto; }
+      .brand { grid-column: 1; grid-row: 1; }
+      .topbar-title { grid-column: 1 / -1; grid-row: 2; justify-self: center; font-size: 1rem; }
+      .top-actions { grid-column: 2; grid-row: 1; max-width: 52vw; overflow-x: auto; }
+    }
+    @media (max-width: 440px) {
+      .topbar { gap: 7px 10px; padding: 6px 10px; }
+      .brand-name { font-size: 0.62rem; }
+      .brand-caption { font-size: 0.44rem; }
+      .topbar-title { font-size: 0.85rem; }
+      .page-tab { padding: 0 10px; }
+    }
+    .refresh-control:has(> #refresh-progress) { display: flex; align-items: center; gap: 5px; }
+    #refresh-progress { position: relative; inset: auto; display: none; flex: 0 0 40px; width: 40px; height: 40px; margin: 0; place-items: center; color: #fff; font-size: 0.62rem; }
+    #refresh-progress:not([data-state="idle"]) { display: grid; }
+    #refresh-progress .refresh-progress-label { position: relative; z-index: 1; font-weight: 700; }
+    #refresh-progress .refresh-progress-track { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; background: none; }
+    #refresh-progress .refresh-progress-track::before { content: ""; display: block; width: 100%; height: 100%; background: center / contain no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3Cpath id='p' d='M50 6v11' stroke='%2318d9c2' stroke-width='9' stroke-linecap='round'/%3E%3C/defs%3E%3Cuse href='%23p' opacity='.18'/%3E%3Cuse href='%23p' transform='rotate(30 50 50)' opacity='.25'/%3E%3Cuse href='%23p' transform='rotate(60 50 50)' opacity='.32'/%3E%3Cuse href='%23p' transform='rotate(90 50 50)' opacity='.39'/%3E%3Cuse href='%23p' transform='rotate(120 50 50)' opacity='.46'/%3E%3Cuse href='%23p' transform='rotate(150 50 50)' opacity='.53'/%3E%3Cuse href='%23p' transform='rotate(180 50 50)' opacity='.6'/%3E%3Cuse href='%23p' transform='rotate(210 50 50)' opacity='.67'/%3E%3Cuse href='%23p' transform='rotate(240 50 50)' opacity='.74'/%3E%3Cuse href='%23p' transform='rotate(270 50 50)' opacity='.81'/%3E%3Cuse href='%23p' transform='rotate(300 50 50)' opacity='.9'/%3E%3Cuse href='%23p' transform='rotate(330 50 50)'/%3E%3C/svg%3E"); }
+    #refresh-progress[data-state="running"] .refresh-progress-track::before { animation: iw28-spin 1s steps(12) infinite; }
+    #refresh-progress[data-state="error"] .refresh-progress-label { color: #ffaaa4; }
+    #refresh-progress .refresh-progress-value { display: none; }
+    @keyframes iw28-spin { to { transform: rotate(360deg); } }
+    @media (prefers-reduced-motion: reduce) { #refresh-progress[data-state="running"] .refresh-progress-track::before { animation: none; } }
+  </style>
+  <script src="/sidebar.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><img src="/rims-one-logo.png" alt="RIMS One — Robotic Integrated Maintenance System One" style="display:block;width:min(180px, 100%);height:auto"></div>
+    <h1 class="topbar-title">SISTEMA INTEGRADO DE MANUTENÇÃO ROBÓTICA</h1>
+    <div class="top-actions">
+      <div class="refresh-control">
+        <button class="nav-link" id="refresh" type="button">SAP (IW28)</button>
+        <div class="refresh-progress" id="refresh-progress" data-state="idle" title="Estimativa durante a execução; 100% somente após conclusão">
+          <span class="refresh-progress-label" id="refresh-progress-label">0%</span>
+          <div class="refresh-progress-track" role="progressbar" aria-label="Progresso da atualização IW28" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+            <div class="refresh-progress-value" id="refresh-progress-value"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <nav class="page-nav" aria-label="Navegação principal">
+    <div class="page-nav-inner">
+      <a class="page-tab" href="/">Painel de notas</a>
+      <a class="page-tab" href="/dashboard">Dashboard</a>
+      <a class="page-tab" href="/gantt" aria-current="page">Gantt semanal</a>
+      <a class="page-tab" href="/kanban">Kanban</a>
+      <a class="page-tab" href="/nivelamento">Nivelamento</a>
+      <a class="page-tab" href="/confiabilidade">Confiabilidade</a>
+    </div>
+  </nav>
+
+  <main class="layout">
+    <section class="intro">
+      <div class="week-controls" aria-label="Filtros e navegação entre semanas">
+        <div class="filter-controls">
+          <div class="dropdown-filter">
+            Centro de trabalho
+            <div class="dropdown-root" id="work-center-filter">
+              <button type="button" class="dropdown-trigger">Todos</button>
+              <div class="dropdown-options" id="work-center-options" popover="auto"></div>
+            </div>
+          </div>
+          <div class="dropdown-filter">
+            Executor
+            <div class="dropdown-root" id="executor-filter">
+              <button type="button" class="dropdown-trigger">Todos</button>
+              <div class="dropdown-options" id="executor-options" popover="auto"></div>
+            </div>
+          </div>
+          <div class="dropdown-filter">
+            Serviço em Execução
+            <div class="dropdown-root" id="shutdown-filter">
+              <button type="button" class="dropdown-trigger">Todas</button>
+              <div class="dropdown-options" id="shutdown-options" popover="auto"></div>
+            </div>
+          </div>
+          <div class="dropdown-filter">
+            Status do Sistema
+            <div class="dropdown-root" id="system-status-filter">
+              <button type="button" class="dropdown-trigger">Todos</button>
+              <div class="dropdown-options" id="system-status-options" popover="auto"></div>
+            </div>
+          </div>
+          <article class="notes-card" aria-label="Notas visualizadas">
+            <strong class="notes-card-value" id="visible-notes">Qtd de notas: —</strong>
+          </article>
+        </div>
+        <div class="period-controls">
+          <button id="previous-week" type="button" aria-label="Semana anterior">← Anterior</button>
+          <span id="week-label" aria-live="polite"></span>
+          <button id="current-week" type="button">Esta semana</button>
+          <button id="next-week" type="button" aria-label="Próxima semana">Próxima →</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="gantt-panel" aria-label="Tarefas programadas e cronograma semanal">
+      <div class="gantt-scroll">
+        <div class="gantt-grid" id="gantt-grid"></div>
+      </div>
+    </section>
+    <div class="task-tooltip" id="task-tooltip" role="tooltip" hidden></div>
+    <div class="gantt-legend" aria-label="Legenda">
+      <span><i class="legend-open"></i>Notas Abertas</span>
+      <span><i class="legend-scheduled"></i>Notas Programadas</span>
+      <span><i class="legend-progress"></i>Em Andamento</span>
+      <span><i class="legend-closed"></i>Notas Encerradas</span>
+    </div>
+    <p id="status" role="status" aria-live="polite">Carregando notas programadas…</p>
+  </main>
+
+  <dialog id="gantt-edit-dialog" aria-labelledby="gantt-edit-title">
+    <form class="gantt-dialog-content" id="gantt-edit-form">
+      <div class="gantt-dialog-heading">
+        <h2 id="gantt-edit-title">Alterar dados da nota</h2>
+        <button class="gantt-dialog-close" type="button" aria-label="Fechar janela" title="Fechar">×</button>
+      </div>
+      <p class="gantt-dialog-subtitle" id="gantt-edit-subtitle"></p>
+      <div class="gantt-edit-fields">
+        <label class="gantt-edit-field">Nota<input id="gantt-note" readonly></label>
+        <label class="gantt-edit-field">Denominação Local de Instalação<input id="gantt-installation" readonly></label>
+        <label class="gantt-edit-field">Denominação do objeto técnico<input id="gantt-technical-object" readonly></label>
+        <label class="gantt-edit-field">Descrição<input id="gantt-description" readonly></label>
+        <label class="gantt-edit-field">Executor<input id="gantt-executor" readonly></label>
+        <label class="gantt-edit-field">Prioridade
+          <select id="gantt-priority">
+            <option value="">Selecione</option>
+            <option value="Alta">Alta</option>
+            <option value="Média">Média</option>
+            <option value="Baixa">Baixa</option>
+          </select>
+        </label>
+        <label class="gantt-edit-field">Iníc.nec.<input id="gantt-desired-start" type="date"></label>
+        <label class="gantt-edit-field">Concl.desj<input id="gantt-desired-completion" type="date"></label>
+        <label class="gantt-edit-field">DuraçParad<input id="gantt-shutdown-duration" maxlength="40"></label>
+        <label class="gantt-edit-shutdown"><input id="gantt-shutdown" type="checkbox">Parada</label>
+      </div>
+      <p class="gantt-dialog-status" id="gantt-dialog-status" role="status" aria-live="polite"></p>
+      <div class="gantt-dialog-actions">
+        <button id="gantt-cancel-action" type="button">Cancelar Ação</button>
+        <button id="gantt-submit" type="submit">Alterar Dados</button>
+        <button id="gantt-close-note" type="button">Encerrar</button>
+        <button id="gantt-reopen-note" type="button">Reabrir</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script>
+    const ganttGrid = document.querySelector("#gantt-grid");
+    const statusLine = document.querySelector("#status");
+    const weekLabel = document.querySelector("#week-label");
+    const workCenterFilter = document.querySelector("#work-center-filter");
+    const executorFilter = document.querySelector("#executor-filter");
+    const shutdownFilter = document.querySelector("#shutdown-filter");
+    const systemStatusFilter = document.querySelector("#system-status-filter");
+    const visibleNotes = document.querySelector("#visible-notes");
+    const taskTooltip = document.querySelector("#task-tooltip");
+    const ganttEditDialog = document.querySelector("#gantt-edit-dialog");
+    const ganttEditForm = document.querySelector("#gantt-edit-form");
+    const ganttDialogStatus = document.querySelector("#gantt-dialog-status");
+    const preferencesKey = "sap-pm-gantt-preferences";
+    let preferences = loadPreferences();
+    let records = [];
+    const ganttDrafts = new Map();
+    let editingGanttRecord = null;
+    let ganttBusy = false;
+    let barDrag = null;
+    let weekStart = parseDate(preferences.weekStart) || currentWeekStart();
+
+    function loadPreferences() {
+      const saved = localStorage.getItem(preferencesKey);
+      if (!saved) return {};
+      try {
+        const parsed = JSON.parse(saved);
+        return parsed && typeof parsed === "object" ? parsed : {};
+      } catch (error) {
+        console.warn("Não foi possível ler as preferências salvas do Gantt.", error);
+        return {};
+      }
+    }
+
+    function savePreferences() {
+      preferences = {
+        weekStart: dateKey(weekStart),
+        filters: {
+          [workCenterFilter.id]: selectedFilterValues(workCenterFilter),
+          [executorFilter.id]: selectedFilterValues(executorFilter),
+          [shutdownFilter.id]: selectedFilterValues(shutdownFilter),
+          [systemStatusFilter.id]: selectedFilterValues(systemStatusFilter)
+        }
+      };
+      localStorage.setItem(preferencesKey, JSON.stringify(preferences));
+    }
+
+    function currentWeekStart() {
+      const now = new Date();
+      const date = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
+      date.setUTCDate(date.getUTCDate() - ((date.getUTCDay() + 6) % 7));
+      return date;
+    }
+
+    function currentDay() {
+      const now = new Date();
+      return new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
+    }
+
+    function addDays(date, days) {
+      const result = new Date(date);
+      result.setUTCDate(result.getUTCDate() + days);
+      return result;
+    }
+
+    function dateKey(date) {
+      return date.toISOString().slice(0, 10);
+    }
+
+    function parseDate(value) {
+      const text = String(value || "").trim();
+      let parts = text.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      if (parts) return new Date(Date.UTC(Number(parts[1]), Number(parts[2]) - 1, Number(parts[3])));
+      parts = text.match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
+      if (parts) return new Date(Date.UTC(Number(parts[3]), Number(parts[2]) - 1, Number(parts[1])));
+      return null;
+    }
+
+    function sourceValue(record, column) {
+      return String(record.sourceColumns?.[column] || "").trim();
+    }
+
+    function workCenterCode(record) {
+      return sourceValue(record, "CenTrabRes") || "Não informado";
+    }
+
+    function executorName(record) {
+      return taskValue(record, "executor", ["Denominação executor", "Recebedor"]) || "Sem executor";
+    }
+
+    function shortLocationCode(record) {
+      const location = sourceValue(record, "Local de instalação");
+      const parts = location.split("-");
+      return parts.length >= 3 ? parts[1] : location;
+    }
+
+    function createdDayMonth(record) {
+      const created = parseDate(sourceValue(record, "Criado em"));
+      return created ? dateText(created) : "";
+    }
+
+    function priorityText(record) {
+      const draftPriority = ganttDrafts.get(record.id)?.priority;
+      if (draftPriority) return draftPriority;
+      return String(record.priority || sourceValue(record, "Texto") || sourceValue(record, "Prioridade")).trim();
+    }
+
+    function isHighPriority(record) {
+      return priorityText(record).toLocaleUpperCase("pt-BR") === "ALTA";
+    }
+
+    function isShutdown(record) {
+      const adjusted = String(record.shutdown || "").toLocaleUpperCase("pt-BR");
+      const source = sourceValue(record, "P") || sourceValue(record, "Parada");
+      return adjusted === "X" || adjusted === "TRUE" || adjusted === "SIM" || source.toLocaleUpperCase("pt-BR") === "X";
+    }
+
+    function isScheduled(record) {
+      const order = String(record.order || "").trim().replace(/[.,\s]/g, "");
+      return /^\d+$/.test(order) && Number(order) > 10;
+    }
+
+    function barCategoryClass(record) {
+      if (record.status === "ENC") return "bar-closed";
+      if (isShutdown(record)) return "bar-progress";
+      if (isScheduled(record)) return "bar-scheduled";
+      return "bar-open";
+    }
+
+    function taskDates(record) {
+      const draft = ganttDrafts.get(record.id);
+      if (draft) {
+        let start = parseDate(draft.desiredStart);
+        let end = parseDate(draft.desiredCompletion);
+        if (!start && !end) return null;
+        if (!start) start = end;
+        if (!end || end < start) end = start;
+        return { start, end };
+      }
+      let start = parseDate(record.desiredStart) || parseDate(sourceValue(record, "Iníc.nec."));
+      let end = parseDate(record.desiredCompletion) || parseDate(sourceValue(record, "Concl.desj"));
+      if (!start && !end) return null;
+      if (!start) start = end;
+      if (!end || end < start) end = start;
+      return { start, end };
+    }
+
+    function dateText(date) {
+      return new Intl.DateTimeFormat("pt-BR", {
+        day: "2-digit",
+        month: "2-digit",
+        timeZone: "UTC"
+      }).format(date);
+    }
+
+    function fullDateText(date) {
+      return new Intl.DateTimeFormat("pt-BR", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        timeZone: "UTC"
+      }).format(date);
+    }
+
+    function weekText(start, end) {
+      const firstMonth = new Intl.DateTimeFormat("pt-BR", { month: "long", timeZone: "UTC" }).format(start);
+      const lastMonth = new Intl.DateTimeFormat("pt-BR", { month: "long", timeZone: "UTC" }).format(end);
+      if (start.getUTCMonth() === end.getUTCMonth()) {
+        return `${start.getUTCDate()}–${end.getUTCDate()} de ${lastMonth} de ${end.getUTCFullYear()}`;
+      }
+      return `${start.getUTCDate()} ${firstMonth} – ${end.getUTCDate()} ${lastMonth} de ${end.getUTCFullYear()}`;
+    }
+
+    function taskValue(record, adjusted, sourceColumns) {
+      const draft = ganttDrafts.get(record.id);
+      if (draft && adjusted in draft) return String(draft[adjusted] || "").trim();
+      const adjustment = String(record[adjusted] || "").trim();
+      if (adjustment) return adjustment;
+      for (const column of sourceColumns) {
+        const value = sourceValue(record, column);
+        if (value) return value;
+      }
+      return "";
+    }
+
+    function createCell(className, value) {
+      const cell = document.createElement("div");
+      if (className) cell.className = className;
+      cell.textContent = value || "—";
+      return cell;
+    }
+
+    function createExecutorCell(value) {
+      const cell = document.createElement("div");
+      cell.textContent = value;
+      if (!String(value || "").trim()) cell.className = "executor-empty";
+      return cell;
+    }
+
+    function selectedFilterValues(filter) {
+      return [...filter.querySelectorAll('input[type="checkbox"]:checked')]
+        .map((checkbox) => checkbox.value);
+    }
+
+    function updateFilterSummary(filter) {
+      const values = selectedFilterValues(filter);
+      const defaultText = filter.id === "shutdown-filter" ? "Todas" : "Todos";
+      filter.querySelector(".dropdown-trigger").textContent = values.length
+        ? [...filter.querySelectorAll('input[type="checkbox"]:checked')]
+          .map((checkbox) => checkbox.closest("label").textContent.trim()).join(", ")
+        : defaultText;
+    }
+
+    function populateFilter(filter, options, containerId) {
+      const container = document.querySelector(`#${containerId}`);
+      const currentlySelected = selectedFilterValues(filter);
+      const previous = new Set(currentlySelected.length
+        ? currentlySelected
+        : preferences.filters?.[filter.id] || []);
+      const optionElements = options.map(({ label, value }) => {
+        const option = document.createElement("label");
+        option.className = "dropdown-option";
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.value = value;
+        checkbox.checked = previous.has(value);
+        option.append(checkbox, document.createTextNode(label));
+        return option;
+      });
+      if (filter === executorFilter) {
+        const selectAll = document.createElement("button");
+        selectAll.type = "button";
+        selectAll.className = "select-all-button";
+        const syncLabel = () => {
+          const boxes = [...container.querySelectorAll('input[type="checkbox"]')];
+          selectAll.textContent = boxes.length && boxes.every((box) => box.checked) ? "Limpar seleção" : "Selecionar todos";
+        };
+        selectAll.addEventListener("click", () => {
+          const boxes = [...container.querySelectorAll('input[type="checkbox"]')];
+          const allChecked = boxes.every((box) => box.checked);
+          boxes.forEach((box) => { box.checked = !allChecked; });
+          syncLabel();
+          updateFilterSummary(filter);
+          savePreferences();
+          render();
+        });
+        container.addEventListener("change", syncLabel);
+        optionElements.unshift(selectAll);
+        queueMicrotask(syncLabel);
+      }
+      container.replaceChildren(...optionElements);
+      updateFilterSummary(filter);
+    }
+
+    function createStatusCell(value, record) {
+      const cell = document.createElement("div");
+      cell.className = `status-cell status-text-${barCategoryClass(record).replace("bar-", "")}`;
+      cell.textContent = value;
+      return cell;
+    }
+
+    function taskStatus(record) {
+      const status = String(record.status || sourceValue(record, "Status sistema") || sourceValue(record, "Status do sistema") || sourceValue(record, "StatSist") || sourceValue(record, "Status") || "").trim();
+      return status.toLocaleUpperCase("pt-BR") === "AND" && !isShutdown(record) ? "PEN" : status;
+    }
+
+    function positionTaskTooltip(x, y) {
+      taskTooltip.hidden = false;
+      const gap = 12;
+      const margin = 8;
+      const bounds = taskTooltip.getBoundingClientRect();
+      const left = Math.min(Math.max(margin, x + gap), window.innerWidth - bounds.width - margin);
+      const top = y + gap + bounds.height <= window.innerHeight - margin
+        ? y + gap
+        : Math.max(margin, y - bounds.height - gap);
+      taskTooltip.style.left = `${left}px`;
+      taskTooltip.style.top = `${top}px`;
+    }
+
+    function showTaskTooltip(record, dates, event) {
+      const executor = taskValue(record, "executor", ["Denominação executor", "Recebedor"]) || "—";
+      const duration = taskValue(record, "shutdownDuration", ["DuraçParad"]) || "—";
+      taskTooltip.textContent = [
+        `Executor: ${executor}`,
+        `Iníc.necessidade: ${fullDateText(dates.start)}`,
+        `Concl.desejada: ${fullDateText(dates.end)}`,
+        `Duração: ${duration}`,
+        `Status: ${taskStatus(record) || "—"}`
+      ].join("\n");
+      positionTaskTooltip(event.clientX, event.clientY);
+    }
+
+    function currentGanttValues(record) {
+      const draft = ganttDrafts.get(record.id);
+      const dates = taskDates(record);
+      return {
+        desiredStart: draft?.desiredStart ?? (dates ? dateKey(dates.start) : ""),
+        desiredCompletion: draft?.desiredCompletion ?? (dates ? dateKey(dates.end) : ""),
+        priority: draft?.priority ?? priorityText(record),
+        shutdownDuration: draft?.shutdownDuration ?? taskValue(record, "shutdownDuration", ["DuraçParad"]),
+        shutdown: draft?.shutdown ?? (isShutdown(record) ? "X" : "")
+      };
+    }
+
+    function ensureGanttDraft(record) {
+      let draft = ganttDrafts.get(record.id);
+      if (!draft) {
+        draft = currentGanttValues(record);
+        ganttDrafts.set(record.id, draft);
+      }
+      return draft;
+    }
+
+    function markBarPending(record) {
+      ganttGrid.querySelectorAll(".task-bar").forEach((bar) => {
+        if (bar.dataset.recordId === record.id) bar.classList.add("bar-pending");
+      });
+    }
+
+    function openGanttEditor(record) {
+      editingGanttRecord = record;
+      ganttDialogStatus.textContent = "";
+      ganttDialogStatus.removeAttribute("data-state");
+      const values = currentGanttValues(record);
+      document.querySelector("#gantt-edit-subtitle").textContent =
+        `Nota ${record.note || "—"} · Ordem ${record.order || "—"}`;
+      document.querySelector("#gantt-note").value = record.note || sourceValue(record, "Nota");
+      document.querySelector("#gantt-installation").value =
+        taskValue(record, "installation", ["Denominação do loc.instalação"]) || "—";
+      document.querySelector("#gantt-technical-object").value =
+        taskValue(record, "technicalObject", ["Denominação do objeto técnico"]) || "—";
+      document.querySelector("#gantt-description").value =
+        record.sapDescription || record.description || sourceValue(record, "Descrição");
+      document.querySelector("#gantt-executor").value =
+        taskValue(record, "executor", ["Denominação executor", "Recebedor"]) || "—";
+      document.querySelector("#gantt-priority").value =
+        ["Alta", "Média", "Baixa"].includes(values.priority) ? values.priority : "";
+      document.querySelector("#gantt-desired-start").value = values.desiredStart;
+      document.querySelector("#gantt-desired-completion").value = values.desiredCompletion;
+      document.querySelector("#gantt-shutdown-duration").value = values.shutdownDuration;
+      document.querySelector("#gantt-shutdown").checked = values.shutdown === "X";
+      ganttEditDialog.showModal();
+    }
+
+    function updateBarGeometry(bar, record) {
+      const dates = taskDates(record);
+      if (!dates) return;
+      const weekEnd = addDays(weekStart, 6);
+      const entirelyOutsideWeek = dates.end < weekStart || dates.start > weekEnd;
+      const visibleStart = entirelyOutsideWeek
+        ? (dates.end < weekStart ? weekStart : weekEnd)
+        : dates.start < weekStart ? weekStart : dates.start;
+      const visibleEnd = entirelyOutsideWeek
+        ? visibleStart
+        : dates.end > weekEnd ? weekEnd : dates.end;
+      const startOffset = Math.round((visibleStart - weekStart) / 86400000);
+      const spanDays = Math.round((visibleEnd - visibleStart) / 86400000) + 1;
+      bar.style.left = `${(startOffset / 7) * 100}%`;
+      bar.style.width = `${(spanDays / 7) * 100}%`;
+    }
+
+    function startBarDrag(event, record, bar, track) {
+      if (event.button !== 0 || !event.isPrimary) return;
+      const dates = taskDates(record);
+      if (!dates) return;
+      const handle = event.target.closest(".resize-handle");
+      const weekEnd = addDays(weekStart, 6);
+      let mode = handle?.dataset.edge || "move";
+      if (mode === "left" && dates.start < weekStart) mode = "move";
+      if (mode === "right" && dates.end > weekEnd) mode = "move";
+      barDrag = {
+        record, bar, track, mode, startX: event.clientX,
+        startDate: dates.start, endDate: dates.end, moved: false
+      };
+      bar.setPointerCapture(event.pointerId);
+      taskTooltip.hidden = true;
+      event.preventDefault();
+    }
+
+    function moveBarDrag(event) {
+      if (!barDrag) return;
+      const bounds = barDrag.track.getBoundingClientRect();
+      const dayWidth = bounds.width / 7;
+      if (!dayWidth) return;
+      const dayDelta = Math.round((event.clientX - barDrag.startX) / dayWidth);
+      if (!dayDelta && !barDrag.moved) return;
+      const draft = ensureGanttDraft(barDrag.record);
+      let start = barDrag.startDate;
+      let end = barDrag.endDate;
+      if (barDrag.mode === "move") {
+        start = addDays(start, dayDelta);
+        end = addDays(end, dayDelta);
+      } else if (barDrag.mode === "left") {
+        start = addDays(start, dayDelta);
+        if (start > end) start = end;
+      } else {
+        end = addDays(end, dayDelta);
+        if (end < start) end = start;
+      }
+      draft.desiredStart = dateKey(start);
+      draft.desiredCompletion = dateKey(end);
+      barDrag.moved = barDrag.moved || dayDelta !== 0;
+      barDrag.bar.classList.add("bar-pending");
+      updateBarGeometry(barDrag.bar, barDrag.record);
+    }
+
+    function finishBarDrag() {
+      if (!barDrag) return;
+      const moved = barDrag.moved;
+      barDrag = null;
+      if (moved) render();
+    }
+
+    function weekDays() {
+      return Array.from({ length: 7 }, (_, index) => addDays(weekStart, index));
+    }
+
+    function render() {
+      const weekEnd = addDays(weekStart, 6);
+      weekLabel.textContent = weekText(weekStart, weekEnd);
+      const header = document.createElement("div");
+      header.className = "gantt-header";
+      ["Executor", "Criado", "Local", "Denominação Local de Instalação", "Denominação do objeto técnico", "Descrição", "Prior.", "Nota", "Ordem", "Duração", "Status"].forEach((label) => {
+        header.append(createCell("", label));
+      });
+      const dayHeadings = document.createElement("div");
+      dayHeadings.className = "day-headings";
+      const weekdayNames = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
+      weekDays().forEach((day, index) => {
+        const heading = document.createElement("div");
+        heading.className = "day-heading";
+        if (day.getTime() === currentDay().getTime()) heading.classList.add("today");
+        const name = document.createElement("span");
+        name.textContent = weekdayNames[index];
+        const number = document.createElement("strong");
+        number.textContent = String(day.getUTCDate()).padStart(2, "0");
+        heading.append(name, number);
+        dayHeadings.append(heading);
+      });
+      header.append(dayHeadings);
+
+      const selectedWorkCenters = selectedFilterValues(workCenterFilter);
+      const selectedExecutors = selectedFilterValues(executorFilter);
+      const selectedShutdowns = selectedFilterValues(shutdownFilter);
+      const selectedSystemStatuses = selectedFilterValues(systemStatusFilter);
+      const tasks = records
+        .filter(isScheduled)
+        .filter((record) => !selectedWorkCenters.length || selectedWorkCenters.includes(workCenterCode(record)))
+        .filter((record) => !selectedExecutors.length || selectedExecutors.includes(executorName(record)))
+        .filter((record) => !selectedShutdowns.length || selectedShutdowns.some((value) => value === "yes" ? isShutdown(record) : !isShutdown(record)))
+        .filter((record) => !selectedSystemStatuses.length || selectedSystemStatuses.includes(taskStatus(record)))
+        .map((record) => ({ record, dates: taskDates(record) }))
+        .filter(({ record, dates }) =>
+          !dates || (dates.start <= weekEnd && dates.end >= weekStart) || ganttDrafts.has(record.id)
+        )
+        .sort((a, b) => {
+          const executorA = taskValue(a.record, "executor", ["Denominação executor", "Recebedor"]);
+          const executorB = taskValue(b.record, "executor", ["Denominação executor", "Recebedor"]);
+          const executorComparison = executorA.localeCompare(executorB, "pt-BR", { sensitivity: "base" });
+          if (executorComparison) return executorComparison;
+          if (a.dates && b.dates && a.dates.start.getTime() !== b.dates.start.getTime()) {
+            return a.dates.start - b.dates.start;
+          }
+          if (a.dates && !b.dates) return -1;
+          if (!a.dates && b.dates) return 1;
+          return Number(a.record.order) - Number(b.record.order);
+        });
+
+      const todayOffset = Math.round((currentDay() - weekStart) / 86400000);
+      const fragment = document.createDocumentFragment();
+      fragment.append(header);
+      let previousExecutor = null;
+      for (const { record, dates } of tasks) {
+        const row = document.createElement("div");
+        row.className = "task-row";
+        if (isHighPriority(record)) row.classList.add("high-priority");
+        const executor = taskValue(record, "executor", ["Denominação executor", "Recebedor"]);
+        if (previousExecutor !== null && executor !== previousExecutor) {
+          row.classList.add("executor-group-start");
+        }
+        const displayExecutor = executor !== previousExecutor ? executor : "";
+        previousExecutor = executor;
+        row.append(
+          createExecutorCell(displayExecutor),
+          createCell("created-cell", createdDayMonth(record)),
+          createCell("local-cell", shortLocationCode(record)),
+          createCell("", taskValue(record, "installation", ["Denominação do loc.instalação"])),
+          createCell("", taskValue(record, "technicalObject", ["Denominação do objeto técnico"])),
+          createCell("", record.description || sourceValue(record, "Descrição")),
+          createCell("priority-cell", priorityText(record)),
+          createCell("note-cell", record.note || sourceValue(record, "Nota")),
+          createCell("order-cell", record.order),
+          createCell("duration-cell", taskValue(record, "shutdownDuration", ["DuraçParad"])),
+          createStatusCell(taskStatus(record), record)
+        );
+        const track = document.createElement("div");
+        track.className = dates ? "timeline-track" : "timeline-track undated";
+        if (todayOffset >= 0 && todayOffset < 7) {
+          const marker = document.createElement("i");
+          marker.className = "today-marker";
+          marker.style.left = `${((todayOffset + 0.5) / 7) * 100}%`;
+          track.append(marker);
+        }
+        if (dates) {
+          const entirelyOutsideWeek = dates.end < weekStart || dates.start > weekEnd;
+          const visibleStart = entirelyOutsideWeek
+            ? (dates.end < weekStart ? weekStart : weekEnd)
+            : dates.start < weekStart ? weekStart : dates.start;
+          const visibleEnd = entirelyOutsideWeek
+            ? visibleStart
+            : dates.end > weekEnd ? weekEnd : dates.end;
+          const startOffset = Math.round((visibleStart - weekStart) / 86400000);
+          const spanDays = Math.round((visibleEnd - visibleStart) / 86400000) + 1;
+          const bar = document.createElement("span");
+          bar.className = `task-bar ${barCategoryClass(record)}${isHighPriority(record) ? " bar-high-priority" : ""}`;
+          if (ganttDrafts.has(record.id)) bar.classList.add("bar-pending");
+          bar.dataset.recordId = record.id;
+          const rawDuration = taskValue(record, "shutdownDuration", ["DuraçParad"]);
+          const durationNumber = Number(rawDuration.replace(/[^0-9,-]/g, "").replace(".", "").replace(",", "."));
+          const duration = rawDuration && Number.isFinite(durationNumber) ? String(Math.round(durationNumber)) : "";
+          bar.textContent = duration ? `${duration}h` : "";
+          bar.style.left = `${(startOffset / 7) * 100}%`;
+          bar.style.width = `${(spanDays / 7) * 100}%`;
+          if (dates.start >= weekStart) {
+            const leftHandle = document.createElement("i");
+            leftHandle.className = "resize-handle resize-left";
+            leftHandle.dataset.edge = "left";
+            leftHandle.setAttribute("aria-hidden", "true");
+            bar.append(leftHandle);
+          }
+          if (dates.end <= weekEnd) {
+            const rightHandle = document.createElement("i");
+            rightHandle.className = "resize-handle resize-right";
+            rightHandle.dataset.edge = "right";
+            rightHandle.setAttribute("aria-hidden", "true");
+            bar.append(rightHandle);
+          }
+          bar.tabIndex = 0;
+          bar.setAttribute("aria-describedby", "task-tooltip");
+          bar.setAttribute("aria-label", `Tarefa de ${dateText(dates.start)} a ${dateText(dates.end)}${duration ? `, duração ${duration} horas` : ""}. Passe o mouse ou foque para ver os detalhes.`);
+          bar.addEventListener("pointerenter", (event) => showTaskTooltip(record, dates, event));
+          bar.addEventListener("pointermove", (event) => showTaskTooltip(record, dates, event));
+          bar.addEventListener("pointerleave", () => { taskTooltip.hidden = true; });
+          bar.addEventListener("focus", () => {
+            const bounds = bar.getBoundingClientRect();
+            showTaskTooltip(record, dates, {
+              clientX: bounds.left + bounds.width / 2,
+              clientY: bounds.bottom
+            });
+          });
+          bar.addEventListener("blur", () => { taskTooltip.hidden = true; });
+          bar.addEventListener("pointerdown", (event) => startBarDrag(event, record, bar, track));
+          bar.addEventListener("pointermove", moveBarDrag);
+          bar.addEventListener("pointerup", finishBarDrag);
+          bar.addEventListener("pointercancel", finishBarDrag);
+          bar.addEventListener("dblclick", (event) => {
+            event.preventDefault();
+            openGanttEditor(record);
+          });
+          track.append(bar);
+        } else {
+          track.textContent = "Sem data programada";
+        }
+        row.append(track);
+        fragment.append(row);
+      }
+      if (tasks.length) {
+        const totalDuration = tasks.reduce((sum, { record }) => {
+          const value = taskValue(record, "shutdownDuration", ["DuraçParad"]);
+          const normalized = value.replace(/[^0-9,-]/g, "").replace(".", "").replace(",", ".");
+          const number = Number(normalized);
+          return sum + (Number.isFinite(number) ? number : 0);
+        }, 0);
+        const totalRow = document.createElement("div");
+        totalRow.className = "task-row total-row";
+        const totalStatus = document.createElement("div");
+        totalStatus.className = "status-cell";
+        totalStatus.textContent = "";
+        totalRow.append(
+          createCell("total-label", "Total duração"),
+          createCell("duration-cell", totalDuration.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })),
+          totalStatus
+        );
+        fragment.append(totalRow);
+      } else {
+        const empty = document.createElement("div");
+        empty.className = "empty-state";
+        empty.textContent = "Nenhuma nota programada nesta semana.";
+        fragment.append(empty);
+      }
+      ganttGrid.replaceChildren(fragment);
+      visibleNotes.textContent = `Qtd de notas: ${tasks.length.toLocaleString("pt-BR")}`;
+      statusLine.textContent = `${tasks.length} notas programadas nesta semana.`;
+      statusLine.removeAttribute("data-state");
+    }
+
+    function refreshExecutorOptions(selectAll = false) {
+      const centers = selectedFilterValues(workCenterFilter);
+      const executors = [...new Set(records
+        .filter((record) => isScheduled(record) && (!centers.length || centers.includes(workCenterCode(record))))
+        .map(executorName))].sort((a, b) => a.localeCompare(b, "pt-BR"));
+      populateFilter(executorFilter, executors.map((executor) => ({ label: executor, value: executor })), "executor-options");
+      if (selectAll) {
+        const container = document.querySelector("#executor-options");
+        const checkboxes = [...container.querySelectorAll('input[type="checkbox"]')];
+        checkboxes.forEach((checkbox) => { checkbox.checked = true; });
+        updateFilterSummary(executorFilter);
+        container.querySelector(".select-all-button").textContent = checkboxes.length ? "Limpar seleção" : "Selecionar todos";
+      }
+    }
+
+    function syncGanttDraftFromForm(event) {
+      if (!editingGanttRecord) return;
+      const draft = ensureGanttDraft(editingGanttRecord);
+      draft.priority = document.querySelector("#gantt-priority").value;
+      draft.desiredStart = document.querySelector("#gantt-desired-start").value;
+      draft.desiredCompletion = document.querySelector("#gantt-desired-completion").value;
+      draft.shutdownDuration = document.querySelector("#gantt-shutdown-duration").value.trim();
+      draft.shutdown = document.querySelector("#gantt-shutdown").checked ? "X" : "";
+      markBarPending(editingGanttRecord);
+      if (event.target.id === "gantt-desired-start" || event.target.id === "gantt-desired-completion") {
+        render();
+      }
+    }
+
+    ganttEditForm.addEventListener("input", syncGanttDraftFromForm);
+    ganttEditForm.addEventListener("change", syncGanttDraftFromForm);
+
+    document.querySelector(".gantt-dialog-close").addEventListener("click", () => {
+      editingGanttRecord = null;
+      ganttEditDialog.close();
+    });
+
+    ganttEditDialog.addEventListener("cancel", (event) => {
+      if (ganttBusy) {
+        event.preventDefault();
+        return;
+      }
+      editingGanttRecord = null;
+    });
+
+    document.querySelector("#gantt-cancel-action").addEventListener("click", () => {
+      if (!editingGanttRecord) return;
+      ganttDrafts.delete(editingGanttRecord.id);
+      editingGanttRecord = null;
+      ganttEditDialog.close();
+      render();
+    });
+
+    function setGanttBusy(busy) {
+      ganttBusy = busy;
+      ganttEditForm.querySelectorAll("button, input, select").forEach((control) => {
+        control.disabled = busy;
+      });
+    }
+
+    function setGanttDialogStatus(state, message) {
+      ganttDialogStatus.dataset.state = state;
+      ganttDialogStatus.textContent = message;
+    }
+
+    async function changeNoteStatus(action) {
+      const record = editingGanttRecord;
+      if (!record || ganttBusy) return;
+      const verb = action === "close" ? "encerrar" : "reabrir";
+      const pending = ganttDrafts.has(record.id)
+        ? "\n\nHá alterações pendentes no Gantt. Esta ação não as grava nem as descarta."
+        : "";
+      if (!window.confirm(`Confirma ${verb} a nota ${record.note} no SAP?${pending}`)) return;
+      setGanttBusy(true);
+      setGanttDialogStatus("loading", `Solicitando ${verb} a nota ${record.note} no SAP…`);
+      try {
+        const response = await fetch("/api/iw22/status", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ source: "iw28", id: record.id, action })
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.message || "Não foi possível alterar o status da nota.");
+        const message = `${result.sapMessage} Atualizando o arquivo SAP (IW28) para consultar o novo status no Gantt.`;
+        setGanttDialogStatus("done", message);
+        statusLine.dataset.state = "done";
+        statusLine.textContent = message;
+        startRefresh();
+      } catch (error) {
+        const message = error.message || "Falha ao alterar o status da nota.";
+        setGanttDialogStatus("error", message);
+        statusLine.dataset.state = "error";
+        statusLine.textContent = message;
+      } finally {
+        setGanttBusy(false);
+      }
+    }
+
+    document.querySelector("#gantt-close-note").addEventListener("click", () => changeNoteStatus("close"));
+    document.querySelector("#gantt-reopen-note").addEventListener("click", () => changeNoteStatus("reopen"));
+
+    ganttEditForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const record = editingGanttRecord;
+      if (!record || ganttBusy) return;
+      syncGanttDraftFromForm({ target: { id: "" } });
+      const updates = {
+        executor: taskValue(record, "executor", ["Denominação executor", "Recebedor"]),
+        priority: document.querySelector("#gantt-priority").value,
+        desiredStart: document.querySelector("#gantt-desired-start").value,
+        desiredCompletion: document.querySelector("#gantt-desired-completion").value,
+        shutdownDuration: document.querySelector("#gantt-shutdown-duration").value.trim(),
+        shutdown: document.querySelector("#gantt-shutdown").checked ? "X" : "",
+        sapDescription: record.sapDescription || sourceValue(record, "Descrição") || record.description || ""
+      };
+      if (updates.desiredStart && updates.desiredCompletion &&
+          updates.desiredCompletion < updates.desiredStart) {
+        statusLine.dataset.state = "error";
+        statusLine.textContent = "A conclusão desejada não pode ser anterior ao início desejado.";
+        setGanttDialogStatus("error", statusLine.textContent);
+        return;
+      }
+
+      setGanttBusy(true);
+      statusLine.dataset.state = "loading";
+      statusLine.textContent = `Gravando alterações da nota ${record.note} no SAP…`;
+      setGanttDialogStatus("loading", statusLine.textContent);
+      try {
+        const response = await fetch("/api/plan", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ source: "iw28", id: record.id, updates })
+        });
+        const result = await response.json();
+        if (!response.ok) {
+          if (result.localSaved && result.record) Object.assign(record, result.record);
+          throw new Error(result.message || "Não foi possível gravar as alterações no SAP.");
+        }
+        Object.assign(record, result.record);
+        ganttDrafts.delete(record.id);
+        editingGanttRecord = null;
+        ganttEditDialog.close();
+        render();
+        statusLine.dataset.state = "done";
+        statusLine.textContent = result.sapMessage || `Nota ${record.note} alterada no SAP.`;
+      } catch (error) {
+        render();
+        statusLine.dataset.state = "error";
+        statusLine.textContent = error.message || "Falha ao gravar os dados da nota.";
+        setGanttDialogStatus("error", statusLine.textContent);
+      } finally {
+        setGanttBusy(false);
+      }
+    });
+
+    function moveWeek(offset) {
+      weekStart = addDays(weekStart, offset * 7);
+      savePreferences();
+      render();
+    }
+
+    [workCenterFilter, executorFilter, shutdownFilter, systemStatusFilter].forEach((filter) => {
+      const trigger = filter.querySelector(".dropdown-trigger");
+      const options = filter.querySelector(".dropdown-options");
+      trigger.addEventListener("click", (event) => {
+        event.stopPropagation();
+        [workCenterFilter, executorFilter, shutdownFilter, systemStatusFilter].forEach((other) => {
+          const otherOptions = other.querySelector(".dropdown-options");
+          if (other !== filter && otherOptions.matches(":popover-open")) otherOptions.hidePopover();
+          other.classList.remove("open");
+        });
+        const rect = trigger.getBoundingClientRect();
+        options.style.left = `${rect.left}px`;
+        options.style.top = `${rect.bottom + 3}px`;
+        if (options.matches(":popover-open")) options.hidePopover();
+        else {
+          options.showPopover();
+          filter.classList.add("open");
+        }
+      });
+      options.addEventListener("click", (event) => event.stopPropagation());
+      options.addEventListener("toggle", () => {
+        if (!options.matches(":popover-open")) filter.classList.remove("open");
+      });
+      options.addEventListener("change", () => {
+        updateFilterSummary(filter);
+        if (filter === workCenterFilter) refreshExecutorOptions(true);
+        savePreferences();
+        render();
+      });
+    });
+    document.addEventListener("click", () => {
+      [workCenterFilter, executorFilter, shutdownFilter, systemStatusFilter].forEach((filter) => {
+        const options = filter.querySelector(".dropdown-options");
+        if (options.matches(":popover-open")) options.hidePopover();
+      });
+    });
+    document.querySelector("#previous-week").addEventListener("click", () => moveWeek(-1));
+    document.querySelector("#next-week").addEventListener("click", () => moveWeek(1));
+    document.querySelector("#current-week").addEventListener("click", () => {
+      weekStart = currentWeekStart();
+      savePreferences();
+      render();
+    });
+
+    async function loadRecords() {
+      try {
+        const response = await fetch("/api/data?source=iw28", { cache: "no-store" });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message || "Não foi possível carregar a exportação IW28.");
+        if (!Array.isArray(data.records)) throw new Error("A resposta IW28 não contém uma lista de notas válida.");
+        records = data.records.filter((record) =>
+          String(record.status || "").trim().replace(/\s+/g, " ").toLocaleUpperCase("pt-BR") !== "MREL MSEN ORDA"
+        );
+        const workCenters = [...new Set(records.filter(isScheduled).map(workCenterCode))]
+          .sort((a, b) => a.localeCompare(b, "pt-BR"));
+        populateFilter(workCenterFilter, workCenters.map((center) => ({ label: center, value: center })), "work-center-options");
+        refreshExecutorOptions();
+        populateFilter(shutdownFilter, [
+          { label: "Atendida", value: "yes" },
+          { label: "Ag. Atendimento", value: "no" }
+        ], "shutdown-options");
+        const systemStatuses = [...new Set(records.map(taskStatus).filter(Boolean))]
+          .sort((a, b) => a.localeCompare(b, "pt-BR"));
+        populateFilter(systemStatusFilter, systemStatuses.map((status) => ({ label: status, value: status })), "system-status-options");
+        render();
+      } catch (error) {
+        statusLine.dataset.state = "error";
+        statusLine.textContent = error.message || "Erro ao carregar as notas programadas.";
+      }
+    }
+
+    let lastSourceStamp = null;
+
+    async function checkForUpdates() {
+      try {
+        const response = await fetch("/api/sources", { cache: "no-store" });
+        const result = await response.json();
+        if (!response.ok) return;
+        const iw28 = result.sources.find((item) => item.id === "iw28");
+        const stamp = iw28 ? `${iw28.updated}|${iw28.count}` : null;
+        if (lastSourceStamp !== null && stamp !== lastSourceStamp) await loadRecords();
+        lastSourceStamp = stamp;
+      } catch {
+        // Nova tentativa no próximo ciclo.
+      }
+    }
+
+    loadRecords().then(checkForUpdates);
+    setInterval(checkForUpdates, 10000);
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) checkForUpdates();
+    });
+    const refreshButton = document.querySelector("#refresh");
+    const refreshProgress = document.querySelector("#refresh-progress");
+    const refreshProgressLabel = document.querySelector("#refresh-progress-label");
+    const refreshProgressTrack = refreshProgress.querySelector('[role="progressbar"]');
+    const refreshProgressValue = document.querySelector("#refresh-progress-value");
+    let refreshStartedAt = 0;
+    let refreshTimer = null;
+
+    function setRefreshProgress(value, state, label = `${value}%`) {
+      const progress = Math.max(0, Math.min(100, value));
+      refreshProgress.dataset.state = state;
+      refreshProgressLabel.textContent = label;
+      refreshProgressTrack.setAttribute("aria-valuenow", String(progress));
+      refreshProgressValue.style.width = `${progress}%`;
+    }
+
+    function updateEstimatedProgress() {
+      if (!refreshStartedAt) refreshStartedAt = Date.now();
+      const estimate = Math.min(95, Math.floor(((Date.now() - refreshStartedAt) / 60000) * 95));
+      setRefreshProgress(estimate, "running");
+    }
+
+    function finishRefresh(label) {
+      refreshTimer = null;
+      refreshStartedAt = 0;
+      refreshButton.disabled = false;
+      if (label) setRefreshProgress(0, "error", label);
+    }
+
+    async function pollRefresh(resumeOnly = false) {
+      try {
+        const response = await fetch("/api/status", { cache: "no-store" });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.message || "Não foi possível consultar a execução SAP.");
+        if (result.state === "queued" || result.state === "running") {
+          refreshButton.disabled = true;
+          updateEstimatedProgress();
+          refreshTimer = window.setTimeout(pollRefresh, 1000);
+        } else if (result.state === "done" && !resumeOnly) {
+          setRefreshProgress(100, "done");
+          await reloadAfterRefresh();
+          finishRefresh();
+        } else {
+          finishRefresh(result.state === "error" && !resumeOnly ? "Falha" : "");
+        }
+      } catch (error) {
+        finishRefresh("Falha");
+        refreshProgress.title = error.message;
+      }
+    }
+
+    async function startRefresh() {
+      refreshButton.disabled = true;
+      refreshStartedAt = Date.now();
+      setRefreshProgress(0, "running");
+      try {
+        const response = await fetch("/api/run", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ background: true })
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.message || "Não foi possível iniciar a exportação.");
+        if (refreshTimer) window.clearTimeout(refreshTimer);
+        refreshTimer = window.setTimeout(pollRefresh, 1000);
+      } catch (error) {
+        finishRefresh("Falha");
+        refreshProgress.title = error.message;
+      }
+    }
+
+    refreshButton.addEventListener("click", startRefresh);
+
+    pollRefresh(true);
+
+    function reloadAfterRefresh() {
+      return loadRecords();
+    }
+  </script>
+</body>
+</html>

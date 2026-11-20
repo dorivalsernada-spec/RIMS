@@ -1,0 +1,1054 @@
+﻿<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dashboard · Planejamento SAP PM</title>
+  <style>
+    :root {
+      font-size: 12px;
+      font-family: "Segoe UI", Arial, sans-serif;
+      color: #172b4d;
+      background: #f3f6fa;
+      font-synthesis: none;
+    }
+
+    * { box-sizing: border-box; }
+    body { zoom: 125%; min-width: 360px; margin: 0; }
+    button, a { font: inherit; }
+
+    .topbar {
+      zoom: 0.72;
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 20px;
+      padding: 26px clamp(18px, 4vw, 48px);
+      background: #102b46;
+      color: #fff;
+    }
+    .brand { display: flex; align-items: center; gap: 13px; }
+    .brand-mark {
+      display: grid;
+      width: 42px;
+      height: 42px;
+      place-items: center;
+      border-radius: 12px;
+      background: #087e8b;
+      color: #fff;
+      font-weight: 800;
+    }
+    .brand-name { margin: 0; font-size: 1rem; }
+    .brand-caption { margin: 4px 0 0; color: #b7c8d8; font-size: 0.8rem; }
+    .topbar-title {
+      grid-column: 2;
+      grid-row: 1;
+      margin: 0;
+      color: #fff;
+      font-size: 1.4rem;
+      text-align: left;
+      justify-self: start;
+      margin-left: 24px;
+    }
+    .top-actions { display: flex; flex-wrap: wrap; justify-self: end; align-items: center; gap: 10px; }
+    .nav-link {
+      box-sizing: border-box;
+      display: inline-flex;
+      width: 110px;
+      height: 40px;
+      min-height: 40px;
+      align-items: center;
+      justify-content: center;
+      padding: 9px 10px;
+      border: 1px solid #638099;
+      border-radius: 7px;
+      color: #fff;
+      font-weight: 650;
+      font-size: 0.85rem;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .nav-link:hover { background: #25415a; }
+    .nav-link[aria-current="page"] { border-color: #46c2a8; background: #087e8b; }
+    .page-nav { overflow-x: auto; border-bottom: 1px solid #dfe6ee; background: #fff; scrollbar-width: thin; }
+    .page-nav-inner { display: flex; width: min(1600px, 100%); min-width: max-content; margin: 0 auto; padding: 0 clamp(16px, 3vw, 40px); }
+    .page-tab { display: inline-flex; min-height: 44px; align-items: center; justify-content: center; padding: 0 15px; border-bottom: 3px solid transparent; color: #52647a; font-size: 0.78rem; font-weight: 650; text-decoration: none; white-space: nowrap; }
+    .page-tab:hover { background: #f3f8f8; color: #087e8b; }
+    .page-tab[aria-current="page"] { border-bottom-color: #087e8b; color: #087e8b; }
+    .page-tab:focus-visible { outline: 2px solid #087e8b; outline-offset: -2px; }
+
+    .layout {
+      width: min(1600px, 100%);
+      margin: 0 auto;
+      padding: 12px clamp(16px, 3vw, 40px) 48px;
+    }
+    .summary { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-bottom: 12px; }
+    .intro-tools { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 10px; }
+    .updated { color: #67788e; font-size: 0.68rem; }
+    .clear-chart-filters { min-height: 28px; padding: 4px 7px; border: 1px solid #d5dee8; border-radius: 6px; background: #fff; color: #087e8b; cursor: pointer; font-size: 0.65rem; font-weight: 650; }
+    .clear-chart-filters:hover:not(:disabled) { background: #eaf5f6; }
+    .clear-chart-filters:disabled { display: none; }
+
+    .status-filters { display: grid; flex: 1 1 630px; grid-template-columns: repeat(4, minmax(0, 190px)); justify-content: start; gap: 8px; }
+    .status-filter {
+      display: flex;
+      min-height: 48px;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 4px 10px;
+      border: 1px solid #d5dee8;
+      border-radius: 9px;
+      background: #fff;
+      color: #52647a;
+      cursor: pointer;
+      text-align: left;
+    }
+    .status-filter:hover { border-color: #087e8b; }
+    .status-filter[aria-pressed="true"] { border-color: #087e8b; box-shadow: inset 0 0 0 1px #087e8b; }
+    .status-filter span { font-size: 0.68rem; font-weight: 650; white-space: nowrap; }
+    .status-filter strong { color: #172b4d; font-size: 0.95rem; }
+    .status-filter.open { background: #fde8e8; border-color: #e8a0a0; }
+    .status-filter.scheduled { background: #fff8df; border-color: #d7bd55; }
+    .status-filter.progress { background: #eaf3fc; border-color: #7aaddc; }
+    .status-filter.closed { background: #eaf6ee; border-color: #2e8b57; box-shadow: inset 0 0 0 1px #2e8b57; }
+    .status-filter[aria-pressed="false"] { opacity: 0.55; }
+    .status-card { cursor: default; }
+    .chart-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; align-items: stretch; }
+    .chart-card { min-width: 0; padding: 10px; border: 1px solid #e2e8ef; border-radius: 12px; background: #fff; box-shadow: 0 4px 14px rgb(16 43 70 / 4%); }
+    .chart-grid > .priority-chart, .chart-grid > .backlog-chart, .chart-grid > .type-chart { min-height: 210px; }
+    .chart-card h3 { margin: 0; font-size: 0.82rem; letter-spacing: -0.01em; }
+    .chart-caption { min-height: 15px; margin: 4px 0 8px; color: #718198; font-size: 0.62rem; }
+    .chart-list { display: grid; gap: 4px; }
+    .chart-row { display: grid; grid-template-columns: minmax(90px, 31%) minmax(40px, 1fr) 42px; align-items: center; gap: 5px; min-height: 14px; }
+    .chart-label { overflow: hidden; color: #34475d; font-size: 0.66rem; text-overflow: ellipsis; white-space: nowrap; }
+    .chart-track { overflow: hidden; height: 7px; border-radius: 99px; background: #edf1f5; }
+    .chart-bar { height: 100%; min-width: 0; border-radius: inherit; background: linear-gradient(90deg, #087e8b, #46b7a3); transition: width 220ms ease; }
+    .chart-row:nth-child(3n + 2) .chart-bar { background: linear-gradient(90deg, #3c78b4, #77b3e3); }
+    .chart-row:nth-child(3n + 3) .chart-bar { background: linear-gradient(90deg, #d59a27, #f1c96b); }
+    .chart-value { color: #34475d; font-size: 0.65rem; font-weight: 700; font-variant-numeric: tabular-nums; text-align: right; }
+    .type-chart { display: flex; flex-direction: column; }
+    .type-chart .chart-list { min-height: 120px; flex: 1; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: end; gap: 14px; padding: 6px 12px 0; }
+    .type-bar-item { display: grid; height: 100%; grid-template-rows: 1fr auto auto; justify-items: center; gap: 9px; }
+    .chart-selectable { cursor: pointer; }
+    .chart-selectable:focus-visible { outline: 2px solid #087e8b; outline-offset: 3px; }
+    .type-bar-item[aria-pressed="true"] .type-bar-area { filter: drop-shadow(0 0 4px rgb(8 126 139 / 55%)); }
+    .type-bar-item[aria-pressed="true"] .type-bar-label,
+    .chart-row[aria-pressed="true"] .chart-label,
+    .legend-item[aria-pressed="true"] .legend-name { color: #087e8b; font-weight: 800; }
+    .chart-row[aria-pressed="true"] .chart-track { outline: 2px solid #087e8b; outline-offset: 2px; }
+    .type-bar-area { display: flex; width: min(44px, 72%); height: 76px; align-self: end; align-items: end; justify-content: center; }
+    .type-bar { width: 100%; min-height: 3px; border-radius: 8px 8px 2px 2px; background: linear-gradient(180deg, #43b9a2, #087e8b); box-shadow: 0 5px 12px rgb(8 126 139 / 16%); transition: height 220ms ease; }
+    .type-bar-item:nth-child(2) .type-bar { background: linear-gradient(180deg, #f1c96b, #d59a27); box-shadow: 0 5px 12px rgb(213 154 39 / 14%); }
+    .type-bar-item:nth-child(3) .type-bar { background: linear-gradient(180deg, #77b3e3, #3c78b4); box-shadow: 0 5px 12px rgb(60 120 180 / 14%); }
+    .type-bar-count { color: #243b53; font-size: 0.85rem; font-weight: 750; font-variant-numeric: tabular-nums; text-align: center; }
+    .type-bar-label { max-width: 100%; padding-bottom: 8px; color: #52647a; font-size: 0.67rem; font-weight: 650; overflow-wrap: anywhere; text-align: center; }
+    .priority-chart .chart-list { min-height: 120px; grid-template-columns: minmax(100px, 0.9fr) minmax(110px, 1.1fr); align-items: center; gap: 10px; }
+    .donut { position: relative; display: grid; width: min(112px, 100%); aspect-ratio: 1; place-items: center; justify-self: center; border-radius: 50%; }
+    .donut::after { position: absolute; width: 66%; aspect-ratio: 1; border-radius: 50%; background: #fff; content: ""; }
+    .donut-center { z-index: 1; display: grid; justify-items: center; gap: 2px; }
+    .donut-total { color: #183853; font-size: 1.05rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+    .donut-label { color: #718198; font-size: 0.58rem; }
+    .priority-legend { display: grid; gap: 3px; }
+    .legend-item { display: grid; grid-template-columns: 8px minmax(0, 1fr) auto; align-items: center; gap: 5px; padding: 1px 3px; border: 0; border-radius: 5px; background: transparent; text-align: left; }
+    .legend-item:hover, .legend-item[aria-pressed="true"] { background: #f0f7f8; }
+    .legend-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--legend-color); }
+    .legend-name { color: #52647a; font-size: 0.67rem; }
+    .legend-value { color: #243b53; font-size: 0.7rem; font-weight: 750; font-variant-numeric: tabular-nums; }
+    .priority-chart .empty-chart { grid-column: 1 / -1; }
+    .backlog-chart { display: flex; flex-direction: column; }
+    .backlog-chart-header { display: flex; align-items: start; justify-content: space-between; gap: 10px; }
+    .backlog-chart-header .chart-caption { margin-bottom: 4px; }
+    .backlog-indicator { display: grid; flex: 0 0 auto; justify-items: end; gap: 2px; padding: 5px 8px; border: 1px solid #cfe7e1; border-radius: 8px; background: #fff; }
+    .backlog-indicator span { color: #52647a; font-size: 0.58rem; font-weight: 650; }
+    .backlog-indicator strong { color: #087e65; font-size: 1rem; font-variant-numeric: tabular-nums; }
+    .backlog-trend { min-height: 120px; flex: 1; }
+    .backlog-trend svg { display: block; width: 100%; height: 100%; min-height: 120px; overflow: visible; }
+    .backlog-gridline { stroke: #e7edf2; stroke-width: 1; }
+    .backlog-axis-label { fill: #718198; font: 10px "Segoe UI", Arial, sans-serif; }
+    .backlog-line { fill: none; stroke: #087e8b; stroke-linecap: round; stroke-linejoin: round; stroke-width: 3; }
+    .backlog-point { fill: #fff; stroke: #087e8b; stroke-width: 2.5; }
+    .backlog-chart .empty-chart { margin: auto; }
+    .weekly-chart { display: flex; flex-direction: column; min-height: 210px; }
+    .weekly-legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; color: #52647a; font-size: 0.62rem; }
+    .weekly-legend span { display: inline-flex; align-items: center; gap: 4px; }
+    .weekly-legend i { width: 8px; height: 8px; border-radius: 2px; }
+    .weekly-open { background: #d65a52; }
+    .weekly-closed { background: #2e8b57; }
+    .weekly-bars { display: grid; flex: 1; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; align-items: end; padding-top: 8px; }
+    .weekly-group { display: grid; min-width: 0; justify-items: center; gap: 4px; }
+    .weekly-pair { display: flex; height: 104px; width: 100%; align-items: end; justify-content: center; gap: 3px; }
+    .weekly-series { display: flex; width: min(22px, 42%); height: 100%; flex-direction: column; align-items: center; justify-content: end; gap: 2px; }
+    .weekly-value { color: #34475d; font-size: 0.58rem; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .weekly-percentage { color: #52647a; font-size: 0.52rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .weekly-bar { width: 100%; border-radius: 3px 3px 0 0; }
+    .weekly-label { color: #52647a; font-size: 0.6rem; font-weight: 650; white-space: nowrap; }
+    .chart-card[data-chart="location"], .chart-card[data-chart="executor"] { min-height: 210px; }
+    .chart-card[data-chart="work-center"] { grid-column: 1 / -1; }
+    .chart-card[data-chart="work-center"] .chart-list { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px 18px; }
+    .chart-card[data-chart="work-center"] .chart-row { grid-template-columns: minmax(75px, 32%) minmax(40px, 1fr) 36px; }
+    .empty-chart { padding: 20px 10px; color: #718198; font-size: 0.72rem; text-align: center; }
+    #status { min-height: 18px; margin: 10px 0 0; color: #52647a; font-size: 0.68rem; }
+    #status[data-state="error"] { color: #b42318; }
+    #status[data-state="done"] { color: #18794e; }
+
+    @media (max-width: 760px) {
+      .topbar { grid-template-columns: 1fr auto; align-items: start; }
+      .topbar-title { grid-column: 1 / -1; grid-row: 1; justify-self: center; }
+      .brand { grid-column: 1; grid-row: 2; }
+      .top-actions { grid-column: 2; grid-row: 2; align-self: center; }
+      .status-filters { grid-template-columns: 1fr; gap: 7px; }
+      .intro-tools { margin-left: auto; }
+      .chart-grid { grid-template-columns: 1fr; }
+      .chart-card[data-chart="work-center"] { grid-column: auto; }
+      .chart-card[data-chart="work-center"] .chart-list { grid-template-columns: 1fr; }
+      .priority-chart .chart-list { grid-template-columns: minmax(100px, 0.8fr) minmax(130px, 1.2fr); }
+    }
+    @media (max-width: 440px) {
+      .topbar { gap: 12px; padding: 15px; }
+      .brand { gap: 8px; }
+      .brand-mark { width: 36px; height: 36px; }
+      .brand-name { font-size: 0.78rem; }
+      .brand-caption { font-size: 0.62rem; }
+      .nav-link { min-height: 32px; padding: 6px 8px; font-size: 0.67rem; }
+      .chart-row { grid-template-columns: minmax(76px, 34%) minmax(30px, 1fr) 36px; gap: 6px; }
+    }
+  .refresh-control { position: relative; display: grid; }
+    .refresh-control #refresh { background: transparent; cursor: pointer; }
+    .refresh-control #refresh:hover:not(:disabled) { background: #25415a; }
+    .refresh-control #refresh:disabled { cursor: wait; opacity: 0.65; }
+    .refresh-progress { position: absolute; top: 100%; left: 0; display: grid; width: 100%; margin-top: 4px; gap: 3px; color: #d7e4ee; font-size: 0.62rem; }
+    .refresh-progress-label { text-align: center; }
+    .refresh-progress-track { overflow: hidden; height: 5px; border-radius: 99px; background: #425b70; }
+    .refresh-progress-value { width: 0; height: 100%; border-radius: inherit; background: #46c2a8; transition: width 250ms ease; }
+    .refresh-progress[data-state="error"] .refresh-progress-value { background: #ff887d; }
+    :root { font-size: 12px; color: #263634; background: #f3f5f3; }
+    body { zoom: 90%; }
+    .topbar { zoom: 1; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 12px; min-height: 48px; padding: 6px clamp(14px, 2.4vw, 32px); background: #142c2a; }
+    .brand { gap: 8px; }
+    .brand-mark { width: 28px; height: 28px; border-radius: 5px; background: #287c70; }
+    .brand-name { font-size: 0.68rem; font-weight: 750; text-transform: uppercase; }
+    .brand-caption { margin-top: 2px; color: #a7c0bb; font-size: 0.48rem; }
+    .topbar-title { grid-column: 2; grid-row: 1; justify-self: center; margin: 0; font-size: 1.15rem; font-weight: 750; text-align: center; white-space: nowrap; }
+    .top-actions { grid-column: 3; grid-row: 1; flex-wrap: nowrap; gap: 5px; }
+    .top-actions .nav-link, .top-actions button { width: auto; height: 28px; min-height: 28px; padding: 4px 8px; border-color: #53726c; border-radius: 4px; font-size: 0.62rem; }
+    .page-nav-inner { width: min(1600px, 100%); }
+    .page-tab { min-height: 34px; padding: 0 12px; border-bottom-width: 2px; font-size: 0.68rem; }
+    .layout { padding-top: 12px; }
+    @media (max-width: 760px) {
+      .topbar { grid-template-columns: minmax(0, 1fr) auto; }
+      .brand { grid-column: 1; grid-row: 1; }
+      .topbar-title { grid-column: 1 / -1; grid-row: 2; justify-self: center; font-size: 1rem; }
+      .top-actions { grid-column: 2; grid-row: 1; max-width: 52vw; overflow-x: auto; }
+    }
+    @media (max-width: 440px) {
+      .topbar { gap: 7px 10px; padding: 6px 10px; }
+      .brand-name { font-size: 0.62rem; }
+      .brand-caption { font-size: 0.44rem; }
+      .topbar-title { font-size: 0.85rem; }
+      .page-tab { padding: 0 10px; }
+    }
+    .refresh-control:has(> #refresh-progress) { display: flex; align-items: center; gap: 5px; }
+    #refresh-progress { position: relative; inset: auto; display: none; flex: 0 0 40px; width: 40px; height: 40px; margin: 0; place-items: center; color: #fff; font-size: 0.62rem; }
+    #refresh-progress:not([data-state="idle"]) { display: grid; }
+    #refresh-progress .refresh-progress-label { position: relative; z-index: 1; font-weight: 700; }
+    #refresh-progress .refresh-progress-track { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; background: none; }
+    #refresh-progress .refresh-progress-track::before { content: ""; display: block; width: 100%; height: 100%; background: center / contain no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3Cpath id='p' d='M50 6v11' stroke='%2318d9c2' stroke-width='9' stroke-linecap='round'/%3E%3C/defs%3E%3Cuse href='%23p' opacity='.18'/%3E%3Cuse href='%23p' transform='rotate(30 50 50)' opacity='.25'/%3E%3Cuse href='%23p' transform='rotate(60 50 50)' opacity='.32'/%3E%3Cuse href='%23p' transform='rotate(90 50 50)' opacity='.39'/%3E%3Cuse href='%23p' transform='rotate(120 50 50)' opacity='.46'/%3E%3Cuse href='%23p' transform='rotate(150 50 50)' opacity='.53'/%3E%3Cuse href='%23p' transform='rotate(180 50 50)' opacity='.6'/%3E%3Cuse href='%23p' transform='rotate(210 50 50)' opacity='.67'/%3E%3Cuse href='%23p' transform='rotate(240 50 50)' opacity='.74'/%3E%3Cuse href='%23p' transform='rotate(270 50 50)' opacity='.81'/%3E%3Cuse href='%23p' transform='rotate(300 50 50)' opacity='.9'/%3E%3Cuse href='%23p' transform='rotate(330 50 50)'/%3E%3C/svg%3E"); }
+    #refresh-progress[data-state="running"] .refresh-progress-track::before { animation: iw28-spin 1s steps(12) infinite; }
+    #refresh-progress[data-state="error"] .refresh-progress-label { color: #ffaaa4; }
+    #refresh-progress .refresh-progress-value { display: none; }
+    @keyframes iw28-spin { to { transform: rotate(360deg); } }
+    @media (prefers-reduced-motion: reduce) { #refresh-progress[data-state="running"] .refresh-progress-track::before { animation: none; } }
+  </style>
+  <script src="/sidebar.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><img src="/rims-one-logo.png" alt="RIMS One — Robotic Integrated Maintenance System One" style="display:block;width:min(180px, 100%);height:auto"></div>
+    <h1 class="topbar-title">SISTEMA INTEGRADO DE MANUTENÇÃO ROBÓTICA</h1>
+    <div class="top-actions">
+      <div class="refresh-control">
+        <button class="nav-link" id="refresh" type="button">SAP (IW28)</button>
+        <div class="refresh-progress" id="refresh-progress" data-state="idle" title="Estimativa durante a execução; 100% somente após conclusão">
+          <span class="refresh-progress-label" id="refresh-progress-label">0%</span>
+          <div class="refresh-progress-track" role="progressbar" aria-label="Progresso da atualização IW28" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+            <div class="refresh-progress-value" id="refresh-progress-value"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <nav class="page-nav" aria-label="Navegação principal">
+    <div class="page-nav-inner">
+      <a class="page-tab" href="/">Painel de notas</a>
+      <a class="page-tab" href="/dashboard" aria-current="page">Dashboard</a>
+      <a class="page-tab" href="/gantt">Gantt semanal</a>
+      <a class="page-tab" href="/kanban">Kanban</a>
+      <a class="page-tab" href="/nivelamento">Nivelamento</a>
+      <a class="page-tab" href="/confiabilidade">Confiabilidade</a>
+    </div>
+  </nav>
+
+  <main class="layout">
+    <div class="summary">
+      <section class="status-filters" aria-label="Filtros de situação">
+        <button class="status-filter open" type="button" data-filter="open" aria-pressed="true">
+          <span>Notas Abertas</span><strong id="open-count">—</strong>
+        </button>
+        <button class="status-filter scheduled" type="button" data-filter="scheduled" aria-pressed="true">
+          <span>Notas Programadas</span><strong id="scheduled-count">—</strong>
+        </button>
+        <button class="status-filter progress" type="button" data-filter="progress" aria-pressed="true">
+          <span>Serviço em Execução</span><strong id="progress-count">—</strong>
+        </button>
+        <div class="status-filter status-card closed">
+          <span>Notas Encerradas</span><strong id="closed-count">—</strong>
+        </div>
+      </section>
+      <div class="intro-tools">
+        <button class="clear-chart-filters" id="clear-chart-filters" type="button" disabled>Limpar seleções dos gráficos</button>
+        <span class="updated" id="updated">Atualizando dados…</span>
+      </div>
+    </div>
+
+    <section class="chart-grid" aria-label="Gráficos de distribuição">
+      <article class="chart-card" data-chart="work-center">
+        <h3>Notas por centro de trabalho</h3><p class="chart-caption">Centro de trabalho responsável</p><div class="chart-list"></div>
+      </article>
+      <article class="chart-card priority-chart" data-chart="priority">
+        <h3>Notas por prioridade</h3><p class="chart-caption">Prioridade atual, incluindo ajustes locais</p><div class="chart-list"></div>
+      </article>
+      <article class="chart-card backlog-chart" data-chart="backlog">
+        <div class="backlog-chart-header">
+          <div>
+            <h3>Tendência do Backlog</h3>
+            <p class="chart-caption">Semana atual e anterior, desde novembro/2026: HH das notas criadas (incluindo encerradas) ÷ média diária disponível (HH semanal ÷ 7 dias)</p>
+          </div>
+          <div class="backlog-indicator" aria-label="Backlog em dias corridos na semana atual">
+            <span>Backlog atual (dias)</span><strong id="backlog-count">—</strong>
+          </div>
+        </div>
+        <div class="backlog-trend" id="backlog-trend"></div>
+      </article>
+      <article class="chart-card type-chart" data-chart="type">
+        <h3>Notas por tipo</h3><p class="chart-caption">Tipos B1, B2 e B3</p><div class="chart-list"></div>
+      </article>
+      <article class="chart-card" data-chart="executor">
+        <h3>Notas por executor</h3><p class="chart-caption">Executante atual, incluindo ajustes locais</p><div class="chart-list"></div>
+      </article>
+      <article class="chart-card weekly-chart">
+        <h3>Notas abertas e encerradas por semana</h3>
+        <p class="chart-caption">Últimas 5 semanas de criação · ENC atual e percentual sobre notas criadas, não data de encerramento</p>
+        <div class="weekly-bars" id="weekly-notes"></div>
+        <div class="weekly-legend" aria-label="Legenda">
+          <span><i class="weekly-open"></i>Notas criadas</span>
+          <span><i class="weekly-closed"></i>Encerradas (ENC)</span>
+        </div>
+      </article>
+      <article class="chart-card" data-chart="location">
+        <h3>Notas por local</h3><p class="chart-caption">Código customizado do local de instalação (ex.: SUP)</p><div class="chart-list"></div>
+      </article>
+    </section>
+    <p id="status" role="status" aria-live="polite">Carregando exportação IW28…</p>
+  </main>
+
+  <script>
+    const statusLine = document.querySelector("#status");
+    const chartDefinitions = [
+      { id: "type", label: "tipo de nota", getValue: (record) => sourceValue(record, ["Tp.", "Tipo de nota", "Tipo Nota"]) },
+      { id: "priority", label: "prioridade", getValue: (record) => record.priority || sourceValue(record, ["Prioridade", "Texto"]) },
+      {
+        id: "location",
+        label: "local",
+        getValue: (record) => {
+          const locationCode = sourceValue(record, ["Local de instalação"]);
+          return locationCode.length >= 7 ? locationCode.slice(4, 7) : locationCode || record.installation;
+        }
+      },
+      { id: "executor", label: "executor", getValue: (record) => record.executor || sourceValue(record, ["Recebedor", "Executante"]) },
+      { id: "work-center", label: "centro de trabalho", getValue: (record) => sourceValue(record, ["CenTrabRes", "CenTrabOp.", "CenOper."]) }
+    ];
+    let records = [];
+    let availabilityRecords = [];
+    const chartFilters = new Map();
+
+    function sourceValue(record, columns) {
+      for (const column of columns) {
+        const value = record.sourceColumns?.[column];
+        if (value) return String(value).trim();
+      }
+      return "";
+    }
+
+    function isScheduled(record) {
+      const order = String(record.order || "").trim().replace(/[.,\s]/g, "");
+      return /^\d+$/.test(order) && Number(order) > 10;
+    }
+
+    function isInProgress(record) {
+      const status = String(record.status || "").toLocaleUpperCase("pt-BR");
+      if (status !== "AND" && status !== "PEN") return false;
+      return sourceValue(record, ["P", "Parada"]).toLocaleUpperCase("pt-BR") === "X"
+        || String(record.shutdown || "").toLocaleUpperCase("pt-BR") === "X";
+    }
+
+    function parseDashboardDate(value) {
+      const text = String(value || "").trim();
+      let parts = text.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      if (!parts) {
+        const localized = text.match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
+        if (!localized) return null;
+        parts = [localized[0], localized[3], localized[2], localized[1]];
+      }
+      const year = Number(parts[1]);
+      const month = Number(parts[2]);
+      const day = Number(parts[3]);
+      const date = new Date(Date.UTC(year, month - 1, day));
+      if (date.getUTCFullYear() !== year || date.getUTCMonth() !== month - 1 || date.getUTCDate() !== day) return null;
+      return date;
+    }
+
+    function mondayOf(date) {
+      const monday = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+      monday.setUTCDate(monday.getUTCDate() - ((monday.getUTCDay() + 6) % 7));
+      return monday;
+    }
+
+    function weekKey(date) {
+      return mondayOf(date).toISOString().slice(0, 10);
+    }
+
+    function isoWeek(date) {
+      const thursday = mondayOf(date);
+      thursday.setUTCDate(thursday.getUTCDate() + 3);
+      const year = thursday.getUTCFullYear();
+      const firstDay = new Date(Date.UTC(year, 0, 1));
+      const number = Math.floor((thursday - firstDay) / 86400000 / 7) + 1;
+      return { year, number };
+    }
+
+    function parseNoteHours(value) {
+      const text = String(value || "").trim().replace(/\s/g, "");
+      if (!text) return 0;
+      const normalized = text.includes(",") ? text.replace(/\./g, "").replace(",", ".") : text;
+      const hours = Number(normalized);
+      return Number.isFinite(hours) && hours > 0 ? hours : 0;
+    }
+
+    function formatHours(value) {
+      return `${value.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} HH`;
+    }
+
+    function renderWeeklyNotes(data) {
+      const now = new Date();
+      const currentMonday = mondayOf(new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate())));
+      const weeks = Array.from({ length: 5 }, (_, index) => {
+        const start = new Date(currentMonday);
+        start.setUTCDate(start.getUTCDate() - (4 - index) * 7);
+        return { start, key: weekKey(start), open: 0, closed: 0 };
+      });
+      const weekByKey = new Map(weeks.map((week) => [week.key, week]));
+      for (const record of data) {
+        const created = parseDashboardDate(sourceValue(record, ["Criado em"]));
+        if (!created) continue;
+        const key = weekKey(created);
+        const field = String(record.status || "").trim().toLocaleUpperCase("pt-BR") === "ENC" ? "closed" : "open";
+        const week = weekByKey.get(key);
+        if (week) week[field] += 1;
+      }
+
+      renderWeeklyBars(document.querySelector("#weekly-notes"), weeks);
+    }
+
+    function renderWeeklyBars(container, weeks) {
+      const maximum = Math.max(1, ...weeks.map((week) => week.open + week.closed));
+      container.replaceChildren();
+      for (const week of weeks) {
+        const iso = isoWeek(week.start);
+        const group = document.createElement("div");
+        group.className = "weekly-group";
+        const start = week.start.toLocaleDateString("pt-BR", { timeZone: "UTC" });
+        const total = week.open + week.closed;
+        const percentage = total ? week.closed / total * 100 : 0;
+        const percentageText = `${percentage.toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%`;
+        const description = `Semana ${iso.number}/${iso.year}, início em ${start}: ${total.toLocaleString("pt-BR")} notas criadas, ${week.closed.toLocaleString("pt-BR")} encerradas atualmente (${percentageText})`;
+        group.setAttribute("role", "img");
+        group.setAttribute("aria-label", description);
+        group.title = description;
+        const pair = document.createElement("div");
+        pair.className = "weekly-pair";
+        for (const [type, count] of [["open", total], ["closed", week.closed]]) {
+          const series = document.createElement("div");
+          series.className = "weekly-series";
+          const value = document.createElement("span");
+          value.className = "weekly-value";
+          value.textContent = count.toLocaleString("pt-BR");
+          const bar = document.createElement("div");
+          bar.className = `weekly-bar weekly-${type}`;
+          bar.style.height = `${count / maximum * 80}px`;
+          series.append(value);
+          if (type === "closed") {
+            const percentageLabel = document.createElement("span");
+            percentageLabel.className = "weekly-percentage";
+            percentageLabel.textContent = percentageText;
+            series.append(percentageLabel);
+          }
+          series.append(bar);
+          pair.append(series);
+        }
+        const label = document.createElement("span");
+        label.className = "weekly-label";
+        label.textContent = `S${String(iso.number).padStart(2, "0")}`;
+        group.append(pair, label);
+        container.append(group);
+      }
+    }
+
+    function renderBacklogTrend(data) {
+      const container = document.querySelector("#backlog-trend");
+      container.replaceChildren();
+      const indicator = document.querySelector("#backlog-count");
+      indicator.textContent = "—";
+      indicator.removeAttribute("title");
+
+      const availabilityByWeek = new Map();
+      for (const entry of availabilityRecords) {
+        const date = parseDashboardDate(entry.date);
+        const hours = Number(entry.hh);
+        if (!date || !Number.isFinite(hours) || hours < 0) continue;
+        const key = weekKey(date);
+        availabilityByWeek.set(key, (availabilityByWeek.get(key) || 0) + hours);
+      }
+
+      const capacityWeeks = [...availabilityByWeek.entries()]
+        .filter(([, available]) => available > 0)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([key, available]) => ({ key, available }));
+      if (!capacityWeeks.length) {
+        const empty = document.createElement("p");
+        empty.className = "empty-chart";
+        empty.textContent = "Sem HH disponível na planilha de Nivelamento.";
+        container.append(empty);
+        return;
+      }
+
+      const now = new Date();
+      const currentWeekKey = weekKey(new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate())));
+      const currentWeek = capacityWeeks.find((week) => week.key === currentWeekKey);
+      if (currentWeek) {
+        const pendingHours = data.reduce((total, record) => {
+          if (String(record.status || "").toLocaleUpperCase("pt-BR") === "ENC") return total;
+          return total + parseNoteHours(sourceValue(record, ["DuraçParad"]));
+        }, 0);
+        const days = pendingHours / (currentWeek.available / 7);
+        indicator.textContent = `${days.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} dias`;
+        indicator.title = `${formatHours(pendingHours)} de notas não encerradas ÷ ${formatHours(currentWeek.available / 7)} médias disponíveis por dia`;
+      }
+
+      const hoursByWeek = new Map();
+      for (const record of data) {
+        const created = parseDashboardDate(sourceValue(record, ["Criado em"]));
+        if (!created) continue;
+        const key = weekKey(created);
+        const hours = parseNoteHours(sourceValue(record, ["DuraçParad"]));
+        hoursByWeek.set(key, (hoursByWeek.get(key) || 0) + hours);
+      }
+      if (!hoursByWeek.size) {
+        const empty = document.createElement("p");
+        empty.className = "empty-chart";
+        empty.textContent = "Sem datas de criação válidas para calcular as horas das notas.";
+        container.append(empty);
+        return;
+      }
+
+      const trendStart = "2026-11-02";
+      const previousWeek = parseDashboardDate(currentWeekKey);
+      previousWeek.setUTCDate(previousWeek.getUTCDate() - 7);
+      const previousWeekKey = weekKey(previousWeek);
+      const trendCapacityWeeks = capacityWeeks.filter((week) =>
+        week.key >= trendStart && (week.key === previousWeekKey || week.key === currentWeekKey)
+      );
+      if (!trendCapacityWeeks.length) {
+        const empty = document.createElement("p");
+        empty.className = "empty-chart";
+        empty.textContent = "Sem HH disponível na semana atual ou anterior a partir de novembro/2026.";
+        container.append(empty);
+        return;
+      }
+
+      const weeks = trendCapacityWeeks.map((week) => {
+        const start = parseDashboardDate(week.key);
+        const weeklyHours = hoursByWeek.get(week.key) || 0;
+        return {
+          ...week,
+          start,
+          weeklyHours,
+          backlogDays: weeklyHours / (week.available / 7)
+        };
+      });
+
+      const width = 600;
+      const height = 160;
+      const left = 34;
+      const right = 12;
+      const top = 12;
+      const bottom = 30;
+      const plotWidth = width - left - right;
+      const plotHeight = height - top - bottom;
+      const maximum = Math.max(1, ...weeks.map((week) => week.backlogDays));
+      const axisMaximum = Math.ceil(maximum / 5) * 5;
+      const x = (index) => weeks.length === 1 ? left + plotWidth / 2 : left + index * plotWidth / (weeks.length - 1);
+      const y = (days) => top + plotHeight - days / axisMaximum * plotHeight;
+      const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+      svg.setAttribute("role", "img");
+      svg.setAttribute("aria-label", "Tendência em dias corridos nas semanas atual e anterior, a partir de novembro de 2026: horas das notas criadas em cada semana, incluindo as encerradas, divididas pela média diária de HH disponíveis.");
+      const title = document.createElementNS(svg.namespaceURI, "title");
+      title.textContent = "HH das notas criadas em cada semana divididas pela média diária de HH disponíveis";
+      svg.append(title);
+
+      for (const fraction of [0, 0.5, 1]) {
+        const value = Math.round(axisMaximum * fraction);
+        const line = document.createElementNS(svg.namespaceURI, "line");
+        line.setAttribute("x1", String(left));
+        line.setAttribute("x2", String(width - right));
+        line.setAttribute("y1", String(y(value)));
+        line.setAttribute("y2", String(y(value)));
+        line.setAttribute("class", "backlog-gridline");
+        const label = document.createElementNS(svg.namespaceURI, "text");
+        label.setAttribute("x", String(left - 7));
+        label.setAttribute("y", String(y(value) + 3));
+        label.setAttribute("text-anchor", "end");
+        label.setAttribute("class", "backlog-axis-label");
+        label.textContent = `${value.toLocaleString("pt-BR")} dias`;
+        svg.append(line, label);
+      }
+
+      const trend = document.createElementNS(svg.namespaceURI, "polyline");
+      trend.setAttribute("class", "backlog-line");
+      trend.setAttribute("points", weeks.map((week, index) => `${x(index)},${y(week.backlogDays)}`).join(" "));
+      svg.append(trend);
+      weeks.forEach((week, index) => {
+        const point = document.createElementNS(svg.namespaceURI, "circle");
+        point.setAttribute("class", "backlog-point");
+        point.setAttribute("cx", String(x(index)));
+        point.setAttribute("cy", String(y(week.backlogDays)));
+        point.setAttribute("r", "3");
+        const pointTitle = document.createElementNS(svg.namespaceURI, "title");
+        const label = `${String(week.start.getUTCDate()).padStart(2, "0")}/${String(week.start.getUTCMonth() + 1).padStart(2, "0")}`;
+        const iso = isoWeek(week.start);
+        pointTitle.textContent = `Semana ${iso.number}/${iso.year} (início em ${label}/${week.start.getUTCFullYear()}): ${formatHours(week.weeklyHours)} de notas criadas ÷ ${formatHours(week.available / 7)} por dia = ${week.backlogDays.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} dias corridos`;
+        point.append(pointTitle);
+        svg.append(point);
+
+        const weekLabel = document.createElementNS(svg.namespaceURI, "text");
+        weekLabel.setAttribute("x", String(x(index)));
+        weekLabel.setAttribute("y", String(height - 8));
+        weekLabel.setAttribute("text-anchor", "middle");
+        weekLabel.setAttribute("class", "backlog-axis-label");
+        weekLabel.textContent = `S${String(iso.number).padStart(2, "0")}/${String(iso.year).slice(-2)}`;
+        svg.append(weekLabel);
+      });
+      container.append(svg);
+    }
+
+
+    function matchesChartFilters(record, exceptChartId = "") {
+      return [...chartFilters.entries()].every(([chartId, values]) => {
+        if (chartId === exceptChartId || !values.size) return true;
+        const definition = chartDefinitions.find((item) => item.id === chartId);
+        const value = (definition?.getValue(record) || "").trim() || "Não informado";
+        return values.has(value);
+      });
+    }
+
+    function updateCards() {
+      const filtered = records.filter((record) => matchesChartFilters(record));
+      document.querySelector("#open-count").textContent = filtered.length.toLocaleString("pt-BR");
+      document.querySelector("#scheduled-count").textContent = filtered.filter(isScheduled).length.toLocaleString("pt-BR");
+      document.querySelector("#progress-count").textContent = filtered.filter(isInProgress).length.toLocaleString("pt-BR");
+      document.querySelector("#closed-count").textContent = filtered
+        .filter((record) => String(record.status || "").toLocaleUpperCase("pt-BR") === "ENC")
+        .length.toLocaleString("pt-BR");
+    }
+
+    function selectedRecords(exceptChartId = "") {
+      const selected = new Set();
+      if (document.querySelector('[data-filter="open"]').getAttribute("aria-pressed") === "true") {
+        records.forEach((record) => selected.add(record.id));
+      }
+      if (document.querySelector('[data-filter="scheduled"]').getAttribute("aria-pressed") === "true") {
+        records.filter(isScheduled).forEach((record) => selected.add(record.id));
+      }
+      if (document.querySelector('[data-filter="progress"]').getAttribute("aria-pressed") === "true") {
+        records.filter(isInProgress).forEach((record) => selected.add(record.id));
+      }
+      return records.filter((record) => {
+        if (!selected.has(record.id)) return false;
+        return matchesChartFilters(record, exceptChartId);
+      });
+    }
+
+    function aggregate(data, definition) {
+      const counts = new Map();
+      for (const record of data) {
+        const label = definition.getValue(record).trim() || "Não informado";
+        counts.set(label, (counts.get(label) || 0) + 1);
+      }
+      if (definition.id === "type") {
+        for (const type of ["B1", "B2", "B3"]) {
+          if (!counts.has(type)) counts.set(type, 0);
+        }
+      }
+      return [...counts.entries()]
+        .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "pt-BR"))
+        .map(([label, count]) => [label, count, [label]]);
+    }
+
+    function isChartValueSelected(chartId, values) {
+      const selected = chartFilters.get(chartId);
+      return Boolean(selected?.size && values.every((value) => selected.has(value)));
+    }
+
+    function toggleChartSelection(chartId, values) {
+      const selected = new Set(chartFilters.get(chartId) || []);
+      if (values.every((value) => selected.has(value))) {
+        values.forEach((value) => selected.delete(value));
+      } else {
+        values.forEach((value) => selected.add(value));
+      }
+      if (selected.size) chartFilters.set(chartId, selected);
+      else chartFilters.delete(chartId);
+      render();
+    }
+
+    function makeChartSelectable(element, chartId, values, label) {
+      element.classList.add("chart-selectable");
+      element.setAttribute("role", "button");
+      element.setAttribute("tabindex", "0");
+      element.setAttribute("aria-label", `${label}. Clique para filtrar os demais gráficos.`);
+      element.setAttribute("aria-pressed", String(isChartValueSelected(chartId, values)));
+      element.title = `${label} — clique para filtrar os demais gráficos`;
+      element.addEventListener("click", () => toggleChartSelection(chartId, values));
+      element.addEventListener("keydown", (event) => {
+        if (event.key !== "Enter" && event.key !== " ") return;
+        event.preventDefault();
+        toggleChartSelection(chartId, values);
+      });
+    }
+
+    function renderTypeChart(list, entries, chartId) {
+      list.classList.add("type-chart-list");
+      list.replaceChildren();
+      const maximum = Math.max(1, ...entries.map((entry) => entry[1]));
+      const total = entries.reduce((sum, entry) => sum + entry[1], 0);
+      const names = { B1: "B1_Corretiva", B2: "B2_Preditiva", B3: "B3_Preventiva" };
+      for (const [label, count, values] of entries) {
+        const nameText = names[label] || label;
+        const percentage = total ? count / total * 100 : 0;
+        const percentageText = `${percentage.toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%`;
+        const item = document.createElement("div");
+        item.className = "type-bar-item";
+        makeChartSelectable(item, chartId, values, `${nameText}: ${count.toLocaleString("pt-BR")} notas (${percentageText})`);
+        const area = document.createElement("div");
+        area.className = "type-bar-area";
+        const bar = document.createElement("div");
+        bar.className = "type-bar";
+        bar.style.height = `${count === 0 ? 3 : Math.max(10, (count / maximum) * 108)}px`;
+        area.append(bar);
+        const value = document.createElement("span");
+        value.className = "type-bar-count";
+        value.textContent = `${count.toLocaleString("pt-BR")} (${percentageText})`;
+        const name = document.createElement("span");
+        name.className = "type-bar-label";
+        name.textContent = nameText;
+        item.append(area, value, name);
+        list.append(item);
+      }
+    }
+
+    function priorityColor(label) {
+      const normalized = label.toLocaleLowerCase("pt-BR");
+      if (normalized === "alta") return "#d65a52";
+      if (normalized === "média" || normalized === "media") return "#e2a72e";
+      if (normalized === "baixa") return "#28a58d";
+      return "#7293b5";
+    }
+
+    function renderPriorityChart(list, entries, chartId) {
+      list.classList.add("priority-chart-list");
+      list.replaceChildren();
+      if (!entries.length) {
+        const empty = document.createElement("p");
+        empty.className = "empty-chart";
+        empty.textContent = "Sem notas para exibir por prioridade.";
+        list.append(empty);
+        return;
+      }
+
+      const total = entries.reduce((sum, entry) => sum + entry[1], 0);
+      let offset = 0;
+      const segments = entries.map(([label, count]) => {
+        const start = offset;
+        offset += total ? (count / total) * 100 : 0;
+        return `${priorityColor(label)} ${start}% ${offset}%`;
+      });
+      const donut = document.createElement("div");
+      donut.className = "donut";
+      donut.setAttribute("role", "img");
+      donut.setAttribute("aria-label", entries.map(([label, count]) => `${label}: ${count}`).join(", "));
+      donut.style.background = total
+        ? `conic-gradient(${segments.join(", ")})`
+        : "conic-gradient(#e9eef3 0% 100%)";
+      const center = document.createElement("div");
+      center.className = "donut-center";
+      const totalValue = document.createElement("span");
+      totalValue.className = "donut-total";
+      totalValue.textContent = total.toLocaleString("pt-BR");
+      const totalLabel = document.createElement("span");
+      totalLabel.className = "donut-label";
+      totalLabel.textContent = "notas";
+      center.append(totalValue, totalLabel);
+      donut.append(center);
+
+      const legend = document.createElement("div");
+      legend.className = "priority-legend";
+      for (const [label, count, values] of entries) {
+        const item = document.createElement("button");
+        item.type = "button";
+        item.className = "legend-item";
+        makeChartSelectable(item, chartId, values, `${label}: ${count} notas`);
+        const dot = document.createElement("span");
+        dot.className = "legend-dot";
+        dot.style.setProperty("--legend-color", priorityColor(label));
+        const name = document.createElement("span");
+        name.className = "legend-name";
+        name.textContent = label;
+        const value = document.createElement("span");
+        value.className = "legend-value";
+        value.textContent = count.toLocaleString("pt-BR");
+        item.append(dot, name, value);
+        legend.append(item);
+      }
+      list.append(donut, legend);
+    }
+
+    function renderHorizontalChart(list, entries, chartId) {
+      list.classList.remove("type-chart-list", "priority-chart-list");
+      list.replaceChildren();
+      const visibleEntries = entries.slice(0, 6).map(([label, count, values]) => ({ label, count, values }));
+      if (entries.length > 6) {
+        const remainderEntries = entries.slice(6);
+        visibleEntries.push({
+          label: `Outros (${remainderEntries.length} grupos)`,
+          count: remainderEntries.reduce((sum, entry) => sum + entry[1], 0),
+          values: remainderEntries.flatMap((entry) => entry[2])
+        });
+      }
+      const maximum = Math.max(1, ...visibleEntries.map((entry) => entry.count));
+      if (!visibleEntries.length) {
+        const empty = document.createElement("p");
+        empty.className = "empty-chart";
+        empty.textContent = "Sem notas para exibir.";
+        list.append(empty);
+        return;
+      }
+      for (const { label, count, values } of visibleEntries) {
+        const row = document.createElement("div");
+        row.className = "chart-row";
+        makeChartSelectable(row, chartId, values, `${label}: ${count} notas`);
+        const name = document.createElement("span");
+        name.className = "chart-label";
+        name.textContent = label;
+        name.title = label;
+        const track = document.createElement("div");
+        track.className = "chart-track";
+        track.setAttribute("role", "img");
+        track.setAttribute("aria-label", `${label}: ${count} notas`);
+        const bar = document.createElement("div");
+        bar.className = "chart-bar";
+        bar.style.width = `${(count / maximum) * 100}%`;
+        track.append(bar);
+        const value = document.createElement("span");
+        value.className = "chart-value";
+        value.textContent = count.toLocaleString("pt-BR");
+        row.append(name, track, value);
+        list.append(row);
+      }
+    }
+
+    function renderChart(definition, data) {
+      const card = document.querySelector(`[data-chart="${definition.id}"]`);
+      const list = card.querySelector(".chart-list");
+      const entries = aggregate(data, definition);
+      if (definition.id === "type") {
+        const order = new Map([["B1", 0], ["B2", 1], ["B3", 2]]);
+        const typeEntries = entries.sort((a, b) =>
+          (order.get(a[0]) ?? 3) - (order.get(b[0]) ?? 3)
+        );
+        renderTypeChart(list, typeEntries, definition.id);
+        return;
+      }
+      if (definition.id === "priority") {
+        renderPriorityChart(list, entries, definition.id);
+        return;
+      }
+      const visibleEntries = definition.id === "executor"
+        ? entries.filter(([label]) => label.toLocaleLowerCase("pt-BR") !== "não informado")
+        : entries;
+      renderHorizontalChart(list, visibleEntries, definition.id);
+    }
+
+    function render() {
+      updateCards();
+      const visible = selectedRecords();
+      renderBacklogTrend(records.filter((record) => matchesChartFilters(record)));
+      renderWeeklyNotes(visible);
+      for (const definition of chartDefinitions) {
+        renderChart(definition, selectedRecords(definition.id));
+      }
+      const activeFilters = [...chartFilters.entries()].filter(([, values]) => values.size);
+      const clearButton = document.querySelector("#clear-chart-filters");
+      clearButton.disabled = activeFilters.length === 0;
+      if (activeFilters.length) {
+        const summary = activeFilters.map(([chartId, values]) => {
+          const definition = chartDefinitions.find((item) => item.id === chartId);
+          return `${definition.label}: ${[...values].join(", ")}`;
+        }).join(" · ");
+        clearButton.textContent = `Limpar seleções (${activeFilters.length})`;
+        clearButton.title = summary;
+      } else {
+        clearButton.textContent = "Limpar seleções dos gráficos";
+        clearButton.removeAttribute("title");
+      }
+      statusLine.textContent = `${visible.length.toLocaleString("pt-BR")} de ${records.length.toLocaleString("pt-BR")} notas incluídas nos gráficos.`;
+      if (activeFilters.length) statusLine.textContent += ` Filtros: ${activeFilters.map(([chartId, values]) => {
+        const definition = chartDefinitions.find((item) => item.id === chartId);
+        return `${definition.label} = ${[...values].join(", ")}`;
+      }).join("; ")}.`;
+      statusLine.dataset.state = "done";
+    }
+
+    async function loadDashboard() {
+      try {
+        const [response, availabilityResponse, source] = await Promise.all([
+          fetch("/api/data?source=iw28", { cache: "no-store" }),
+          fetch("/api/nivelamento", { cache: "no-store" }),
+          fetch("/api/sources", { cache: "no-store" })
+        ]);
+        const [result, availabilityResult, sourceResult] = await Promise.all([
+          response.json(),
+          availabilityResponse.json(),
+          source.json()
+        ]);
+        if (!response.ok) throw new Error(result.message || "Não foi possível carregar a exportação IW28.");
+        if (!availabilityResponse.ok) throw new Error(availabilityResult.message || "Não foi possível carregar as HH disponíveis.");
+        if (!source.ok) throw new Error(sourceResult.message || "Não foi possível consultar a atualização da IW28.");
+        if (!Array.isArray(availabilityResult.records)) throw new Error("A planilha de Nivelamento não retornou registros de HH disponíveis.");
+        records = result.records.filter((record) =>
+          String(record.status || "").trim().replace(/\s+/g, " ").toLocaleUpperCase("pt-BR") !== "MREL MSEN ORDA"
+        );
+        availabilityRecords = availabilityResult.records;
+        const iw28 = sourceResult.sources.find((item) => item.id === "iw28");
+        document.querySelector("#updated").textContent = iw28 ? `IW28 atualizada em ${iw28.updated}` : "IW28";
+        render();
+      } catch (error) {
+        statusLine.dataset.state = "error";
+        statusLine.textContent = error.message;
+      }
+    }
+
+    document.querySelectorAll("button.status-filter").forEach((button) => {
+      button.addEventListener("click", () => {
+        button.setAttribute("aria-pressed", String(button.getAttribute("aria-pressed") !== "true"));
+        render();
+      });
+    });
+
+
+    document.querySelector("#clear-chart-filters").addEventListener("click", () => {
+      chartFilters.clear();
+      render();
+    });
+
+    loadDashboard();
+    const refreshButton = document.querySelector("#refresh");
+    const refreshProgress = document.querySelector("#refresh-progress");
+    const refreshProgressLabel = document.querySelector("#refresh-progress-label");
+    const refreshProgressTrack = refreshProgress.querySelector('[role="progressbar"]');
+    const refreshProgressValue = document.querySelector("#refresh-progress-value");
+    let refreshStartedAt = 0;
+    let refreshTimer = null;
+
+    function setRefreshProgress(value, state, label = `${value}%`) {
+      const progress = Math.max(0, Math.min(100, value));
+      refreshProgress.dataset.state = state;
+      refreshProgressLabel.textContent = label;
+      refreshProgressTrack.setAttribute("aria-valuenow", String(progress));
+      refreshProgressValue.style.width = `${progress}%`;
+    }
+
+    function updateEstimatedProgress() {
+      if (!refreshStartedAt) refreshStartedAt = Date.now();
+      const estimate = Math.min(95, Math.floor(((Date.now() - refreshStartedAt) / 60000) * 95));
+      setRefreshProgress(estimate, "running");
+    }
+
+    function finishRefresh(label) {
+      refreshTimer = null;
+      refreshStartedAt = 0;
+      refreshButton.disabled = false;
+      if (label) setRefreshProgress(0, "error", label);
+    }
+
+    async function pollRefresh(resumeOnly = false) {
+      try {
+        const response = await fetch("/api/status", { cache: "no-store" });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.message || "Não foi possível consultar a execução SAP.");
+        if (result.state === "queued" || result.state === "running") {
+          refreshButton.disabled = true;
+          updateEstimatedProgress();
+          refreshTimer = window.setTimeout(pollRefresh, 1000);
+        } else if (result.state === "done" && !resumeOnly) {
+          setRefreshProgress(100, "done");
+          await reloadAfterRefresh();
+          finishRefresh();
+        } else {
+          finishRefresh(result.state === "error" && !resumeOnly ? "Falha" : "");
+        }
+      } catch (error) {
+        finishRefresh("Falha");
+        refreshProgress.title = error.message;
+      }
+    }
+
+    refreshButton.addEventListener("click", async () => {
+      refreshButton.disabled = true;
+      refreshStartedAt = Date.now();
+      setRefreshProgress(0, "running");
+      try {
+        const response = await fetch("/api/run", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: "{}"
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.message || "Não foi possível iniciar a exportação.");
+        if (refreshTimer) window.clearTimeout(refreshTimer);
+        refreshTimer = window.setTimeout(pollRefresh, 1000);
+      } catch (error) {
+        finishRefresh("Falha");
+        refreshProgress.title = error.message;
+      }
+    });
+
+    pollRefresh(true);
+
+    function reloadAfterRefresh() {
+      return loadDashboard();
+    }
+  </script>
+</body>
+</html>

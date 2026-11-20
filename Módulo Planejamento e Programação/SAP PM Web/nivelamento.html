@@ -1,0 +1,1408 @@
+﻿<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Nivelamento · Planejamento SAP PM</title>
+  <style>
+    :root {
+      font-size: 12px;
+      font-family: "Segoe UI", Arial, sans-serif;
+      color: #172b4d;
+      background: #f3f6fa;
+      font-synthesis: none;
+    }
+
+    * { box-sizing: border-box; }
+    body { min-width: 360px; margin: 0; }
+    button, a { font: inherit; }
+    .topbar {
+      zoom: 0.9;
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 20px;
+      padding: 26px clamp(18px, 4vw, 48px);
+      background: #102b46;
+      color: #fff;
+    }
+    .brand { display: flex; align-items: center; gap: 13px; }
+    .brand-mark { display: grid; width: 42px; height: 42px; place-items: center; border-radius: 12px; background: #087e8b; color: #fff; font-weight: 800; }
+    .brand-name { margin: 0; font-size: 1rem; }
+    .brand-caption { margin: 4px 0 0; color: #b7c8d8; font-size: 0.8rem; }
+    .topbar-title { grid-column: 2; grid-row: 1; margin: 0; color: #fff; font-size: 1.4rem; text-align: left; justify-self: start; margin-left: 24px; }
+    .top-actions { display: flex; flex-wrap: wrap; justify-self: end; align-items: center; gap: 10px; }
+    .nav-link {
+      box-sizing: border-box;
+      display: inline-flex;
+      width: 110px;
+      height: 40px;
+      min-height: 40px;
+      align-items: center;
+      justify-content: center;
+      padding: 9px 10px;
+      border: 1px solid #638099;
+      border-radius: 7px;
+      background: transparent;
+      color: #fff;
+      cursor: pointer;
+      font-weight: 650;
+      font-size: 0.85rem;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .nav-link:hover { background: #25415a; }
+    .nav-link[aria-current="page"] { border-color: #46c2a8; background: #087e8b; }
+    .page-nav { overflow-x: auto; border-bottom: 1px solid #dfe6ee; background: #fff; scrollbar-width: thin; }
+    .page-nav-inner { display: flex; width: min(1800px, 100%); min-width: max-content; margin: 0 auto; padding: 0 clamp(12px, 2vw, 24px); }
+    .page-tab { display: inline-flex; min-height: 44px; align-items: center; justify-content: center; padding: 0 15px; border-bottom: 3px solid transparent; color: #52647a; font-size: 0.78rem; font-weight: 650; text-decoration: none; white-space: nowrap; }
+    .page-tab:hover { background: #f3f8f8; color: #087e8b; }
+    .page-tab[aria-current="page"] { border-bottom-color: #087e8b; color: #087e8b; }
+    .page-tab:focus-visible { outline: 2px solid #087e8b; outline-offset: -2px; }
+    #upload-button { border-color: #fff; background: #fff; color: #1762a5; }
+    #upload-button:hover { background: #eaf3fc; }
+    .layout { width: min(1800px, 100%); margin: 0 auto; padding: 28px clamp(12px, 2vw, 24px) 48px; }
+    .controls { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 8px; margin-bottom: 12px; }
+    .filter-controls, .period-controls { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 8px; }
+    .field { position: relative; display: grid; gap: 2px; min-width: 170px; color: #52647a; font-size: 0.62rem; font-weight: 650; }
+    .multi { position: relative; }
+    .multi > summary { display: block; height: 32px; overflow: hidden; padding: 8px 24px 0 8px; border: 1px solid #d5dee8; border-radius: 7px; background: #fff; color: #193651; cursor: pointer; font-size: 0.68rem; font-weight: 400; list-style: none; text-overflow: ellipsis; white-space: nowrap; }
+    .multi > summary::-webkit-details-marker { display: none; }
+    .multi > summary::after { content: "▾"; position: absolute; right: 8px; top: 8px; color: #67788e; }
+    .multi-options { position: absolute; z-index: 50; top: 36px; left: 0; width: max(100%, 230px); max-height: 260px; overflow-y: auto; padding: 6px; border: 1px solid #d5dee8; border-radius: 7px; background: #fff; box-shadow: 0 8px 20px rgb(16 43 70 / 12%); }
+    .multi-options label { display: flex; align-items: center; gap: 6px; padding: 3px 2px; color: #193651; font-size: 0.68rem; font-weight: 400; cursor: pointer; }
+    .multi-options label:hover { background: #eaf5f6; }
+    .multi-options .multi-all { border-bottom: 1px solid #edf1f5; font-weight: 650; }
+    .multi-options input { margin: 0; }
+    .period-controls { padding: 6px 10px; border: 1px solid rgb(23 105 170 / 35%); border-radius: 12px; background: rgb(23 105 170 / 5%); align-items: center; }
+    .controls button, .period-controls button {
+      min-height: 32px;
+      padding: 6px 9px;
+      border: 1px solid #d5dee8;
+      border-radius: 7px;
+      background: #fff;
+      color: #193651;
+      cursor: pointer;
+      font-weight: 650;
+      font-size: 0.68rem;
+    }
+    .controls button:hover, .period-controls button:hover { border-color: #087e8b; background: #eaf5f6; }
+    .controls .upload-button { border-color: #087e8b; background: #087e8b; color: #fff; }
+    .controls .upload-button:hover { background: #066a75; }
+    #week-label { display: inline-flex; min-width: 165px; min-height: 32px; align-items: center; justify-content: center; color: #34475d; font-size: 0.72rem; font-weight: 700; text-align: center; }
+    .cards { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: flex-start; gap: 5px; }
+    .card { width: 110px; padding: 3px 6px; border: 1px solid; border-radius: 7px; }
+    .card span { display: block; font-size: 0.6rem; font-weight: 700; }
+    .card strong { display: inline; margin-top: 0; font-size: 0.95rem; }
+    .card small { margin-left: 3px; font-size: 0.58rem; font-weight: 600; }
+    .card-open { border-color: #f1b5b5; background: #fff; color: #b42318; }
+    .card-available { border-color: #aebccb; background: #fff; color: #52647a; }
+    .card-scheduled { border-color: #f0d57a; background: #fff; color: #8a6700; }
+    .card-progress { border-color: #b8d5f3; background: #fff; color: #1762a5; }
+    .card-closed { border-color: #b7e0c8; background: #fff; color: #18794e; }
+    .card-pct { border-color: #c3cfdb; background: #fff; color: #34475d; }
+    .leveling-content { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .availability-panel { min-width: 0; padding: 10px; border: 1px solid #e2e8ef; border-radius: 12px; background: #fff; }
+    .availability-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 5px; }
+    .availability-panel h2 { margin: 0; color: #34475d; font-size: 0.9rem; }
+    .availability-refresh { min-height: 20px; padding: 2px 6px; border: 1px solid #d5dee8; border-radius: 6px; background: #fff; color: #193651; cursor: pointer; font-size: 0.58rem; }
+    .availability-refresh:hover:not(:disabled) { border-color: #087e8b; background: #eaf5f6; }
+    .availability-refresh:disabled { cursor: wait; opacity: 0.65; }
+    .availability-refresh-status { color: #b42318; font-size: 0.65rem; }
+    .availability-toolbar .period-controls { flex: 0 1 auto; justify-content: flex-end; max-width: 100%; margin-left: auto; gap: 3px; padding: 2px 4px; }
+    .availability-toolbar .period-controls button { min-height: 20px; padding: 2px 4px; font-size: 0.58rem; }
+    .availability-toolbar #week-label { min-width: 0; min-height: 20px; font-size: 0.58rem; }
+    .availability-scroll { max-height: 202.5px; overflow: auto; }
+    .availability-table { width: 100%; min-width: 570px; table-layout: fixed; border-collapse: collapse; font-size: 0.68rem; }
+    .availability-table col:first-child { width: 170px; }
+    .availability-table th, .availability-table td { padding: 2px 4px; border: 1px solid #e2e8ef; text-align: center; }
+    .availability-table th { background: #f7f9fb; }
+    .availability-date { display: block; font-size: 0.55rem; font-weight: 400; }
+    .availability-table th[scope="row"], .availability-table th[rowspan] { text-align: left; overflow-wrap: anywhere; }
+    .availability-table tbody th[scope="row"] { font-size: 0.55rem; }
+    .availability-table tfoot { font-weight: 700; background: #dceee9; }
+    .availability-note { margin: 6px 0 0; color: #52647a; font-size: 0.68rem; }
+    .unassigned-panel { grid-row: span 2; display: flex; flex-direction: column; min-width: 0; min-height: 0; padding: 10px; border: 1px solid #e2e8ef; border-radius: 12px; background: #fff; }
+    .unassigned-panel h2 { margin: 0 0 4px; color: #34475d; font-size: 0.9rem; }
+    .unassigned-count { margin: 0 0 8px; color: #52647a; font-size: 0.68rem; }
+    .unassigned-toolbar { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 8px; }
+    .unassigned-actions { display: flex; align-items: flex-start; gap: 6px; }
+    .unassigned-actions button, .note-filter-dialog button { padding: 6px 9px; border: 1px solid #d5dee8; border-radius: 6px; background: #fff; color: #193651; cursor: pointer; font: inherit; }
+    .unassigned-actions button { font-size: 0.68rem; }
+    .note-filter-dialog { width: min(460px, 90vw); max-height: 80vh; border: 1px solid #d5dee8; border-radius: 10px; color: #193651; font-size: 0.8rem; }
+    .note-filter-dialog::backdrop { background: rgb(16 43 70 / 45%); }
+    .note-filter-dialog h2 { margin: 0 0 10px; font-size: 1rem; }
+    .note-filter-dialog label.filter-field { display: grid; gap: 4px; margin-bottom: 8px; }
+    .note-filter-dialog select, .note-filter-dialog input[type="search"] { width: 100%; padding: 6px; border: 1px solid #d5dee8; border-radius: 5px; font: inherit; }
+    .note-filter-values { max-height: 35vh; overflow-y: auto; margin: 8px 0; border: 1px solid #e2e8ef; border-radius: 5px; }
+    .note-filter-values label { display: flex; align-items: flex-start; gap: 6px; padding: 4px 6px; overflow-wrap: anywhere; }
+    .note-filter-values label:hover { background: #eaf5f6; }
+    .note-filter-values input { flex: none; margin: 2px 0 0; }
+    .note-filter-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+    .column-selector { position: relative; font-size: 0.68rem; }
+    .column-selector summary { padding: 6px 9px; border: 1px solid #d5dee8; border-radius: 6px; background: #fff; color: #193651; cursor: pointer; list-style: none; }
+    .column-selector summary::-webkit-details-marker { display: none; }
+    .column-selector summary::after { content: " ▾"; }
+    .column-selector-options { position: absolute; z-index: 20; right: 0; width: 220px; max-height: 280px; overflow-y: auto; padding: 7px; border: 1px solid #d5dee8; border-radius: 6px; background: #fff; box-shadow: 0 8px 20px rgb(16 43 70 / 16%); }
+    .column-selector-options label { display: flex; align-items: center; gap: 6px; padding: 3px 0; color: #193651; }
+    .column-selector-options input { margin: 0; }
+    .column-selector-message { margin: 4px 0 0; color: #b42318; }
+    .unassigned-scroll { flex: 1 1 0; min-height: 0; overflow: auto; }
+    .unassigned-table { width: 100%; min-width: 500px; table-layout: fixed; border-collapse: separate; border-spacing: 0; font-size: 0.55rem; }
+    .unassigned-table th { position: sticky; top: 0; z-index: 1; background: #f7f9fb; color: #34475d; text-align: left; vertical-align: top; }
+    .unassigned-table th[hidden] { display: none; }
+    .unassigned-table th, .unassigned-table td { padding: 2px; border-bottom: 1px solid #e2e8ef; overflow-wrap: anywhere; }
+    .note-sort { border: 0; padding: 0; background: transparent; color: #087e8b; cursor: pointer; font: inherit; line-height: 1; }
+    .note-sort:focus-visible { outline: 1px solid #087e8b; }
+    .unassigned-table th[data-column="Criado em"] { width: 27px; }
+    .unassigned-table th[data-column="StatSist"] { width: 6%; }
+    .unassigned-table th[data-column="Ordem"] { width: 8%; }
+    .unassigned-table th[data-column="Local"], .unassigned-table th[data-column="Texto"], .unassigned-table th[data-column="Nota"] { width: 3%; }
+    .unassigned-table th[data-column="DuraçParad"] { width: 5%; }
+    .unassigned-table th[data-column="Tp."] { width: 14px; }
+    .unassigned-table th[data-column="Denominação executor"] { width: 8%; }
+    .unassigned-table th[data-column="Denominação do loc.instalação"] { width: 12%; }
+    .unassigned-table th[data-column="Descrição"] { width: 10%; }
+    .unassigned-table tbody td { height: 15px; padding: 0 2px; }
+    .unassigned-table td[data-column="DuraçParad"] { padding: 0; }
+    .unassigned-table tbody tr { height: 15px; }
+    .unassigned-cell-content { height: 14px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+    .unassigned-table td[data-column="DuraçParad"] .unassigned-cell-content { display: flex; align-items: center; }
+    .unassigned-table tbody tr:nth-child(even) { background: #f7f9fb; }
+    .duration-drag { padding: 2px; border: 1px solid #087e8b; border-radius: 3px; background: #eaf5f6; color: #193651; cursor: grab; font: inherit; }
+    .duration-remove { margin-left: 2px; padding: 2px; border: 0; background: transparent; color: #b42318; cursor: pointer; font: inherit; }
+    .unassigned-table td[data-column="DuraçParad"] .duration-drag { flex: 1 1 0; min-width: 0; height: 12px; margin: 0; padding: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+    .unassigned-table td[data-column="DuraçParad"] .duration-remove { flex: 0 0 9px; height: 12px; margin: 0; padding: 0; line-height: 1; }
+    .unassigned-table td.locally-scheduled, .availability-table td.locally-scheduled { background: #fff0a8; box-shadow: inset 0 0 0 1px #b78700; }
+    .availability-table td.drop-target { outline: 2px solid #087e8b; outline-offset: -2px; background: #eaf5f6; }
+    .assignment-dialog { width: min(600px, 90vw); max-height: 80vh; border: 1px solid #d5dee8; border-radius: 10px; color: #193651; font-size: 0.72rem; }
+    .assignment-dialog::backdrop { background: rgb(16 43 70 / 45%); }
+    .assignment-dialog h2 { margin: 0 0 8px; font-size: 0.85rem; }
+    .assignment-dialog ul { max-height: 45vh; overflow-y: auto; padding-left: 18px; }
+    .assignment-dialog li { margin: 8px 0; }
+    .assignment-dialog button { margin-left: 6px; padding: 4px 8px; border: 1px solid #d5dee8; border-radius: 5px; background: #fff; color: #193651; cursor: pointer; }
+    @media (max-width: 900px) { .leveling-content { grid-template-columns: minmax(0, 1fr); } .unassigned-panel { grid-row: auto; } .unassigned-scroll { flex: auto; max-height: 340px; } }
+    .chart { position: relative; display: grid; grid-template-columns: repeat(var(--columns, 8), minmax(0, 1fr)); gap: 10px; align-items: end; height: 200px; padding-top: 20px; border-bottom: 1px solid #9fb0c3; }
+    .chart-panel { grid-column: 2; min-width: 0; padding: 12px 18px 8px; border: 1px solid #e2e8ef; border-radius: 12px; background: #fff; box-shadow: 0 4px 14px rgb(16 43 70 / 4%); }
+    @media (max-width: 900px) { .chart-panel { grid-column: 1; } }
+    .chart-scroll { overflow-x: auto; }
+    .chart-content { min-width: 560px; }
+    .chart::before { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(to top, transparent 0, transparent calc(25% - 1px), #edf1f5 calc(25% - 1px), #edf1f5 25%); pointer-events: none; }
+    .day-group { position: relative; display: flex; height: 100%; align-items: flex-end; justify-content: center; gap: 4px; }
+    .bar-col { display: flex; height: 100%; max-width: 46px; flex: 1; flex-direction: column; justify-content: flex-end; align-items: center; }
+    .bar { width: 100%; min-height: 2px; border-radius: 4px 4px 0 0; transition: height 0.3s; }
+    .bar-value { margin-bottom: 3px; color: #34475d; font-size: 0.62rem; font-weight: 750; white-space: nowrap; }
+    .bar-available { background: #aebccb; }
+    .bar-scheduled { background: #f2c200; }
+    .bar-done { background: #18794e; }
+    .bar-labels { display: grid; grid-template-columns: repeat(var(--columns, 8), minmax(0, 1fr)); gap: 10px; margin-top: 6px; color: #34475d; font-size: 0.72rem; font-weight: 700; text-align: center; }
+    .day-group.total-group { border-left: 1px dashed #c3cfdb; }
+    .bar-labels small { display: block; color: #718198; font-size: 0.65rem; font-weight: 600; }
+    .legend { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; margin: 8px 2px 0; color: #34475d; font-size: 0.68rem; }
+    .legend span { display: inline-flex; align-items: center; gap: 6px; }
+    .legend i { width: 12px; height: 12px; border-radius: 3px; }
+    .legend-open { background: #e57373; }
+    .legend-scheduled { background: #f2c200; }
+    .legend-progress { background: #1769aa; }
+    .legend-closed { background: #18794e; }
+    .legend-available { background: #aebccb; }
+    #status { margin: 8px 2px 0; color: #52647a; font-size: 0.7rem; }
+    #status[data-state="error"] { color: #b42318; }
+    @media (max-width: 900px) {
+      .topbar { grid-template-columns: 1fr; }
+      .topbar-title { grid-column: 1; grid-row: auto; margin-left: 0; }
+      .top-actions { justify-self: start; }
+    }
+  .refresh-control { position: relative; display: grid; }
+    .refresh-control #refresh { background: transparent; cursor: pointer; }
+    .refresh-control #refresh:hover:not(:disabled) { background: #25415a; }
+    .refresh-control #refresh:disabled { cursor: wait; opacity: 0.65; }
+    .refresh-progress { position: absolute; top: 100%; left: 0; display: grid; width: 100%; margin-top: 4px; gap: 3px; color: #d7e4ee; font-size: 0.62rem; }
+    .refresh-progress-label { text-align: center; }
+    .refresh-progress-track { overflow: hidden; height: 5px; border-radius: 99px; background: #425b70; }
+    .refresh-progress-value { width: 0; height: 100%; border-radius: inherit; background: #46c2a8; transition: width 250ms ease; }
+    .refresh-progress[data-state="error"] .refresh-progress-value { background: #ff887d; }
+    :root { color: #263634; background: #f3f5f3; }
+    .topbar { zoom: 1; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 12px; min-height: 48px; padding: 6px clamp(14px, 2.4vw, 32px); background: #142c2a; }
+    .brand { gap: 8px; }
+    .brand-mark { width: 28px; height: 28px; border-radius: 5px; background: #287c70; }
+    .brand-name { font-size: 0.68rem; font-weight: 750; text-transform: uppercase; }
+    .brand-caption { margin-top: 2px; color: #a7c0bb; font-size: 0.48rem; }
+    .topbar-title { grid-column: 2; grid-row: 1; justify-self: center; margin: 0; font-size: 1.15rem; font-weight: 750; text-align: center; white-space: nowrap; }
+    .top-actions { grid-column: 3; grid-row: 1; flex-wrap: nowrap; gap: 5px; }
+    .top-actions .nav-link, .top-actions button, .top-actions a { width: auto; height: 28px; min-height: 28px; padding: 4px 8px; border-color: #53726c; border-radius: 4px; font-size: 0.62rem; }
+    .page-nav-inner { width: min(1800px, 100%); }
+    .page-tab { min-height: 34px; padding: 0 12px; border-bottom-width: 2px; font-size: 0.68rem; }
+    .layout { padding-top: 12px; }
+    @media (max-width: 760px) {
+      .topbar { grid-template-columns: minmax(0, 1fr) auto; }
+      .brand { grid-column: 1; grid-row: 1; }
+      .topbar-title { grid-column: 1 / -1; grid-row: 2; justify-self: center; font-size: 1rem; }
+      .top-actions { grid-column: 2; grid-row: 1; max-width: 52vw; overflow-x: auto; }
+    }
+    @media (max-width: 440px) {
+      .topbar { gap: 7px 10px; padding: 6px 10px; }
+      .brand-name { font-size: 0.62rem; }
+      .brand-caption { font-size: 0.44rem; }
+      .topbar-title { font-size: 0.85rem; }
+      .page-tab { padding: 0 10px; }
+    }
+    .refresh-control:has(> #refresh-progress) { display: flex; align-items: center; gap: 5px; }
+    #refresh-progress { position: relative; inset: auto; display: none; flex: 0 0 40px; width: 40px; height: 40px; margin: 0; place-items: center; color: #fff; font-size: 0.62rem; }
+    #refresh-progress:not([data-state="idle"]) { display: grid; }
+    #refresh-progress .refresh-progress-label { position: relative; z-index: 1; font-weight: 700; }
+    #refresh-progress .refresh-progress-track { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; background: none; }
+    #refresh-progress .refresh-progress-track::before { content: ""; display: block; width: 100%; height: 100%; background: center / contain no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3Cpath id='p' d='M50 6v11' stroke='%2318d9c2' stroke-width='9' stroke-linecap='round'/%3E%3C/defs%3E%3Cuse href='%23p' opacity='.18'/%3E%3Cuse href='%23p' transform='rotate(30 50 50)' opacity='.25'/%3E%3Cuse href='%23p' transform='rotate(60 50 50)' opacity='.32'/%3E%3Cuse href='%23p' transform='rotate(90 50 50)' opacity='.39'/%3E%3Cuse href='%23p' transform='rotate(120 50 50)' opacity='.46'/%3E%3Cuse href='%23p' transform='rotate(150 50 50)' opacity='.53'/%3E%3Cuse href='%23p' transform='rotate(180 50 50)' opacity='.6'/%3E%3Cuse href='%23p' transform='rotate(210 50 50)' opacity='.67'/%3E%3Cuse href='%23p' transform='rotate(240 50 50)' opacity='.74'/%3E%3Cuse href='%23p' transform='rotate(270 50 50)' opacity='.81'/%3E%3Cuse href='%23p' transform='rotate(300 50 50)' opacity='.9'/%3E%3Cuse href='%23p' transform='rotate(330 50 50)'/%3E%3C/svg%3E"); }
+    #refresh-progress[data-state="running"] .refresh-progress-track::before { animation: iw28-spin 1s steps(12) infinite; }
+    #refresh-progress[data-state="error"] .refresh-progress-label { color: #ffaaa4; }
+    #refresh-progress .refresh-progress-value { display: none; }
+    @keyframes iw28-spin { to { transform: rotate(360deg); } }
+    @media (prefers-reduced-motion: reduce) { #refresh-progress[data-state="running"] .refresh-progress-track::before { animation: none; } }
+  </style>
+  <script src="/sidebar.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><img src="/rims-one-logo.png" alt="RIMS One — Robotic Integrated Maintenance System One" style="display:block;width:min(180px, 100%);height:auto"></div>
+    <h1 class="topbar-title">SISTEMA INTEGRADO DE MANUTENÇÃO ROBÓTICA</h1>
+    <div class="top-actions">
+      <button id="upload-button" class="nav-link" type="button" title="Carregar arquivo Nivelamento 2026 (.xlsx)">Carregar tabela Disp</button>
+      <input id="upload-input" type="file" accept=".xlsx" hidden>
+      <div class="refresh-control">
+        <button class="nav-link" id="refresh" type="button">SAP (IW28)</button>
+        <div class="refresh-progress" id="refresh-progress" data-state="idle" title="Estimativa durante a execução; 100% somente após conclusão">
+          <span class="refresh-progress-label" id="refresh-progress-label">0%</span>
+          <div class="refresh-progress-track" role="progressbar" aria-label="Progresso da atualização IW28" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+            <div class="refresh-progress-value" id="refresh-progress-value"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <nav class="page-nav" aria-label="Navegação principal">
+    <div class="page-nav-inner">
+      <a class="page-tab" href="/">Painel de notas</a>
+      <a class="page-tab" href="/dashboard">Dashboard</a>
+      <a class="page-tab" href="/gantt">Gantt semanal</a>
+      <a class="page-tab" href="/kanban">Kanban</a>
+      <a class="page-tab" href="/nivelamento" aria-current="page">Nivelamento</a>
+      <a class="page-tab" href="/confiabilidade">Confiabilidade</a>
+    </div>
+  </nav>
+
+  <main class="layout">
+    <section class="controls" aria-label="Filtros e totais">
+      <div class="filter-controls">
+        <div class="field">Centro de trabalho
+          <details class="multi" id="work-center-filter"><summary>Todos</summary><div class="multi-options"></div></details>
+        </div>
+        <div class="field">Funcionário
+          <details class="multi" id="employee-filter"><summary>Todos</summary><div class="multi-options"></div></details>
+        </div>
+      </div>
+      <div class="cards" aria-label="Totais da semana exibida">
+        <article class="card card-available"><span>HH Disponível</span><strong id="card-available">0</strong><small>HH</small></article>
+        <article class="card card-scheduled"><span>HH Programado</span><strong id="card-planned">0</strong><small>HH</small></article>
+        <article class="card card-closed"><span>HH Realizado (ENC)</span><strong id="card-done">0</strong><small>HH</small></article>
+        <article class="card card-pct"><span>% Programado</span><strong id="card-pct">0</strong><small>%</small></article>
+        <article class="card card-pct"><span>Aderência Prog</span><strong id="card-adherence">0</strong><small>%</small></article>
+      </div>
+    </section>
+    <div class="leveling-content">
+      <section class="unassigned-panel" aria-labelledby="unassigned-title">
+        <div class="unassigned-toolbar">
+          <div>
+            <h2 id="unassigned-title">Notas sem denominação de executor</h2>
+            <p class="unassigned-count" id="unassigned-count" role="status">Carregando notas…</p>
+          </div>
+          <div class="unassigned-actions">
+            <button type="button" id="note-filter-open">Filtros</button>
+            <details class="column-selector" id="column-selector">
+              <summary>Campos visíveis</summary>
+              <div class="column-selector-options">
+                <div id="column-selector-list"></div>
+                <p class="column-selector-message" id="column-selector-message" role="status"></p>
+              </div>
+            </details>
+          </div>
+        </div>
+        <div class="unassigned-scroll">
+          <table class="unassigned-table">
+            <thead id="unassigned-head"></thead>
+            <tbody id="unassigned-body"></tbody>
+          </table>
+        </div>
+      </section>
+      <section class="availability-panel" aria-labelledby="availability-title">
+        <div class="availability-toolbar">
+          <h2 id="availability-title">Disponibilidade de funcionários</h2>
+          <button class="availability-refresh" id="availability-refresh" type="button">Atualizar SAP</button>
+          <span class="availability-refresh-status" id="availability-refresh-status" role="status"></span>
+          <div class="period-controls" role="group" aria-label="Navegação entre semanas">
+            <button id="previous-week" type="button" aria-label="Semana anterior">← Anterior</button>
+            <span id="week-label" aria-live="polite"></span>
+            <button id="current-week" type="button">Esta semana</button>
+            <button id="next-week" type="button" aria-label="Próxima semana">Próxima →</button>
+          </div>
+        </div>
+        <div class="availability-scroll">
+          <table class="availability-table">
+            <colgroup><col><col span="16"></colgroup>
+            <thead id="availability-head"></thead>
+            <tbody id="availability-body"></tbody>
+            <tfoot id="availability-foot"></tfoot>
+          </table>
+        </div>
+        <p class="availability-note">D = horas disponíveis; P = duração programada. Arraste DuraçParad para P ou selecione a duração e clique em P. Amarelo indica programação local; clique duas vezes em P para escolher uma nota a estornar. Não altera o SAP.</p>
+        <p class="availability-note" id="assignment-message" role="status" aria-live="polite"></p>
+      </section>
+      <section class="chart-panel" aria-label="HH disponível, programado e realizado">
+        <div class="chart-scroll">
+          <div class="chart-content">
+            <div class="chart" id="chart"></div>
+            <div class="bar-labels" id="day-labels"></div>
+          </div>
+        </div>
+        <div class="legend" aria-label="Legenda">
+          <span><i class="legend-available"></i>HH Disponível</span>
+          <span><i class="legend-scheduled"></i>HH Programado (PEN/AND/ENC)</span>
+          <span><i class="legend-closed"></i>HH Realizado (ENC)</span>
+        </div>
+      </section>
+    </div>
+    <p id="status" role="status" aria-live="polite">Carregando…</p>
+  </main>
+  <dialog class="note-filter-dialog" id="note-filter-dialog" aria-labelledby="note-filter-title">
+    <h2 id="note-filter-title">Filtros das notas</h2>
+    <label class="filter-field">Campo
+      <select id="note-filter-column"></select>
+    </label>
+    <label class="filter-field">Buscar valores
+      <input type="search" id="note-filter-search" placeholder="Digite para buscar">
+    </label>
+    <p>Selecione os valores desejados. Sem seleção, todos são exibidos.</p>
+    <div class="note-filter-values" id="note-filter-values"></div>
+    <div class="note-filter-actions">
+      <button type="button" id="note-filter-apply">Aplicar</button>
+      <button type="button" id="note-filter-clear">Limpar todos</button>
+      <button type="button" id="note-filter-cancel">Cancelar</button>
+    </div>
+  </dialog>
+  <dialog class="assignment-dialog" id="assignment-dialog" aria-labelledby="assignment-dialog-title">
+    <h2 id="assignment-dialog-title">Estornar programação local</h2>
+    <p id="assignment-dialog-location"></p>
+    <ul id="assignment-dialog-list"></ul>
+    <p id="assignment-dialog-message" role="status"></p>
+    <button id="assignment-dialog-close" type="button">Fechar</button>
+  </dialog>
+
+  <script>
+    const statusLine = document.querySelector("#status");
+    const weekLabel = document.querySelector("#week-label");
+    const centerFilter = document.querySelector("#work-center-filter");
+    const employeeFilter = document.querySelector("#employee-filter");
+    const selectedCenters = new Set();
+    const selectedEmployees = new Set();
+    const uploadInput = document.querySelector("#upload-input");
+    const unassignedHead = document.querySelector("#unassigned-head");
+    const unassignedBody = document.querySelector("#unassigned-body");
+    const unassignedCount = document.querySelector("#unassigned-count");
+    const availabilityHead = document.querySelector("#availability-head");
+    const availabilityBody = document.querySelector("#availability-body");
+    const availabilityFoot = document.querySelector("#availability-foot");
+    const assignmentMessage = document.querySelector("#assignment-message");
+    const assignmentDialog = document.querySelector("#assignment-dialog");
+    const assignmentDialogLocation = document.querySelector("#assignment-dialog-location");
+    const assignmentDialogList = document.querySelector("#assignment-dialog-list");
+    const assignmentDialogMessage = document.querySelector("#assignment-dialog-message");
+    const assignmentsKey = "sap-pm-nivelamento-assignments-v1";
+    let records = [];
+    let leveling = [];
+    let weekStart = currentWeekStart();
+    let assignments = {};
+    let selectedNote = "";
+    let noteCounts = new Map();
+
+    function readAssignments() {
+      try {
+        const parsed = JSON.parse(localStorage.getItem(assignmentsKey) || "{}");
+        if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("Formato inválido.");
+        if (Object.entries(parsed).some(([note, item]) => !note || !item || typeof item !== "object"
+          || typeof item.name !== "string" || !item.name.trim() || typeof item.center !== "string"
+          || typeof item.date !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(item.date))) throw new Error("Programação inválida.");
+        assignments = parsed;
+        return true;
+      } catch (error) {
+        assignmentMessage.textContent = `Não foi possível ler a programação local: ${error.message}`;
+        return false;
+      }
+    }
+
+    function saveAssignment(note, assignment) {
+      if (!readAssignments()) return false;
+      const updated = { ...assignments };
+      if (assignment) updated[note] = assignment;
+      else delete updated[note];
+      try {
+        localStorage.setItem(assignmentsKey, JSON.stringify(updated));
+      } catch (error) {
+        assignmentMessage.textContent = `Não foi possível salvar a programação local: ${error.message}`;
+        return false;
+      }
+      assignments = updated;
+      return true;
+    }
+
+    function noteNumber(record) {
+      return String(record.note || sourceValue(record, "Nota")).trim();
+    }
+
+    function localAssignment(record) {
+      const note = noteNumber(record);
+      const assignment = Object.hasOwn(assignments, note) ? assignments[note] : null;
+      return note && !sourceValue(record, "Denominação executor")
+        && ["AND", "PEN"].includes(record.status)
+        && noteCounts.get(note) === 1
+        && assignment && typeof assignment.name === "string" && typeof assignment.center === "string"
+        && typeof assignment.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(assignment.date)
+        ? assignment : null;
+    }
+
+    readAssignments();
+
+    function currentWeekStart() {
+      const now = new Date();
+      const date = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
+      date.setUTCDate(date.getUTCDate() - ((date.getUTCDay() + 6) % 7));
+      return date;
+    }
+
+    function addDays(date, days) {
+      const result = new Date(date);
+      result.setUTCDate(result.getUTCDate() + days);
+      return result;
+    }
+
+    function dateKey(date) {
+      return date.toISOString().slice(0, 10);
+    }
+
+    function parseDate(value) {
+      const text = String(value || "").trim();
+      let parts = text.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      if (parts) return new Date(Date.UTC(Number(parts[1]), Number(parts[2]) - 1, Number(parts[3])));
+      parts = text.match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
+      if (parts) return new Date(Date.UTC(Number(parts[3]), Number(parts[2]) - 1, Number(parts[1])));
+      return null;
+    }
+
+    function sourceValue(record, column) {
+      return String(record.sourceColumns?.[column] || "").trim();
+    }
+
+    function noteColumnValue(record, column) {
+      if (column === "Local") {
+        const value = sourceValue(record, "Local de instalação");
+        return value.length >= 7 ? value.slice(4, 7) : value;
+      }
+      if (column === "Texto" && Object.hasOwn(record, "priority")) {
+        return String(record.priority || "").trim();
+      }
+      if (column === "Descrição" && Object.hasOwn(record, "sapDescription")) {
+        return String(record.sapDescription || "").trim();
+      }
+      if (column === "Denominação executor") {
+        return localAssignment(record)?.name || "";
+      }
+      if (column === "DuraçParad" && Object.hasOwn(record, "shutdownDuration")) {
+        return String(record.shutdownDuration || "").trim();
+      }
+      if (column === "StatSist") {
+        const value = sourceValue(record, column);
+        return value === "AND" && !isShutdown(record) ? "PEN" : value;
+      }
+      return sourceValue(record, column);
+    }
+
+    const noteColumns = [
+      "Criado em", "Local", "Tp.", "Texto", "Nota", "Ordem",
+      "Denominação do loc.instalação", "Denominação do objeto técnico",
+      "Descrição", "Denominação executor", "StatSist", "DuraçParad"
+    ];
+    const columnPreferencesKey = "sap-pm-nivelamento-visible-columns-v2";
+    const previousColumnPreferencesKey = "sap-pm-nivelamento-visible-columns";
+    let visibleColumns = new Set(noteColumns);
+    try {
+      let saved = localStorage.getItem(columnPreferencesKey);
+      const migrating = saved === null;
+      if (migrating) saved = localStorage.getItem(previousColumnPreferencesKey);
+      if (saved !== null) {
+        const parsed = JSON.parse(saved);
+        if (!Array.isArray(parsed)) throw new Error("A seleção salva não é uma lista.");
+        const valid = parsed.filter((column) => noteColumns.includes(column));
+        if (!valid.length) throw new Error("A seleção salva não contém campos válidos.");
+        visibleColumns = new Set(valid);
+        if (migrating) {
+          visibleColumns.add("Denominação executor");
+          localStorage.setItem(columnPreferencesKey, JSON.stringify(noteColumns.filter((column) => visibleColumns.has(column))));
+        }
+      }
+    } catch (error) {
+      console.warn("Não foi possível restaurar os campos visíveis.", error);
+    }
+    const noteFilters = new Map();
+    let noteSort = null;
+    const noteCollator = new Intl.Collator("pt-BR", { numeric: true, sensitivity: "base" });
+    const filterDialog = document.querySelector("#note-filter-dialog");
+    const filterColumn = document.querySelector("#note-filter-column");
+    const filterSearch = document.querySelector("#note-filter-search");
+    const filterValues = document.querySelector("#note-filter-values");
+    const filterOpen = document.querySelector("#note-filter-open");
+    let draftFilters = new Map();
+    const noteHeader = document.createElement("tr");
+    const columnSelectorList = document.querySelector("#column-selector-list");
+    const columnSelectorMessage = document.querySelector("#column-selector-message");
+    noteColumns.forEach((column) => {
+      const heading = document.createElement("th");
+      heading.scope = "col";
+      heading.dataset.column = column;
+      if (column === "Denominação executor") heading.title = "Funcionário da programação local; não altera o SAP.";
+      heading.hidden = !visibleColumns.has(column);
+      heading.append(document.createTextNode(column));
+      const sortButton = document.createElement("button");
+      sortButton.type = "button";
+      sortButton.className = "note-sort";
+      sortButton.textContent = "↕";
+      sortButton.setAttribute("aria-label", `Classificar ${column}`);
+      sortButton.title = `Classificar ${column}: crescente ou decrescente`;
+      sortButton.addEventListener("click", () => {
+        noteSort = { column, direction: noteSort?.column === column && noteSort.direction === "ascending" ? "descending" : "ascending" };
+        updateSortHeaders();
+        renderUnassignedNotes();
+      });
+      heading.append(sortButton);
+      noteHeader.append(heading);
+
+      const option = document.createElement("label");
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.checked = visibleColumns.has(column);
+      checkbox.addEventListener("change", () => {
+        if (!checkbox.checked && visibleColumns.size === 1) {
+          checkbox.checked = true;
+          columnSelectorMessage.textContent = "Mantenha ao menos um campo visível.";
+          return;
+        }
+        columnSelectorMessage.textContent = "";
+        if (checkbox.checked) visibleColumns.add(column);
+        else {
+          visibleColumns.delete(column);
+          noteFilters.delete(column);
+          if (noteSort?.column === column) noteSort = null;
+        }
+        heading.hidden = !checkbox.checked;
+        updateSortHeaders();
+        try {
+          localStorage.setItem(columnPreferencesKey, JSON.stringify(noteColumns.filter((item) => visibleColumns.has(item))));
+        } catch (error) {
+          console.warn("Não foi possível salvar os campos visíveis.", error);
+          columnSelectorMessage.textContent = "Não foi possível salvar a seleção neste navegador.";
+        }
+        renderUnassignedNotes();
+      });
+      option.append(checkbox, document.createTextNode(column));
+      columnSelectorList.append(option);
+    });
+    unassignedHead.append(noteHeader);
+
+    function updateSortHeaders() {
+      noteHeader.querySelectorAll("th").forEach((heading) => {
+        const active = noteSort?.column === heading.dataset.column;
+        if (active) heading.setAttribute("aria-sort", noteSort.direction);
+        else heading.removeAttribute("aria-sort");
+        heading.querySelector(".note-sort").textContent = active
+          ? (noteSort.direction === "ascending" ? "↑" : "↓") : "↕";
+      });
+    }
+
+    function compareNoteValues(a, b, column) {
+      const left = noteColumnValue(a, column);
+      const right = noteColumnValue(b, column);
+      if (!left || !right) return left ? -1 : right ? 1 : 0;
+      if (column === "Criado em") {
+        const leftDate = parseDate(left);
+        const rightDate = parseDate(right);
+        if (leftDate && rightDate) return leftDate - rightDate;
+      }
+      if (column === "DuraçParad") {
+        const parseHours = (value) => {
+          const clean = value.trim().replace(/\s/g, "");
+          if (!/^-?(?:\d+(?:[.,]\d+)?|\d{1,3}(?:\.\d{3})+,\d+)$/.test(clean)) return null;
+          const number = Number(clean.includes(",") ? clean.replace(/\./g, "").replace(",", ".") : clean);
+          return Number.isFinite(number) ? number : null;
+        };
+        const leftHours = parseHours(left);
+        const rightHours = parseHours(right);
+        if (leftHours !== null && rightHours !== null) return leftHours - rightHours;
+      }
+      return noteCollator.compare(left, right);
+    }
+
+    function unassignedBaseRecords() {
+      return records.filter((record) =>
+        !sourceValue(record, "Denominação executor")
+        && ["AND", "PEN"].includes(String(record.status || "").trim().toLocaleUpperCase("pt-BR"))
+        && (!selectedCenters.size || selectedCenters.has(normalizeCenter(workCenterCode(record))))
+        && employeeMatches(localAssignment(record)?.name || record.executor)
+      );
+    }
+
+    function renderFilterValues() {
+      const column = filterColumn.value;
+      const selected = draftFilters.get(column) || new Set();
+      const values = new Set(unassignedBaseRecords().map((record) => noteColumnValue(record, column)));
+      selected.forEach((value) => values.add(value));
+      const search = normalizeName(filterSearch.value);
+      const sorted = [...values].sort((a, b) => a.localeCompare(b, "pt-BR", { numeric: true }));
+      const fragment = document.createDocumentFragment();
+      sorted.filter((value) => normalizeName(value || "(Sem valor)").includes(search)).forEach((value) => {
+        const label = document.createElement("label");
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.checked = selected.has(value);
+        checkbox.addEventListener("change", () => {
+          if (!draftFilters.has(column)) draftFilters.set(column, new Set());
+          const choices = draftFilters.get(column);
+          if (checkbox.checked) choices.add(value);
+          else choices.delete(value);
+          if (!choices.size) draftFilters.delete(column);
+        });
+        label.append(checkbox, document.createTextNode(value || "(Sem valor)"));
+        fragment.append(label);
+      });
+      if (!fragment.childNodes.length) {
+        const message = document.createElement("p");
+        message.textContent = "Nenhum valor encontrado.";
+        fragment.append(message);
+      }
+      filterValues.replaceChildren(fragment);
+    }
+
+    filterOpen.addEventListener("click", () => {
+      draftFilters = new Map([...noteFilters].map(([column, values]) => [column, new Set(values)]));
+      filterColumn.replaceChildren(...noteColumns.filter((column) => visibleColumns.has(column)).map((column) => {
+        const option = document.createElement("option");
+        option.value = column;
+        option.textContent = column;
+        return option;
+      }));
+      filterSearch.value = "";
+      renderFilterValues();
+      filterDialog.showModal();
+    });
+    filterColumn.addEventListener("change", () => { filterSearch.value = ""; renderFilterValues(); });
+    filterSearch.addEventListener("input", renderFilterValues);
+    document.querySelector("#note-filter-clear").addEventListener("click", () => {
+      draftFilters.clear();
+      filterSearch.value = "";
+      renderFilterValues();
+    });
+    document.querySelector("#note-filter-apply").addEventListener("click", () => {
+      noteFilters.clear();
+      draftFilters.forEach((values, column) => { if (visibleColumns.has(column) && values.size) noteFilters.set(column, new Set(values)); });
+      filterDialog.close();
+      renderUnassignedNotes();
+    });
+    document.querySelector("#note-filter-cancel").addEventListener("click", () => filterDialog.close());
+
+    function renderUnassignedNotes() {
+      const visible = unassignedBaseRecords().filter((record) =>
+        [...noteFilters].every(([column, values]) => values.has(noteColumnValue(record, column)))
+      );
+      if (noteSort) {
+        const { column, direction } = noteSort;
+        visible.sort((a, b) => {
+          const left = noteColumnValue(a, column);
+          const right = noteColumnValue(b, column);
+          if (!left || !right) return left ? -1 : right ? 1 : 0;
+          return compareNoteValues(a, b, column) * (direction === "ascending" ? 1 : -1);
+        });
+      }
+      filterOpen.textContent = noteFilters.size ? `Filtros (${noteFilters.size})` : "Filtros";
+      const rows = document.createDocumentFragment();
+      visible.forEach((record) => {
+        const row = document.createElement("tr");
+        noteColumns.filter((column) => visibleColumns.has(column)).forEach((column) => {
+          const cell = document.createElement("td");
+          cell.dataset.column = column;
+          const content = document.createElement("div");
+          content.className = "unassigned-cell-content";
+          cell.title = noteColumnValue(record, column);
+          if (column === "DuraçParad" && noteNumber(record) && hours(record) > 0
+              && noteCounts.get(noteNumber(record)) === 1) {
+            const note = noteNumber(record);
+            const assignment = localAssignment(record);
+            if (assignment) cell.classList.add("locally-scheduled");
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "duration-drag";
+            button.draggable = true;
+            button.textContent = noteColumnValue(record, column);
+            button.title = assignment
+              ? `Programada localmente: ${assignment.name}, ${assignment.date}. Arraste para mover.`
+              : "Arraste para P ou clique e depois selecione uma célula P.";
+            button.setAttribute("aria-label", `Programar nota ${note}, duração ${button.textContent}`);
+            button.addEventListener("dragstart", (event) => {
+              selectedNote = note;
+              event.dataTransfer.setData("text/plain", note);
+              event.dataTransfer.effectAllowed = "move";
+            });
+            button.addEventListener("dragend", () => { selectedNote = ""; });
+            button.addEventListener("click", () => {
+              selectedNote = note;
+              assignmentMessage.textContent = `Nota ${note} selecionada. Clique em P para programar.`;
+            });
+            content.append(button);
+            if (assignment) {
+              const remove = document.createElement("button");
+              remove.type = "button";
+              remove.className = "duration-remove";
+              remove.textContent = "×";
+              remove.title = "Remover programação local";
+              remove.setAttribute("aria-label", `Remover programação local da nota ${note}`);
+              remove.addEventListener("click", () => {
+                if (!saveAssignment(note, null)) return;
+                selectedNote = "";
+                render();
+                assignmentMessage.textContent = `Programação local da nota ${note} removida.`;
+              });
+              content.append(remove);
+            }
+          } else {
+            content.textContent = noteColumnValue(record, column);
+          }
+          cell.append(content);
+          row.append(cell);
+        });
+        rows.append(row);
+      });
+      if (!visible.length) {
+        const row = document.createElement("tr");
+        const cell = document.createElement("td");
+        cell.colSpan = visibleColumns.size;
+        const content = document.createElement("div");
+        content.className = "unassigned-cell-content";
+        content.textContent = "Nenhuma nota encontrada.";
+        cell.append(content);
+        row.append(cell);
+        rows.append(row);
+      }
+      unassignedBody.replaceChildren(rows);
+      const totalHours = visible.reduce((total, record) => total + hours(record), 0);
+      unassignedCount.textContent = `${visible.length.toLocaleString("pt-BR")} notas encontradas. · Qtd HH (${totalHours.toLocaleString("pt-BR", { maximumFractionDigits: 2 })})`;
+    }
+
+    function workCenterCode(record) {
+      return sourceValue(record, "CenTrabRes");
+    }
+
+    function isShutdown(record) {
+      const adjusted = String(record.shutdown || "").toLocaleUpperCase("pt-BR");
+      const source = sourceValue(record, "P") || sourceValue(record, "Parada");
+      return adjusted === "X" || adjusted === "TRUE" || adjusted === "SIM" || source.toLocaleUpperCase("pt-BR") === "X";
+    }
+
+    function isScheduled(record) {
+      const order = String(record.order || "").trim().replace(/[.,\s]/g, "");
+      return /^\d+$/.test(order) && Number(order) > 10;
+    }
+
+    function category(record) {
+      if (record.status === "ENC") return "closed";
+      if (isShutdown(record)) return "progress";
+      if (isScheduled(record)) return "scheduled";
+      return "open";
+    }
+
+    function taskDates(record) {
+      let start = parseDate(record.desiredStart) || parseDate(sourceValue(record, "Iníc.nec."));
+      let end = parseDate(record.desiredCompletion) || parseDate(sourceValue(record, "Concl.desj"));
+      if (!start && !end) return null;
+      if (!start) start = end;
+      if (!end || end < start) end = start;
+      return { start, end };
+    }
+
+    function hours(record) {
+      const value = String(record.shutdownDuration || "").trim() || sourceValue(record, "DuraçParad");
+      const number = Number(value.replace(/[^0-9,-]/g, "").replace(",", "."));
+      return Number.isFinite(number) ? number : 0;
+    }
+
+    function format(value) {
+      return value.toLocaleString("pt-BR", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+    }
+
+    function weekText(start, end) {
+      const firstMonth = new Intl.DateTimeFormat("pt-BR", { month: "long", timeZone: "UTC" }).format(start);
+      const lastMonth = new Intl.DateTimeFormat("pt-BR", { month: "long", timeZone: "UTC" }).format(end);
+      if (start.getUTCMonth() === end.getUTCMonth()) {
+        return `${start.getUTCDate()}–${end.getUTCDate()} de ${lastMonth} de ${end.getUTCFullYear()}`;
+      }
+      return `${start.getUTCDate()} ${firstMonth} – ${end.getUTCDate()} ${lastMonth} de ${end.getUTCFullYear()}`;
+    }
+
+    function normalizeCenter(value) {
+      return String(value || "").trim().toLocaleUpperCase("pt-BR");
+    }
+
+    function normalizeName(value) {
+      return String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, " ").trim().toLocaleUpperCase("pt-BR");
+    }
+
+    function employeeMatches(name) {
+      return !selectedEmployees.size || selectedEmployees.has(normalizeName(name));
+    }
+
+    function buildDays(dates) {
+      const centerOk = (value) => !selectedCenters.size || selectedCenters.has(normalizeCenter(value));
+      const days = dates.map((date) => ({ date, available: 0, planned: 0, done: 0 }));
+      const dayByKey = new Map(days.map((day) => [dateKey(day.date), day]));
+      leveling.forEach((entry) => {
+        const day = dayByKey.get(entry.date);
+        if (day && centerOk(entry.workCenter) && employeeMatches(entry.name)) day.available += entry.hh;
+      });
+      const first = dates[0];
+      const last = dates[dates.length - 1];
+      for (const record of records) {
+        const assignment = localAssignment(record);
+        if (!centerOk(assignment ? assignment.center : workCenterCode(record))) continue;
+        if (!employeeMatches(assignment ? assignment.name : record.executor)) continue;
+        const isDone = record.status === "ENC";
+        const isPlanned = isDone || record.status === "PEN" || record.status === "AND";
+        if (assignment && isPlanned) {
+          const day = dayByKey.get(assignment.date);
+          if (day) day.planned += hours(record);
+          continue;
+        }
+        const range = taskDates(record);
+        if (!isPlanned || !range || range.start > last || range.end < first) continue;
+        // O HH da nota é distribuído igualmente pelos dias do período dela.
+        const span = Math.round((range.end - range.start) / 86400000) + 1;
+        const value = hours(record);
+        for (const day of days) {
+          if (day.date >= range.start && day.date <= range.end) {
+            day.planned += value / span;
+            if (isDone) day.done += value / span;
+          }
+        }
+      }
+      return days;
+    }
+
+    const shortDate = (date) => new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit", timeZone: "UTC" }).format(date);
+    const formatHours = (value) => value.toLocaleString("pt-BR", { maximumFractionDigits: 0 });
+
+    function showAssignmentDialog(person, day) {
+      if (!readAssignments()) return;
+      const matches = records.filter((record) => {
+        const assignment = localAssignment(record);
+        return assignment && normalizeName(assignment.name) === normalizeName(person.name)
+          && normalizeCenter(assignment.center) === normalizeCenter(person.center) && assignment.date === day;
+      });
+      assignmentDialogLocation.textContent = `${person.name} · ${person.center} · ${day}`;
+      assignmentDialogMessage.textContent = matches.length ? "" : "Não há notas programadas localmente nesta célula.";
+      assignmentDialogList.replaceChildren();
+      matches.forEach((record) => {
+        const note = noteNumber(record);
+        const item = document.createElement("li");
+        const object = noteColumnValue(record, "Denominação do objeto técnico") || "Objeto técnico não informado";
+        const description = noteColumnValue(record, "Descrição") || "Descrição não informada";
+        item.append(document.createTextNode(`Nota ${note} - ${object} - ${description} - ${noteColumnValue(record, "DuraçParad")} HH`));
+        const button = document.createElement("button");
+        button.type = "button";
+        button.textContent = "Estornar";
+        button.setAttribute("aria-label", `Estornar nota ${note}`);
+        button.addEventListener("click", () => {
+          if (!readAssignments()) {
+            assignmentDialogMessage.textContent = assignmentMessage.textContent;
+            return;
+          }
+          const currentRecord = records.find((item) => noteNumber(item) === note);
+          const current = currentRecord && localAssignment(currentRecord);
+          if (!current || normalizeName(current.name) !== normalizeName(person.name)
+              || normalizeCenter(current.center) !== normalizeCenter(person.center) || current.date !== day) {
+            assignmentDialogMessage.textContent = "A programação foi alterada. Feche e abra a lista novamente.";
+            render();
+            return;
+          }
+          if (!saveAssignment(note, null)) {
+            assignmentDialogMessage.textContent = assignmentMessage.textContent;
+            return;
+          }
+          selectedNote = "";
+          assignmentDialog.close();
+          render();
+          assignmentMessage.textContent = `Programação local da nota ${note} estornada; SAP não alterado.`;
+        });
+        item.append(button);
+        assignmentDialogList.append(item);
+      });
+      assignmentDialog.showModal();
+    }
+
+    document.querySelector("#assignment-dialog-close").addEventListener("click", () => assignmentDialog.close());
+
+    function drawChart(days) {
+      const chart = document.querySelector("#chart");
+      const labels = document.querySelector("#day-labels");
+      const weekdays = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
+      const sum = (field) => days.reduce((total, day) => total + day[field], 0);
+      const total = { available: sum("available"), planned: sum("planned"), done: sum("done") };
+      const max = Math.max(1, ...days.flatMap((day) => [day.available, day.planned, day.done]));
+      const totalMax = Math.max(1, total.available, total.planned, total.done);
+      chart.replaceChildren();
+      labels.replaceChildren();
+      [...days, total].forEach((day, index) => {
+        const isTotal = index === days.length;
+        const group = document.createElement("div");
+        group.className = isTotal ? "day-group total-group" : "day-group";
+        [["available", day.available], ["scheduled", day.planned], ["done", day.done]].forEach(([kind, value]) => {
+          const column = document.createElement("div");
+          column.className = "bar-col";
+          const label = document.createElement("span");
+          label.className = "bar-value";
+          label.textContent = Math.round(value) ? format(value) : "";
+          const bar = document.createElement("div");
+          bar.className = `bar bar-${kind}`;
+          bar.style.height = `${(value / (isTotal ? totalMax : max)) * 85}%`;
+          column.append(label, bar);
+          group.append(column);
+        });
+        chart.append(group);
+        const label = document.createElement("span");
+        label.append(isTotal ? "Total" : weekdays[index]);
+        const subtitle = document.createElement("small");
+        subtitle.textContent = isTotal ? "período" : shortDate(day.date);
+        label.append(subtitle);
+        labels.append(label);
+      });
+    }
+
+    function renderAvailability(dates) {
+      const weekdays = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
+      const keys = dates.map(dateKey);
+      const employees = new Map();
+      const employeeKey = (name, center) => JSON.stringify([normalizeName(name), normalizeCenter(center)]);
+      for (const entry of leveling) {
+        if (selectedCenters.size && !selectedCenters.has(normalizeCenter(entry.workCenter))) continue;
+        if (!employeeMatches(entry.name)) continue;
+        const key = employeeKey(entry.name, entry.workCenter);
+        if (!employees.has(key)) employees.set(key, { name: entry.name, center: entry.workCenter, days: new Map() });
+        const person = employees.get(key);
+        person.days.set(entry.date, (person.days.get(entry.date) || 0) + entry.hh);
+      }
+      const planned = new Map();
+      const localNotes = new Map();
+      for (const record of records) {
+        if (!["AND", "PEN", "ENC"].includes(record.status)) continue;
+        const assignment = localAssignment(record);
+        const center = assignment ? assignment.center : workCenterCode(record);
+        if (selectedCenters.size && !selectedCenters.has(normalizeCenter(center))) continue;
+        if (!employeeMatches(assignment ? assignment.name : record.executor)) continue;
+        if (assignment) {
+          if (!keys.includes(assignment.date)) continue;
+          const key = employeeKey(assignment.name, center);
+          if (!employees.has(key)) continue;
+          if (!planned.has(key)) planned.set(key, new Map());
+          const amounts = planned.get(key);
+          amounts.set(assignment.date, (amounts.get(assignment.date) || 0) + hours(record));
+          if (!localNotes.has(key)) localNotes.set(key, new Set());
+          localNotes.get(key).add(assignment.date);
+          continue;
+        }
+        const range = taskDates(record);
+        if (!range || range.start > dates[6] || range.end < dates[0]) continue;
+        const name = String(record.executor || "").trim();
+        const key = employeeKey(name, center);
+        if (!name || !employees.has(key)) continue;
+        if (!planned.has(key)) planned.set(key, new Map());
+        const amounts = planned.get(key);
+        const perDay = hours(record) / (Math.round((range.end - range.start) / 86400000) + 1);
+        dates.forEach((date) => {
+          if (date >= range.start && date <= range.end) {
+            const day = dateKey(date);
+            amounts.set(day, (amounts.get(day) || 0) + perDay);
+          }
+        });
+      }
+      const header = document.createElement("tr");
+      const subheader = document.createElement("tr");
+      const first = document.createElement("th");
+      first.rowSpan = 2;
+      first.scope = "col";
+      first.textContent = "Funcionário";
+      header.append(first);
+      [...dates, null].forEach((date, index) => {
+        const group = document.createElement("th");
+        group.colSpan = 2;
+        group.scope = "colgroup";
+        group.textContent = date ? weekdays[index] : "Total";
+        if (date) {
+          const dateLabel = document.createElement("span");
+          dateLabel.className = "availability-date";
+          dateLabel.textContent = shortDate(date);
+          group.append(dateLabel);
+        }
+        header.append(group);
+        ["D", "P"].forEach((text) => {
+          const cell = document.createElement("th");
+          cell.scope = "col";
+          cell.textContent = text;
+          cell.title = text === "D" ? "Horas disponíveis" : "Horas programadas";
+          subheader.append(cell);
+        });
+      });
+      availabilityHead.replaceChildren(header, subheader);
+      const totals = dates.map(() => ({ available: 0, planned: 0 }));
+      const rows = document.createDocumentFragment();
+      const people = [...employees.entries()].sort((a, b) => a[1].name.localeCompare(b[1].name, "pt-BR"));
+      for (const [key, person] of people) {
+        const row = document.createElement("tr");
+        const label = document.createElement("th");
+        label.scope = "row";
+        label.textContent = person.name;
+        label.title = person.center;
+        row.append(label);
+        let totalAvailable = 0;
+        let totalPlanned = 0;
+        keys.forEach((day, index) => {
+          const available = person.days.get(day);
+          const scheduled = planned.get(key)?.get(day) || 0;
+          totalAvailable += available || 0;
+          totalPlanned += scheduled;
+          totals[index].available += available || 0;
+          totals[index].planned += scheduled;
+          [available === undefined ? "—" : formatHours(available), formatHours(scheduled)].forEach((value, cellIndex) => {
+            const cell = document.createElement("td");
+            cell.textContent = value;
+            if (cellIndex === 1) {
+              const hasLocalNotes = localNotes.get(key)?.has(day);
+              if (hasLocalNotes) cell.classList.add("locally-scheduled");
+              cell.tabIndex = 0;
+              cell.setAttribute("aria-label", `${person.name}, ${day}, P ${value} horas${hasLocalNotes ? ", contém programação local" : ""}`);
+              cell.title = "Solte uma duração aqui ou selecione uma duração e clique. Clique duas vezes para estornar uma nota local.";
+              const assign = (note) => {
+                const matches = records.filter((record) => noteNumber(record) === note
+                  && !sourceValue(record, "Denominação executor") && ["AND", "PEN"].includes(record.status));
+                if (!note || matches.length !== 1 || noteCounts.get(note) !== 1 || hours(matches[0]) <= 0) {
+                  assignmentMessage.textContent = "Selecione uma nota única com duração positiva para programar.";
+                  return;
+                }
+                if (!saveAssignment(note, { name: person.name, center: person.center, date: day })) return;
+                selectedNote = "";
+                render();
+                assignmentMessage.textContent = `Nota ${note} programada localmente para ${person.name} em ${day}; SAP não alterado.`;
+              };
+              cell.addEventListener("dragover", (event) => { if (selectedNote) { event.preventDefault(); cell.classList.add("drop-target"); } });
+              cell.addEventListener("dragleave", () => cell.classList.remove("drop-target"));
+              cell.addEventListener("drop", (event) => {
+                event.preventDefault();
+                cell.classList.remove("drop-target");
+                assign(event.dataTransfer.getData("text/plain"));
+              });
+              cell.addEventListener("click", () => { if (selectedNote) assign(selectedNote); });
+              cell.addEventListener("dblclick", () => showAssignmentDialog(person, day));
+              cell.addEventListener("keydown", (event) => {
+                if (selectedNote && (event.key === "Enter" || event.key === " ")) { event.preventDefault(); assign(selectedNote); }
+                else if (event.key === "Enter" || event.key === " ") { event.preventDefault(); showAssignmentDialog(person, day); }
+              });
+            }
+            row.append(cell);
+          });
+        });
+        [totalAvailable, totalPlanned].forEach((value) => {
+          const cell = document.createElement("td");
+          cell.textContent = formatHours(value);
+          row.append(cell);
+        });
+        rows.append(row);
+      }
+      if (!people.length) {
+        const row = document.createElement("tr");
+        const cell = document.createElement("td");
+        cell.colSpan = 17;
+        cell.textContent = "Nenhum funcionário disponível para os centros selecionados.";
+        row.append(cell);
+        rows.append(row);
+      }
+      availabilityBody.replaceChildren(rows);
+      const totalRow = document.createElement("tr");
+      const totalLabel = document.createElement("th");
+      totalLabel.scope = "row";
+      totalLabel.textContent = "Total";
+      totalRow.append(totalLabel);
+      const totalAvailable = totals.reduce((sum, day) => sum + day.available, 0);
+      const totalPlanned = totals.reduce((sum, day) => sum + day.planned, 0);
+      [...totals.flatMap((day) => [day.available, day.planned]), totalAvailable, totalPlanned].forEach((value) => {
+        const cell = document.createElement("td");
+        cell.textContent = formatHours(value);
+        totalRow.append(cell);
+      });
+      availabilityFoot.replaceChildren(totalRow);
+    }
+
+    function render() {
+      populateEmployees();
+      const weekEnd = addDays(weekStart, 6);
+      weekLabel.textContent = weekText(weekStart, weekEnd);
+
+      const days = buildDays(Array.from({ length: 7 }, (_, index) => addDays(weekStart, index)));
+
+      renderAvailability(days.map((day) => day.date));
+      drawChart(days);
+      const weekAvailable = days.reduce((acc, day) => acc + day.available, 0);
+      const weekPlanned = days.reduce((acc, day) => acc + day.planned, 0);
+      const weekDone = days.reduce((acc, day) => acc + day.done, 0);
+      document.querySelector("#card-available").textContent = format(weekAvailable);
+      document.querySelector("#card-planned").textContent = format(weekPlanned);
+      document.querySelector("#card-done").textContent = format(weekDone);
+      document.querySelector("#card-adherence").textContent = weekPlanned
+        ? Math.round((weekDone / weekPlanned) * 100).toLocaleString("pt-BR")
+        : "0";
+      document.querySelector("#card-pct").textContent = weekAvailable
+        ? Math.round((weekPlanned / weekAvailable) * 100).toLocaleString("pt-BR")
+        : "0";
+      renderUnassignedNotes();
+      statusLine.removeAttribute("data-state");
+      statusLine.textContent = leveling.length
+        ? ""
+        : "Carregue o arquivo Nivelamento 2026 para ver o HH disponível.";
+    }
+
+    function populateCenters() {
+      const centerLabels = new Map();
+      const addCenter = (centerValue) => {
+        const centerKey = normalizeCenter(centerValue);
+        if (centerKey && !centerLabels.has(centerKey)) centerLabels.set(centerKey, String(centerValue).trim());
+      };
+      records.forEach((record) => addCenter(workCenterCode(record)));
+      leveling.forEach((entry) => addCenter(entry.workCenter));
+
+      [...selectedCenters].forEach((key) => { if (!centerLabels.has(key)) selectedCenters.delete(key); });
+
+      const byLabel = (labels) => (a, b) => labels.get(a).localeCompare(labels.get(b), "pt-BR");
+      renderMulti(centerFilter, [...centerLabels.keys()].sort(byLabel(centerLabels)), centerLabels, selectedCenters);
+    }
+
+    function populateEmployees() {
+      const labels = new Map();
+      const addEmployee = (name, center) => {
+        const key = normalizeName(name);
+        if (key && (!selectedCenters.size || selectedCenters.has(normalizeCenter(center))) && !labels.has(key)) {
+          labels.set(key, String(name).trim());
+        }
+      };
+      leveling.forEach((entry) => addEmployee(entry.name, entry.workCenter));
+      records.forEach((record) => {
+        const assignment = localAssignment(record);
+        addEmployee(assignment ? assignment.name : record.executor, assignment ? assignment.center : workCenterCode(record));
+      });
+      selectedEmployees.forEach((key) => { if (!labels.has(key)) labels.set(key, key); });
+      renderMulti(employeeFilter, [...labels.keys()].sort((a, b) => labels.get(a).localeCompare(labels.get(b), "pt-BR")), labels, selectedEmployees);
+    }
+
+    function renderMulti(root, keys, labels, selected) {
+      const options = root.querySelector(".multi-options");
+      const fragment = document.createDocumentFragment();
+      const addOption = (text, checked, key, extraClass) => {
+        const label = document.createElement("label");
+        if (extraClass) label.className = extraClass;
+        const input = document.createElement("input");
+        input.type = "checkbox";
+        input.checked = checked;
+        input.dataset.key = key;
+        label.append(input, text);
+        fragment.append(label);
+      };
+      addOption("Todos", selected.size === 0, "", "multi-all");
+      keys.forEach((key) => addOption(labels.get(key), selected.has(key), key));
+      options.replaceChildren(fragment);
+      const chosen = keys.filter((key) => selected.has(key));
+      root.querySelector("summary").textContent = !chosen.length ? "Todos"
+        : chosen.length === 1 ? labels.get(chosen[0]) : `${chosen.length} selecionados`;
+    }
+
+    function bindMulti(root, selected, onChange) {
+      root.addEventListener("change", (event) => {
+        const input = event.target;
+        if (!(input instanceof HTMLInputElement)) return;
+        if (!input.dataset.key) selected.clear();
+        else if (input.checked) selected.add(input.dataset.key);
+        else selected.delete(input.dataset.key);
+        onChange();
+      });
+    }
+
+    const refresh = () => { populateCenters(); render(); };
+    bindMulti(centerFilter, selectedCenters, refresh);
+    bindMulti(employeeFilter, selectedEmployees, render);
+    document.addEventListener("click", (event) => {
+      if (!centerFilter.contains(event.target)) centerFilter.open = false;
+      if (!employeeFilter.contains(event.target)) employeeFilter.open = false;
+      const columnSelector = document.querySelector("#column-selector");
+      if (!columnSelector.contains(event.target)) columnSelector.open = false;
+    });
+
+    async function loadAll() {
+      try {
+        const [notesResponse, levelResponse] = await Promise.all([
+          fetch("/api/data?source=iw28", { cache: "no-store" }),
+          fetch("/api/nivelamento", { cache: "no-store" })
+        ]);
+        const [notes, level] = await Promise.all([notesResponse.json(), levelResponse.json()]);
+        if (!notesResponse.ok) throw new Error(notes.message || "Não foi possível carregar as notas IW28.");
+        if (!levelResponse.ok) throw new Error(level.message || "Não foi possível carregar o nivelamento.");
+        if (!Array.isArray(notes.records) || !Array.isArray(level.records)) throw new Error("Os dados recebidos não contêm listas válidas.");
+        records = notes.records;
+        noteCounts = new Map();
+        records.forEach((record) => {
+          const note = noteNumber(record);
+          if (note) noteCounts.set(note, (noteCounts.get(note) || 0) + 1);
+        });
+        leveling = level.records;
+        populateCenters();
+        render();
+      } catch (error) {
+        statusLine.dataset.state = "error";
+        statusLine.textContent = error.message || "Erro ao carregar os dados.";
+        unassignedCount.textContent = "Não foi possível atualizar as notas. " + statusLine.textContent;
+      }
+    }
+
+    document.querySelector("#upload-button").addEventListener("click", () => uploadInput.click());
+    uploadInput.addEventListener("change", async () => {
+      const file = uploadInput.files[0];
+      uploadInput.value = "";
+      if (!file) return;
+      statusLine.removeAttribute("data-state");
+      statusLine.textContent = "Enviando arquivo…";
+      try {
+        const response = await fetch("/api/nivelamento", {
+          method: "POST",
+          headers: { "Content-Type": "application/octet-stream", "X-File-Name": encodeURIComponent(file.name) },
+          body: file
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.message || "Não foi possível carregar o arquivo.");
+        await loadAll();
+        statusLine.textContent = `Arquivo carregado: ${result.count.toLocaleString("pt-BR")} lançamentos de HH.`;
+      } catch (error) {
+        statusLine.dataset.state = "error";
+        statusLine.textContent = error.message;
+      }
+    });
+
+    document.querySelector("#previous-week").addEventListener("click", () => { weekStart = addDays(weekStart, -7); render(); });
+    document.querySelector("#next-week").addEventListener("click", () => { weekStart = addDays(weekStart, 7); render(); });
+    document.querySelector("#current-week").addEventListener("click", () => { weekStart = currentWeekStart(); render(); });
+    window.addEventListener("storage", (event) => {
+      if (event.key === assignmentsKey && readAssignments()) render();
+    });
+
+    loadAll();
+    setInterval(() => { if (!document.hidden && !centerFilter.open && !employeeFilter.open && !filterDialog.open) loadAll(); }, 30000);
+    const refreshButton = document.querySelector("#refresh");
+    const availabilityRefreshButton = document.querySelector("#availability-refresh");
+    const availabilityRefreshStatus = document.querySelector("#availability-refresh-status");
+    const refreshProgress = document.querySelector("#refresh-progress");
+    const refreshProgressLabel = document.querySelector("#refresh-progress-label");
+    const refreshProgressTrack = refreshProgress.querySelector('[role="progressbar"]');
+    const refreshProgressValue = document.querySelector("#refresh-progress-value");
+    let refreshStartedAt = 0;
+    let refreshTimer = null;
+
+    function setRefreshBusy(busy) {
+      refreshButton.disabled = busy;
+      availabilityRefreshButton.disabled = busy;
+      availabilityRefreshButton.textContent = busy ? "Atualizando SAP…" : "Atualizar SAP";
+    }
+
+    function setRefreshProgress(value, state, label = `${value}%`) {
+      const progress = Math.max(0, Math.min(100, value));
+      refreshProgress.dataset.state = state;
+      refreshProgressLabel.textContent = label;
+      refreshProgressTrack.setAttribute("aria-valuenow", String(progress));
+      refreshProgressValue.style.width = `${progress}%`;
+    }
+
+    function updateEstimatedProgress() {
+      if (!refreshStartedAt) refreshStartedAt = Date.now();
+      const estimate = Math.min(95, Math.floor(((Date.now() - refreshStartedAt) / 60000) * 95));
+      setRefreshProgress(estimate, "running");
+    }
+
+    function finishRefresh(label, message = "") {
+      refreshTimer = null;
+      refreshStartedAt = 0;
+      setRefreshBusy(false);
+      availabilityRefreshStatus.textContent = message;
+      if (label) setRefreshProgress(0, "error", label);
+    }
+
+    async function pollRefresh(resumeOnly = false) {
+      try {
+        const response = await fetch("/api/status", { cache: "no-store" });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.message || "Não foi possível consultar a execução SAP.");
+        if (result.state === "queued" || result.state === "running") {
+          setRefreshBusy(true);
+          updateEstimatedProgress();
+          refreshTimer = window.setTimeout(pollRefresh, 1000);
+        } else if (result.state === "done" && !resumeOnly) {
+          setRefreshProgress(100, "done");
+          await reloadAfterRefresh();
+          finishRefresh();
+        } else {
+          const failed = result.state === "error" && !resumeOnly;
+          finishRefresh(failed ? "Falha" : "", failed ? (result.message || "Falha na atualização SAP.") : "");
+        }
+      } catch (error) {
+        finishRefresh("Falha", error.message);
+        refreshProgress.title = error.message;
+      }
+    }
+
+    async function startRefresh() {
+      setRefreshBusy(true);
+      availabilityRefreshStatus.textContent = "";
+      refreshStartedAt = Date.now();
+      setRefreshProgress(0, "running");
+      try {
+        const response = await fetch("/api/run", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: "{}"
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.message || "Não foi possível iniciar a exportação.");
+        if (refreshTimer) window.clearTimeout(refreshTimer);
+        refreshTimer = window.setTimeout(pollRefresh, 1000);
+      } catch (error) {
+        finishRefresh("Falha", error.message);
+        refreshProgress.title = error.message;
+      }
+    }
+
+    refreshButton.addEventListener("click", startRefresh);
+    availabilityRefreshButton.addEventListener("click", startRefresh);
+
+    pollRefresh(true);
+
+    function reloadAfterRefresh() {
+      return loadAll();
+    }
+  </script>
+</body>
+</html>

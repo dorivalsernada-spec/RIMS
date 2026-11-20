@@ -1,0 +1,699 @@
+﻿<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kanban · Planejamento SAP PM</title>
+  <style>
+    :root {
+      font-size: 12px;
+      font-family: "Segoe UI", Arial, sans-serif;
+      color: #172b4d;
+      background: #f3f6fa;
+      font-synthesis: none;
+    }
+
+    * { box-sizing: border-box; }
+    body { min-width: 360px; margin: 0; }
+    button, a { font: inherit; }
+    .topbar {
+      zoom: 0.9;
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 20px;
+      padding: 26px clamp(18px, 4vw, 48px);
+      background: #102b46;
+      color: #fff;
+    }
+    .brand { display: flex; align-items: center; gap: 13px; }
+    .brand-mark { display: grid; width: 42px; height: 42px; place-items: center; border-radius: 12px; background: #087e8b; color: #fff; font-weight: 800; }
+    .brand-name { margin: 0; font-size: 1rem; }
+    .brand-caption { margin: 4px 0 0; color: #b7c8d8; font-size: 0.8rem; }
+    .topbar-title { grid-column: 2; grid-row: 1; margin: 0 0 0 24px; color: #fff; font-size: 1.4rem; text-align: left; justify-self: start; }
+    .top-actions { display: flex; flex-wrap: wrap; justify-self: end; align-items: center; gap: 10px; }
+    .nav-link {
+      box-sizing: border-box;
+      display: inline-flex;
+      width: 110px;
+      height: 40px;
+      min-height: 40px;
+      align-items: center;
+      justify-content: center;
+      padding: 9px 10px;
+      border: 1px solid #638099;
+      border-radius: 7px;
+      color: #fff;
+      font-weight: 650;
+      font-size: 0.85rem;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .nav-link:hover { background: #25415a; }
+    .nav-link[aria-current="page"] { border-color: #46c2a8; background: #087e8b; }
+    .page-nav { overflow-x: auto; border-bottom: 1px solid #dfe6ee; background: #fff; scrollbar-width: thin; }
+    .page-nav-inner { display: flex; width: min(1800px, 100%); min-width: max-content; margin: 0 auto; padding: 0 12px; }
+    .page-tab { display: inline-flex; min-height: 44px; align-items: center; justify-content: center; padding: 0 15px; border-bottom: 3px solid transparent; color: #52647a; font-size: 0.78rem; font-weight: 650; text-decoration: none; white-space: nowrap; }
+    .page-tab:hover { background: #f3f8f8; color: #087e8b; }
+    .page-tab[aria-current="page"] { border-bottom-color: #087e8b; color: #087e8b; }
+    .page-tab:focus-visible { outline: 2px solid #087e8b; outline-offset: -2px; }
+    .refresh-control { position: relative; display: grid; }
+    .refresh-control #refresh { background: transparent; cursor: pointer; }
+    .refresh-control #refresh:hover:not(:disabled) { background: #25415a; }
+    .refresh-control #refresh:disabled { cursor: wait; opacity: 0.65; }
+    .refresh-progress { position: absolute; top: 100%; left: 0; display: grid; width: 100%; margin-top: 4px; gap: 3px; color: #d7e4ee; font-size: 0.62rem; }
+    .refresh-progress-label { text-align: center; }
+    .refresh-progress-track { overflow: hidden; height: 5px; border-radius: 99px; background: #425b70; }
+    .refresh-progress-value { width: 0; height: 100%; border-radius: inherit; background: #46c2a8; transition: width 250ms ease; }
+    .refresh-progress[data-state="error"] .refresh-progress-value { background: #ff887d; }
+
+    .layout { box-sizing: border-box; width: min(1800px, 100%); margin: 0 auto; padding: 28px 12px 48px; }
+    .filter-controls { position: relative; z-index: 101; display: flex; flex-wrap: wrap; align-items: flex-end; gap: 8px; margin-bottom: 12px; }
+    .dropdown-filter { position: relative; z-index: 102; display: grid; gap: 2px; min-width: 145px; color: #52647a; font-size: 0.62rem; font-weight: 650; }
+    .dropdown-filter.open { z-index: 1300; }
+    .date-filter { min-width: 0; }
+    .date-filter input { width: 125px; height: 32px; padding: 0 6px; border: 1px solid #d5dee8; border-radius: 7px; background: #fff; color: #193651; font: inherit; font-size: 0.68rem; }
+    .dropdown-root { position: relative; }
+    .dropdown-filter .dropdown-trigger { display: block; width: 145px; min-height: 32px; height: 32px; overflow: hidden; padding: 7px 24px 7px 8px; border: 1px solid #d5dee8; border-radius: 7px; background: #fff; color: #193651; cursor: pointer; font-size: 0.68rem; text-overflow: ellipsis; white-space: nowrap; text-align: left; }
+    .dropdown-options { position: fixed; inset: auto; z-index: 1200; width: 145px; max-height: 220px; margin: 0; padding: 7px; border: 1px solid #d5dee8; border-radius: 7px; background: #fff; box-shadow: 0 8px 20px rgb(16 43 70 / 12%); overflow-y: auto; }
+    .dropdown-option { display: flex; align-items: center; gap: 6px; padding: 2px 0; color: #193651; font-size: 0.68rem; font-weight: 400; }
+    .dropdown-option input { width: 13px; min-height: 13px; margin: 0; }
+    .dropdown-filter:has(#executor-filter) { min-width: 260px; }
+    .select-all-button { display: block; width: 100%; margin: 0 0 5px; padding: 5px 6px; border: 1px solid #d5dee8; border-radius: 6px; background: #eaf5f6; color: #087e8b; cursor: pointer; font-size: 0.68rem; font-weight: 700; text-align: center; }
+    .select-all-button:hover { background: #d9eef0; }
+    #executor-filter .dropdown-trigger, #executor-options { width: 260px; }
+    .notes-card { display: grid; width: 105px; height: 32px; align-content: center; justify-items: center; padding: 3px 5px; border: 1px solid #b8d5f3; border-radius: 7px; background: #eaf3fc; color: #1762a5; font-size: 0.64rem; font-weight: 750; white-space: nowrap; }
+
+    .kanban-board { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; align-items: start; }
+    .kanban-column { min-width: 0; border: 1px solid var(--column-border); border-radius: 12px; background: var(--column-bg); overflow: hidden; }
+    .kanban-column.scheduled { --column-bg: #fffbea; --column-border: #e3cc62; --column-head: #f2c200; --column-head-text: #4d3b00; }
+    .kanban-column.progress { --column-bg: #f0f6fd; --column-border: #7aaddc; --column-head: #1769aa; --column-head-text: #fff; }
+    .kanban-column.closed { --column-bg: #f0f8f3; --column-border: #6eb88e; --column-head: #18794e; --column-head-text: #fff; }
+    .kanban-column.high { --column-bg: #ffe3e3; --column-border: #d32f2f; --column-head: #d32f2f; --column-head-text: #fff; border-width: 2px; }
+    .column-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 9px 12px; background: var(--column-head); color: var(--column-head-text); font-size: 1.1rem; font-weight: 750; text-transform: uppercase; }
+    .column-count { min-width: 26px; padding: 2px 8px; border-radius: 99px; background: rgb(255 255 255 / 30%); text-align: center; }
+    .column-body { display: grid; gap: 8px; max-height: 69.5vh; overflow-y: auto; padding: 8px; }
+    .column-empty { padding: 14px 4px; color: #718198; font-size: 0.85rem; text-align: center; }
+    .kanban-card { display: grid; gap: 4px; padding: 8px 10px; border: 1px solid #dfe6ee; border-left: 4px solid var(--column-head); border-radius: 8px; background: #fff; box-shadow: 0 2px 6px rgb(16 43 70 / 6%); }
+    .kanban-card.high-priority { border-color: #d10000; border-left-color: #d10000; }
+    .card-top { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+    .card-note { color: #172b4d; font-size: 0.95rem; font-weight: 750; }
+    .card-badge { padding: 1px 7px; border-radius: 99px; background: #eef2f6; color: #34475d; font-size: 0.75rem; font-weight: 700; }
+    .card-badge.priority { background: #fde8e8; color: #d10000; }
+    .card-description { margin: 0; color: #34475d; font-size: 0.85rem; line-height: 1.3; overflow-wrap: anywhere; }
+    .card-meta { display: flex; flex-wrap: wrap; gap: 3px 10px; color: #68798e; font-size: 0.78rem; }
+    .card-meta strong { color: #34475d; font-weight: 650; }
+    #status { margin: 10px 0 0; color: #67788e; font-size: 0.72rem; }
+    #status[data-state="error"] { color: #b3261e; }
+
+    @media (max-width: 1100px) { .kanban-board { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (max-width: 640px) {
+      .topbar { grid-template-columns: 1fr; }
+      .topbar-title { grid-column: 1; grid-row: auto; margin-left: 0; }
+      .top-actions { justify-self: start; }
+      .kanban-board { grid-template-columns: 1fr; }
+    }
+    :root { color: #263634; background: #f3f5f3; }
+    .topbar { zoom: 1; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 12px; min-height: 48px; padding: 6px clamp(14px, 2.4vw, 32px); background: #142c2a; }
+    .brand { gap: 8px; }
+    .brand-mark { width: 28px; height: 28px; border-radius: 5px; background: #287c70; }
+    .brand-name { font-size: 0.68rem; font-weight: 750; text-transform: uppercase; }
+    .brand-caption { margin-top: 2px; color: #a7c0bb; font-size: 0.48rem; }
+    .topbar-title { grid-column: 2; grid-row: 1; justify-self: center; margin: 0; font-size: 1.15rem; font-weight: 750; text-align: center; white-space: nowrap; }
+    .top-actions { grid-column: 3; grid-row: 1; flex-wrap: nowrap; gap: 5px; }
+    .top-actions .nav-link, .top-actions button, .top-actions a { width: auto; height: 28px; min-height: 28px; padding: 4px 8px; border-color: #53726c; border-radius: 4px; font-size: 0.62rem; }
+    .page-nav-inner { width: min(1800px, 100%); }
+    .page-tab { min-height: 34px; padding: 0 12px; border-bottom-width: 2px; font-size: 0.68rem; }
+    .layout { padding-top: 12px; }
+    @media (max-width: 760px) {
+      .topbar { grid-template-columns: minmax(0, 1fr) auto; }
+      .brand { grid-column: 1; grid-row: 1; }
+      .topbar-title { grid-column: 1 / -1; grid-row: 2; justify-self: center; font-size: 1rem; }
+      .top-actions { grid-column: 2; grid-row: 1; max-width: 52vw; overflow-x: auto; }
+    }
+    @media (max-width: 440px) {
+      .topbar { gap: 7px 10px; padding: 6px 10px; }
+      .brand-name { font-size: 0.62rem; }
+      .brand-caption { font-size: 0.44rem; }
+      .topbar-title { font-size: 0.85rem; }
+      .page-tab { padding: 0 10px; }
+    }
+    .refresh-control:has(> #refresh-progress) { display: flex; align-items: center; gap: 5px; }
+    #refresh-progress { position: relative; inset: auto; display: none; flex: 0 0 40px; width: 40px; height: 40px; margin: 0; place-items: center; color: #fff; font-size: 0.62rem; }
+    #refresh-progress:not([data-state="idle"]) { display: grid; }
+    #refresh-progress .refresh-progress-label { position: relative; z-index: 1; font-weight: 700; }
+    #refresh-progress .refresh-progress-track { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; background: none; }
+    #refresh-progress .refresh-progress-track::before { content: ""; display: block; width: 100%; height: 100%; background: center / contain no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3Cpath id='p' d='M50 6v11' stroke='%2318d9c2' stroke-width='9' stroke-linecap='round'/%3E%3C/defs%3E%3Cuse href='%23p' opacity='.18'/%3E%3Cuse href='%23p' transform='rotate(30 50 50)' opacity='.25'/%3E%3Cuse href='%23p' transform='rotate(60 50 50)' opacity='.32'/%3E%3Cuse href='%23p' transform='rotate(90 50 50)' opacity='.39'/%3E%3Cuse href='%23p' transform='rotate(120 50 50)' opacity='.46'/%3E%3Cuse href='%23p' transform='rotate(150 50 50)' opacity='.53'/%3E%3Cuse href='%23p' transform='rotate(180 50 50)' opacity='.6'/%3E%3Cuse href='%23p' transform='rotate(210 50 50)' opacity='.67'/%3E%3Cuse href='%23p' transform='rotate(240 50 50)' opacity='.74'/%3E%3Cuse href='%23p' transform='rotate(270 50 50)' opacity='.81'/%3E%3Cuse href='%23p' transform='rotate(300 50 50)' opacity='.9'/%3E%3Cuse href='%23p' transform='rotate(330 50 50)'/%3E%3C/svg%3E"); }
+    #refresh-progress[data-state="running"] .refresh-progress-track::before { animation: iw28-spin 1s steps(12) infinite; }
+    #refresh-progress[data-state="error"] .refresh-progress-label { color: #ffaaa4; }
+    #refresh-progress .refresh-progress-value { display: none; }
+    @keyframes iw28-spin { to { transform: rotate(360deg); } }
+    @media (prefers-reduced-motion: reduce) { #refresh-progress[data-state="running"] .refresh-progress-track::before { animation: none; } }
+  </style>
+  <script src="/sidebar.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><img src="/rims-one-logo.png" alt="RIMS One — Robotic Integrated Maintenance System One" style="display:block;width:min(180px, 100%);height:auto"></div>
+    <h1 class="topbar-title">SISTEMA INTEGRADO DE MANUTENÇÃO ROBÓTICA</h1>
+    <div class="top-actions">
+      <div class="refresh-control">
+        <button class="nav-link" id="refresh" type="button">SAP (IW28)</button>
+        <div class="refresh-progress" id="refresh-progress" data-state="idle" title="Estimativa durante a execução; 100% somente após conclusão">
+          <span class="refresh-progress-label" id="refresh-progress-label">0%</span>
+          <div class="refresh-progress-track" role="progressbar" aria-label="Progresso da atualização IW28" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+            <div class="refresh-progress-value" id="refresh-progress-value"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <nav class="page-nav" aria-label="Navegação principal">
+    <div class="page-nav-inner">
+      <a class="page-tab" href="/">Painel de notas</a>
+      <a class="page-tab" href="/dashboard">Dashboard</a>
+      <a class="page-tab" href="/gantt">Gantt semanal</a>
+      <a class="page-tab" href="/kanban" aria-current="page">Kanban</a>
+      <a class="page-tab" href="/nivelamento">Nivelamento</a>
+      <a class="page-tab" href="/confiabilidade">Confiabilidade</a>
+    </div>
+  </nav>
+
+  <main class="layout">
+    <section class="filter-controls" aria-label="Filtros">
+      <div class="dropdown-filter">
+        Centro de trabalho
+        <div class="dropdown-root" id="work-center-filter">
+          <button type="button" class="dropdown-trigger">Todos</button>
+          <div class="dropdown-options" id="work-center-options" popover="auto"></div>
+        </div>
+      </div>
+      <div class="dropdown-filter">
+        Semana
+        <div class="dropdown-root" id="week-filter">
+          <button type="button" class="dropdown-trigger">Todas</button>
+          <div class="dropdown-options" id="week-options" popover="auto"></div>
+        </div>
+      </div>
+      <label class="dropdown-filter date-filter">
+        Data inicial
+        <input type="date" id="date-from">
+      </label>
+      <label class="dropdown-filter date-filter">
+        Data final
+        <input type="date" id="date-to">
+      </label>
+      <div class="dropdown-filter">
+        Executor
+        <div class="dropdown-root" id="executor-filter">
+          <button type="button" class="dropdown-trigger">Todos</button>
+          <div class="dropdown-options" id="executor-options" popover="auto"></div>
+        </div>
+      </div>
+      <article class="notes-card" aria-label="Notas visualizadas" id="visible-notes">Qt Notas: —</article>
+    </section>
+
+    <section class="kanban-board" aria-label="Painel Kanban de atividades">
+      <article class="kanban-column scheduled" data-column="scheduled">
+        <header class="column-head"><span>Notas Programadas</span><span class="column-count">0</span></header>
+        <div class="column-body"></div>
+      </article>
+      <article class="kanban-column progress" data-column="progress">
+        <header class="column-head"><span>Notas Em Andamento</span><span class="column-count">0</span></header>
+        <div class="column-body"></div>
+      </article>
+      <article class="kanban-column closed" data-column="closed">
+        <header class="column-head"><span>Notas Encerradas</span><span class="column-count">0</span></header>
+        <div class="column-body"></div>
+      </article>
+      <article class="kanban-column high" data-column="high">
+        <header class="column-head"><span>Emergenciais</span><span class="column-count">0</span></header>
+        <div class="column-body"></div>
+      </article>
+    </section>
+    <p id="status" role="status" aria-live="polite">Carregando notas…</p>
+  </main>
+
+  <script>
+    const statusLine = document.querySelector("#status");
+    const visibleNotes = document.querySelector("#visible-notes");
+    const workCenterFilter = document.querySelector("#work-center-filter");
+    const weekFilter = document.querySelector("#week-filter");
+    const executorFilter = document.querySelector("#executor-filter");
+    const dateFrom = document.querySelector("#date-from");
+    const dateTo = document.querySelector("#date-to");
+    const todayLocal = new Date();
+    dateFrom.value = dateTo.value = dateKey(new Date(Date.UTC(todayLocal.getFullYear(), todayLocal.getMonth(), todayLocal.getDate())));
+    [dateFrom, dateTo].forEach((input) => input.addEventListener("change", () => render()));
+    const filters = [workCenterFilter, weekFilter, executorFilter];
+    const preferencesKey = "sap-pm-kanban-preferences";
+    let preferences = loadPreferences();
+    let records = [];
+    let weekInitialized = false;
+
+    function loadPreferences() {
+      try {
+        const parsed = JSON.parse(localStorage.getItem(preferencesKey) || "{}");
+        return parsed && typeof parsed === "object" ? parsed : {};
+      } catch (error) {
+        return {};
+      }
+    }
+
+    function savePreferences() {
+      preferences = { filters: Object.fromEntries(filters.filter((filter) => filter !== weekFilter).map((filter) => [filter.id, selectedFilterValues(filter)])) };
+      localStorage.setItem(preferencesKey, JSON.stringify(preferences));
+    }
+
+    function dateKey(date) {
+      return date.toISOString().slice(0, 10);
+    }
+
+    function addDays(date, days) {
+      const result = new Date(date);
+      result.setUTCDate(result.getUTCDate() + days);
+      return result;
+    }
+
+    function mondayOf(date) {
+      return addDays(date, -((date.getUTCDay() + 6) % 7));
+    }
+
+    function currentWeekStart() {
+      const now = new Date();
+      return mondayOf(new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate())));
+    }
+
+    function parseDate(value) {
+      const text = String(value || "").trim();
+      let parts = text.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      if (parts) return new Date(Date.UTC(Number(parts[1]), Number(parts[2]) - 1, Number(parts[3])));
+      parts = text.match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
+      if (parts) return new Date(Date.UTC(Number(parts[3]), Number(parts[2]) - 1, Number(parts[1])));
+      return null;
+    }
+
+    function dateText(date) {
+      return new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit", timeZone: "UTC" }).format(date);
+    }
+
+    function sourceValue(record, column) {
+      return String(record.sourceColumns?.[column] || "").trim();
+    }
+
+    function taskValue(record, adjusted, sourceColumns) {
+      const adjustment = String(record[adjusted] || "").trim();
+      if (adjustment) return adjustment;
+      for (const column of sourceColumns) {
+        const value = sourceValue(record, column);
+        if (value) return value;
+      }
+      return "";
+    }
+
+    function workCenterCode(record) {
+      return sourceValue(record, "CenTrabRes") || "Não informado";
+    }
+
+    function executorName(record) {
+      return taskValue(record, "executor", ["Denominação executor", "Recebedor"]) || "Sem executor";
+    }
+
+    function taskDates(record) {
+      let start = parseDate(record.desiredStart) || parseDate(sourceValue(record, "Iníc.nec."));
+      let end = parseDate(record.desiredCompletion) || parseDate(sourceValue(record, "Concl.desj"));
+      if (!start && !end) return null;
+      if (!start) start = end;
+      if (!end || end < start) end = start;
+      return { start, end };
+    }
+
+    function priorityText(record) {
+      return String(record.priority || sourceValue(record, "Texto") || sourceValue(record, "Prioridade")).trim();
+    }
+
+    function isHighPriority(record) {
+      return priorityText(record).toLocaleUpperCase("pt-BR") === "ALTA";
+    }
+
+    function isShutdown(record) {
+      const adjusted = String(record.shutdown || "").toLocaleUpperCase("pt-BR");
+      const source = sourceValue(record, "P") || sourceValue(record, "Parada");
+      return adjusted === "X" || adjusted === "TRUE" || adjusted === "SIM" || source.toLocaleUpperCase("pt-BR") === "X";
+    }
+
+    function isScheduled(record) {
+      const order = String(record.order || "").trim().replace(/[.,\s]/g, "");
+      return /^\d+$/.test(order) && Number(order) > 10;
+    }
+
+    function systemStatus(record) {
+      const status = String(record.status || sourceValue(record, "Status sistema") || sourceValue(record, "Status do sistema") || sourceValue(record, "StatSist") || sourceValue(record, "Status") || "").trim().toLocaleUpperCase("pt-BR");
+      return status === "AND" && !isShutdown(record) ? "PEN" : status;
+    }
+
+    function isClosed(record) {
+      return systemStatus(record) === "ENC";
+    }
+
+    function isInProgress(record) {
+      const status = systemStatus(record);
+      return (status === "AND" || status === "PEN") && isShutdown(record);
+    }
+
+    function selectedFilterValues(filter) {
+      return [...filter.querySelectorAll('input[type="checkbox"]:checked')].map((checkbox) => checkbox.value);
+    }
+
+    function updateFilterSummary(filter) {
+      const checked = [...filter.querySelectorAll('input[type="checkbox"]:checked')];
+      filter.querySelector(".dropdown-trigger").textContent = checked.length
+        ? checked.map((checkbox) => checkbox.closest("label").textContent.trim()).join(", ")
+        : (filter.id === "week-filter" ? "Todas" : "Todos");
+    }
+
+    function populateFilter(filter, options, containerId, defaults = null) {
+      const container = document.querySelector(`#${containerId}`);
+      const current = selectedFilterValues(filter);
+      const previous = new Set(defaults || (current.length ? current : preferences.filters?.[filter.id] || []));
+      const optionElements = options.map(({ label, value }) => {
+        const option = document.createElement("label");
+        option.className = "dropdown-option";
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.value = value;
+        checkbox.checked = previous.has(value);
+        option.append(checkbox, document.createTextNode(label));
+        return option;
+      });
+      if (filter === executorFilter) {
+        const selectAll = document.createElement("button");
+        selectAll.type = "button";
+        selectAll.className = "select-all-button";
+        const syncLabel = () => {
+          const boxes = [...container.querySelectorAll('input[type="checkbox"]')];
+          selectAll.textContent = boxes.length && boxes.every((box) => box.checked) ? "Limpar seleção" : "Selecionar todos";
+        };
+        selectAll.addEventListener("click", () => {
+          const boxes = [...container.querySelectorAll('input[type="checkbox"]')];
+          const allChecked = boxes.every((box) => box.checked);
+          boxes.forEach((box) => { box.checked = !allChecked; });
+          syncLabel();
+          updateFilterSummary(filter);
+          savePreferences();
+          render();
+        });
+        container.addEventListener("change", syncLabel);
+        optionElements.unshift(selectAll);
+        queueMicrotask(syncLabel);
+      }
+      container.replaceChildren(...optionElements);
+      updateFilterSummary(filter);
+    }
+
+    function refreshExecutorOptions() {
+      const centers = selectedFilterValues(workCenterFilter);
+      const executors = [...new Set(records
+        .filter((record) => !centers.length || centers.includes(workCenterCode(record)))
+        .map(executorName))].sort((a, b) => a.localeCompare(b, "pt-BR"));
+      populateFilter(executorFilter, executors.map((value) => ({ label: value, value })), "executor-options");
+    }
+
+    function weekOptions() {
+      const starts = new Map();
+      starts.set(dateKey(currentWeekStart()), currentWeekStart());
+      records.forEach((record) => {
+        const dates = taskDates(record);
+        if (!dates) return;
+        for (let week = mondayOf(dates.start); week <= dates.end; week = addDays(week, 7)) {
+          starts.set(dateKey(week), week);
+        }
+      });
+      const current = dateKey(currentWeekStart());
+      return [...starts.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([key, start]) => ({
+        value: key,
+        label: `${dateText(start)} – ${dateText(addDays(start, 6))}${key === current ? " (atual)" : ""}`
+      }));
+    }
+
+    function matchesFilters(record) {
+      const centers = selectedFilterValues(workCenterFilter);
+      if (centers.length && !centers.includes(workCenterCode(record))) return false;
+      const executors = selectedFilterValues(executorFilter);
+      if (executors.length && !executors.includes(executorName(record))) return false;
+      const from = parseDate(dateFrom.value);
+      const to = parseDate(dateTo.value);
+      if (from || to) {
+        const dates = taskDates(record);
+        if (!dates) return false;
+        return (!to || dates.start <= to) && (!from || dates.end >= from);
+      }
+      const weeks = selectedFilterValues(weekFilter);
+      if (weeks.length) {
+        const dates = taskDates(record);
+        if (!dates) return false;
+        return weeks.some((key) => {
+          const start = parseDate(key);
+          return dates.start <= addDays(start, 6) && dates.end >= start;
+        });
+      }
+      return true;
+    }
+
+    function createMeta(label, value) {
+      const item = document.createElement("span");
+      const strong = document.createElement("strong");
+      strong.textContent = `${label}: `;
+      item.append(strong, document.createTextNode(value));
+      return item;
+    }
+
+    function createCard(record) {
+      const card = document.createElement("div");
+      card.className = `kanban-card${isHighPriority(record) ? " high-priority" : ""}`;
+      const top = document.createElement("div");
+      top.className = "card-top";
+      const note = document.createElement("span");
+      note.className = "card-note";
+      note.textContent = `Nota ${record.note || sourceValue(record, "Nota")}`;
+      const badges = document.createElement("span");
+      const status = systemStatus(record);
+      if (status) {
+        const badge = document.createElement("span");
+        badge.className = "card-badge";
+        badge.textContent = status;
+        badges.append(badge, " ");
+      }
+      if (isHighPriority(record)) {
+        const badge = document.createElement("span");
+        badge.className = "card-badge priority";
+        badge.textContent = "Alta";
+        badges.append(badge);
+      }
+      top.append(note, badges);
+      const description = document.createElement("p");
+      description.className = "card-description";
+      description.textContent = record.description || sourceValue(record, "Descrição");
+      const meta = document.createElement("div");
+      meta.className = "card-meta";
+      meta.append(createMeta("Executor", executorName(record)), createMeta("Centro", workCenterCode(record)));
+      const installation = taskValue(record, "installation", ["Denominação do loc.instalação"]);
+      if (installation) meta.append(createMeta("Local de instalação", installation));
+      const dates = taskDates(record);
+      if (dates) meta.append(createMeta("Período", `${dateText(dates.start)} – ${dateText(dates.end)}`));
+      const duration = taskValue(record, "shutdownDuration", ["DuraçParad"]);
+      if (duration) meta.append(createMeta("Duração", `${duration}h`));
+      if (record.order) meta.append(createMeta("Ordem", record.order));
+      card.append(top, description, meta);
+      return card;
+    }
+
+    function render() {
+      const filtered = records.filter(matchesFilters);
+      const columns = {
+        scheduled: filtered.filter((record) => isScheduled(record) && !isClosed(record) && !isInProgress(record)),
+        progress: filtered.filter(isInProgress),
+        closed: filtered.filter(isClosed),
+        high: filtered.filter((record) => isHighPriority(record) && !isClosed(record))
+      };
+      const byStart = (a, b) => {
+        const first = taskDates(a);
+        const second = taskDates(b);
+        if (first && second) {
+          return (first.start - second.start) || (first.end - second.end)
+            || String(a.note || "").localeCompare(String(b.note || ""), "pt-BR", { numeric: true });
+        }
+        return first ? -1 : second ? 1 : 0;
+      };
+      document.querySelectorAll(".kanban-column").forEach((column) => {
+        const items = columns[column.dataset.column].sort(byStart);
+        column.querySelector(".column-count").textContent = items.length.toLocaleString("pt-BR");
+        const body = column.querySelector(".column-body");
+        if (!items.length) {
+          const empty = document.createElement("div");
+          empty.className = "column-empty";
+          empty.textContent = "Nenhuma nota";
+          body.replaceChildren(empty);
+        } else {
+          body.replaceChildren(...items.map(createCard));
+        }
+      });
+      visibleNotes.textContent = `Qt Notas: ${filtered.length.toLocaleString("pt-BR")}`;
+      statusLine.dataset.state = "ready";
+      statusLine.textContent = "";
+    }
+
+    filters.forEach((filter) => {
+      const trigger = filter.querySelector(".dropdown-trigger");
+      const options = filter.querySelector(".dropdown-options");
+      trigger.addEventListener("click", (event) => {
+        event.stopPropagation();
+        filters.forEach((other) => {
+          const otherOptions = other.querySelector(".dropdown-options");
+          if (other !== filter && otherOptions.matches(":popover-open")) otherOptions.hidePopover();
+          other.closest(".dropdown-filter").classList.remove("open");
+        });
+        const rect = trigger.getBoundingClientRect();
+        options.style.left = `${rect.left}px`;
+        options.style.top = `${rect.bottom + 3}px`;
+        if (options.matches(":popover-open")) options.hidePopover();
+        else {
+          options.showPopover();
+          filter.closest(".dropdown-filter").classList.add("open");
+        }
+      });
+      options.addEventListener("click", (event) => event.stopPropagation());
+      options.addEventListener("toggle", () => {
+        if (!options.matches(":popover-open")) filter.closest(".dropdown-filter").classList.remove("open");
+      });
+      options.addEventListener("change", () => {
+        updateFilterSummary(filter);
+        if (filter === workCenterFilter) refreshExecutorOptions();
+        savePreferences();
+        render();
+      });
+    });
+    document.addEventListener("click", () => {
+      filters.forEach((filter) => {
+        const options = filter.querySelector(".dropdown-options");
+        if (options.matches(":popover-open")) options.hidePopover();
+      });
+    });
+
+    async function loadRecords() {
+      try {
+        const response = await fetch("/api/data?source=iw28", { cache: "no-store" });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message || "Não foi possível carregar a exportação IW28.");
+        if (!Array.isArray(data.records)) throw new Error("A resposta IW28 não contém uma lista de notas válida.");
+        records = data.records;
+        const sorted = (values) => [...new Set(values)].sort((a, b) => a.localeCompare(b, "pt-BR"));
+        populateFilter(workCenterFilter, sorted(records.map(workCenterCode)).map((value) => ({ label: value, value })), "work-center-options");
+        refreshExecutorOptions();
+        populateFilter(weekFilter, weekOptions(), "week-options",
+          weekInitialized ? null : [dateKey(currentWeekStart())]);
+        weekInitialized = true;
+        render();
+      } catch (error) {
+        statusLine.dataset.state = "error";
+        statusLine.textContent = error.message || "Erro ao carregar as notas.";
+      }
+    }
+
+    let lastSourceStamp = null;
+
+    async function checkForUpdates() {
+      try {
+        const response = await fetch("/api/sources", { cache: "no-store" });
+        const result = await response.json();
+        if (!response.ok) return;
+        const iw28 = result.sources.find((item) => item.id === "iw28");
+        const stamp = iw28 ? `${iw28.updated}|${iw28.count}` : null;
+        if (lastSourceStamp !== null && stamp !== lastSourceStamp) await loadRecords();
+        lastSourceStamp = stamp;
+      } catch {
+        // Nova tentativa no próximo ciclo.
+      }
+    }
+
+    loadRecords().then(checkForUpdates);
+    setInterval(checkForUpdates, 10000);
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) checkForUpdates();
+    });
+    const refreshButton = document.querySelector("#refresh");
+    const refreshProgress = document.querySelector("#refresh-progress");
+    const refreshProgressLabel = document.querySelector("#refresh-progress-label");
+    const refreshProgressTrack = refreshProgress.querySelector('[role="progressbar"]');
+    const refreshProgressValue = document.querySelector("#refresh-progress-value");
+    let refreshStartedAt = 0;
+    let refreshTimer = null;
+
+    function setRefreshProgress(value, state, label = `${value}%`) {
+      const progress = Math.max(0, Math.min(100, value));
+      refreshProgress.dataset.state = state;
+      refreshProgressLabel.textContent = label;
+      refreshProgressTrack.setAttribute("aria-valuenow", String(progress));
+      refreshProgressValue.style.width = `${progress}%`;
+    }
+
+    function updateEstimatedProgress() {
+      if (!refreshStartedAt) refreshStartedAt = Date.now();
+      const estimate = Math.min(95, Math.floor(((Date.now() - refreshStartedAt) / 60000) * 95));
+      setRefreshProgress(estimate, "running");
+    }
+
+    function finishRefresh(label) {
+      refreshTimer = null;
+      refreshStartedAt = 0;
+      refreshButton.disabled = false;
+      if (label) setRefreshProgress(0, "error", label);
+    }
+
+    async function pollRefresh(resumeOnly = false) {
+      try {
+        const response = await fetch("/api/status", { cache: "no-store" });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.message || "Não foi possível consultar a execução SAP.");
+        if (result.state === "queued" || result.state === "running") {
+          refreshButton.disabled = true;
+          updateEstimatedProgress();
+          refreshTimer = window.setTimeout(pollRefresh, 1000);
+        } else if (result.state === "done" && !resumeOnly) {
+          setRefreshProgress(100, "done");
+          await loadRecords();
+          finishRefresh();
+        } else {
+          finishRefresh(result.state === "error" && !resumeOnly ? "Falha" : "");
+        }
+      } catch (error) {
+        finishRefresh("Falha");
+        refreshProgress.title = error.message;
+      }
+    }
+
+    refreshButton.addEventListener("click", async () => {
+      refreshButton.disabled = true;
+      refreshStartedAt = Date.now();
+      setRefreshProgress(0, "running");
+      try {
+        const response = await fetch("/api/run", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: "{}"
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.message || "Não foi possível iniciar a exportação.");
+        if (refreshTimer) window.clearTimeout(refreshTimer);
+        refreshTimer = window.setTimeout(pollRefresh, 1000);
+      } catch (error) {
+        finishRefresh("Falha");
+        refreshProgress.title = error.message;
+      }
+    });
+
+    pollRefresh(true);
+  </script>
+</body>
+</html>

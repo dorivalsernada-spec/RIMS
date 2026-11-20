@@ -1,0 +1,2041 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Confiabilidade · Planejamento SAP PM</title>
+  <style>
+    :root { font-size: 12px; font-family: "Segoe UI", Arial, sans-serif; color: #172b4d; background: #f3f6fa; font-synthesis: none; }
+    * { box-sizing: border-box; }
+    body { min-width: 360px; margin: 0; }
+    button, a { font: inherit; }
+    .topbar { zoom: 0.9; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 20px; padding: 26px clamp(18px, 4vw, 48px); background: #102b46; color: #fff; }
+    .brand { display: flex; align-items: center; gap: 13px; }
+    .brand-mark { display: grid; width: 42px; height: 42px; place-items: center; border-radius: 12px; background: #087e8b; color: #fff; font-weight: 800; }
+    .brand-name { margin: 0; font-size: 1rem; }
+    .brand-caption { margin: 4px 0 0; color: #b7c8d8; font-size: 0.8rem; }
+    .topbar-title { grid-column: 2; grid-row: 1; margin: 0 0 0 24px; color: #fff; font-size: 1.4rem; text-align: left; justify-self: start; }
+    .top-actions { display: flex; flex-wrap: wrap; justify-self: end; align-items: center; gap: 10px; }
+    .nav-link { box-sizing: border-box; display: inline-flex; width: 110px; height: 40px; min-height: 40px; align-items: center; justify-content: center; padding: 9px 10px; border: 1px solid #638099; border-radius: 7px; color: #fff; font-weight: 650; font-size: 0.85rem; text-decoration: none; white-space: nowrap; }
+    .nav-link:hover { background: #25415a; }
+    .nav-link[aria-current="page"] { border-color: #46c2a8; background: #087e8b; }
+    .page-nav { overflow-x: auto; border-bottom: 1px solid #dfe6ee; background: #fff; scrollbar-width: thin; }
+    .page-nav-inner { display: flex; width: min(1800px, 100%); min-width: max-content; margin: 0 auto; padding: 0 clamp(12px, 2vw, 24px); }
+    .page-tab { display: inline-flex; min-height: 44px; align-items: center; justify-content: center; padding: 0 15px; border-bottom: 3px solid transparent; color: #52647a; font-size: 0.78rem; font-weight: 650; text-decoration: none; white-space: nowrap; }
+    .page-tab:hover { background: #f3f8f8; color: #087e8b; }
+    .page-tab[aria-current="page"] { border-bottom-color: #087e8b; color: #087e8b; }
+    .page-tab:focus-visible { outline: 2px solid #087e8b; outline-offset: -2px; }
+    .refresh-control { position: relative; display: grid; }
+    .refresh-control .nav-link { background: transparent; cursor: pointer; }
+    .refresh-control .nav-link:hover:not(:disabled) { background: #25415a; }
+    .refresh-control .nav-link:disabled { cursor: wait; opacity: 0.65; }
+    .refresh-progress { position: absolute; top: 100%; left: 0; display: grid; width: 100%; margin-top: 4px; gap: 3px; color: #d7e4ee; font-size: 0.62rem; }
+    .refresh-progress-label { text-align: center; }
+    .refresh-progress-track { overflow: hidden; height: 5px; border-radius: 99px; background: #425b70; }
+    .refresh-progress-value { width: 0; height: 100%; border-radius: inherit; background: #46c2a8; transition: width 250ms ease; }
+    .refresh-progress[data-state="error"] .refresh-progress-value { background: #ff887d; }
+
+    .layout { width: min(1800px, 100%); margin: 0 auto; padding: 28px clamp(12px, 2vw, 24px) 48px; }
+    .controls { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 8px; margin-bottom: 12px; }
+    .field { display: grid; gap: 2px; min-width: 240px; color: #52647a; font-size: 0.62rem; font-weight: 650; }
+    .field:has(input[type="datetime-local"]), .field:has(input[type="date"]) { min-width: 0; }
+    .field select, .field input { box-sizing: border-box; height: 32px; padding: 0 8px; border: 1px solid #d5dee8; border-radius: 7px; background: #fff; color: #193651; font-family: inherit; font-size: 0.68rem; }
+    .field input[type="datetime-local"], .field input[type="date"] { min-width: 180px; }
+    .controls button { min-height: 32px; padding: 6px 12px; border: 1px solid #d5dee8; border-radius: 7px; background: #fff; color: #193651; cursor: pointer; font-weight: 650; font-size: 0.68rem; }
+    .controls button:hover:not(:disabled) { border-color: #087e8b; background: #eaf5f6; }
+    .controls button:disabled { cursor: not-allowed; opacity: 0.5; }
+    .controls #messages-open { display: inline-flex; align-items: center; gap: 6px; border-color: #25d366; background: #25d366; color: #fff; }
+    .controls #messages-open:hover:not(:disabled) { border-color: #1da851; background: #1da851; }
+    .controls .primary { border-color: #087e8b; background: #087e8b; color: #fff; }
+    .controls .primary:hover:not(:disabled) { background: #066a75; }
+    .controls .danger { border-color: #f1b5b5; color: #b42318; }
+    .controls .danger:hover:not(:disabled) { border-color: #b42318; background: #fdecea; }
+    .controls .loaded, .controls .loaded:hover:not(:disabled) { border-color: #18794e; background: #18794e; color: #fff; }
+    .controls .button-link { display: inline-flex; min-height: 32px; align-items: center; padding: 6px 12px; border: 1px solid #d5dee8; border-radius: 7px; background: #fff; color: #193651; font-weight: 650; font-size: 0.68rem; text-decoration: none; }
+    .controls .button-link:hover { border-color: #087e8b; background: #eaf5f6; }
+    .controls .button-link[aria-disabled="true"] { opacity: 0.5; pointer-events: none; }
+    .controls button[aria-pressed="true"] { border-color: #b42318; background: #fdecea; color: #b42318; }
+    .view-panel { margin-top: 8px; line-height: normal; }
+    .view-controls { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px; }
+    .view-controls button { width: 95px; height: 26px; padding: 2px 4px; border: 1px solid #d5dee8; border-radius: 7px; background: #fff; color: #193651; cursor: pointer; font-weight: 650; font-size: 0.68rem; }
+    .view-controls button:hover:not(:disabled) { border-color: #087e8b; background: #eaf5f6; }
+    .view-controls button:disabled { cursor: not-allowed; opacity: 0.5; }
+    .view-controls button[aria-pressed="true"] { border-color: #087e8b; background: #087e8b; color: #fff; }
+    .hint { margin: 0 0 10px; color: #67788e; font-size: 0.68rem; }
+    .point-editor { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px; margin-bottom: 10px; padding: 8px 12px; border: 1px solid #f79009; border-radius: 10px; background: #fff4e0; }
+    .point-editor[hidden] { display: none; }
+    .editor-close { width: 28px; height: 28px; margin: 0 0 2px auto; padding: 0; border: 1px solid #d5dee8; border-radius: 7px; background: #fff; color: #b42318; cursor: pointer; font-size: 1rem; font-weight: 800; line-height: 1; }
+    .editor-close:hover { border-color: #b42318; background: #fdecea; }
+    .point-editor .field { min-width: 260px; }
+    .point-editor input { height: 32px; padding: 0 8px; border: 1px solid #d5dee8; border-radius: 7px; background: #fff; color: #193651; font-size: 0.68rem; }
+    #editor-tag { padding-bottom: 8px; color: #34475d; font-size: 0.7rem; font-weight: 650; }
+    .stage-wrap { padding: 12px; border: 1px solid #e2e8ef; border-radius: 12px; background: #fff; box-shadow: 0 4px 14px rgb(16 43 70 / 4%); }
+    .stage-wrap:fullscreen { display: flex; flex-direction: column; justify-content: center; overflow: auto; border: 0; border-radius: 0; }
+    .stage-wrap:fullscreen .stage img { max-height: calc(100vh - 110px); }
+    .stage-wrap:fullscreen .stage { margin: 0 auto; }
+    .stage-wrap:fullscreen::backdrop { background: #fff; }
+    .viewport { overflow: auto; max-height: 78vh; }
+    .stage-wrap:fullscreen .viewport { max-height: calc(100vh - 110px); }
+    .zoom-bar { display: flex; align-items: center; justify-content: flex-end; gap: 6px; margin-top: 8px; color: #193651; font-size: 0.68rem; font-weight: 700; }
+    .zoom-bar[hidden] { display: none; }
+    .zoom-bar button { width: 30px; height: 30px; padding: 0; border: 1px solid #d5dee8; border-radius: 7px; background: transparent; color: #193651; cursor: pointer; font-size: 1.1rem; font-weight: 700; line-height: 1; }
+    .zoom-bar button:hover:not(:disabled) { border-color: #087e8b; background: #eaf5f6; }
+    .zoom-bar button:disabled { opacity: 0.45; cursor: not-allowed; }
+    .zoom-bar input { width: 56px; height: 30px; border: 1px solid #d5dee8; border-radius: 7px; background: transparent; color: #193651; font-size: 0.68rem; font-weight: 700; text-align: center; }
+    .zoom-bar input:focus { outline: 2px solid #087e8b; outline-offset: 1px; background: #eaf5f6; }
+    .stage { position: relative; display: none; width: fit-content; max-width: 100%; margin: 0 auto; line-height: 0; user-select: none; }
+    .stage.visible { display: block; }
+    .stage.placing { cursor: crosshair; }
+    .stage img { display: block; max-width: 100%; max-height: 75vh; height: auto; -webkit-user-drag: none; }
+    .point { position: absolute; width: 18px; height: 18px; margin: -9px 0 0 -9px; border: 2px solid #d5eadd; border-radius: 50%; background: #6a9c7d; box-shadow: 0 0 5px 1px rgb(65 112 81 / 45%); cursor: grab; touch-action: none; }
+    .point:hover, .point.selected { border-color: #f0faf3; background: #83b395; box-shadow: 0 0 7px 2px rgb(65 112 81 / 60%); }
+    .point.health-unknown, .point.state-unknown, .point.state-no-inspection { border-color: #e2e8ef; background: #78838b; box-shadow: 0 0 5px 1px rgb(69 79 87 / 45%); }
+    .point.health-unknown:hover, .point.health-unknown.selected, .point.state-unknown:hover, .point.state-unknown.selected, .point.state-no-inspection:hover, .point.state-no-inspection.selected { border-color: #fff; background: #959fa6; box-shadow: 0 0 7px 2px rgb(69 79 87 / 60%); }
+    .point.health-unknown .point-label, .point.state-unknown .point-label, .point.state-no-inspection .point-label { color: #e2e8ef; text-shadow: 0 0 3px #37424a, 0 0 5px #37424a; }
+    .point.state-high, .point.health-red, .point.state-route-missing { border-color: #ff8a80; background: #ff4d4d; box-shadow: 0 0 6px 1px #ff1f1f, 0 0 12px 3px rgb(255 31 31 / 70%); }
+    .point.state-high:hover, .point.state-high.selected, .point.health-red:hover, .point.health-red.selected, .point.state-route-missing:hover, .point.state-route-missing.selected { border-color: #ffd0cc; background: #ff7a7a; box-shadow: 0 0 8px 2px #ff6b6b, 0 0 18px 6px rgb(255 31 31 / 85%); }
+    .point.state-high .point-label, .point.health-red .point-label, .point.state-route-missing .point-label { color: #ff4d4d; text-shadow: 0 0 4px #ff1f1f; }
+    .point.state-pending, .point.health-yellow { border-color: #fff08a; background: #ffe433; box-shadow: 0 0 6px 1px #ffd400, 0 0 12px 3px rgb(255 212 0 / 70%); }
+    .point.state-pending:hover, .point.state-pending.selected, .point.health-yellow:hover, .point.health-yellow.selected { border-color: #fff9c4; background: #fff07a; box-shadow: 0 0 8px 2px #ffe95a, 0 0 18px 6px rgb(255 212 0 / 85%); }
+    .point.state-pending .point-label, .point.health-yellow .point-label { color: #ffe433; text-shadow: 0 0 4px #ffd400; }
+    .point.no-occurrences, .point.health-ok, .point.state-route-done { border-color: #43df7d; background: #008a35; box-shadow: 0 0 5px 1px rgb(0 178 74 / 55%); }
+    .point.no-occurrences:hover, .point.no-occurrences.selected, .point.health-ok:hover, .point.health-ok.selected, .point.state-route-done:hover, .point.state-route-done.selected { border-color: #8bf5b0; background: #00a848; box-shadow: 0 0 8px 2px rgb(0 178 74 / 70%); }
+    .point.no-occurrences .point-label, .point.health-ok .point-label, .point.state-route-done .point-label { color: #006d2a; text-shadow: 0 0 3px #fff, 0 0 5px #fff; }
+    .point.no-occurrences:not(:hover):not(.selected) { animation: pulse-no-occurrences 2.2s ease-in-out infinite alternate; }
+    @keyframes pulse-no-occurrences { from { border-color: #43df7d; box-shadow: 0 0 3px 1px rgb(0 178 74 / 35%); } to { border-color: #8bf5b0; box-shadow: 0 0 6px 2px rgb(0 178 74 / 65%); } }
+    @media (prefers-reduced-motion: reduce) { .point.no-occurrences:not(:hover):not(.selected) { animation: none; } }
+    .history-modal { position: fixed; z-index: 100; inset: 0; display: flex; align-items: center; justify-content: center; padding: 20px; background: rgb(16 43 70 / 55%); }
+    .history-modal[hidden] { display: none; }
+    .history-box { display: flex; flex-direction: column; width: min(1100px, 100%); max-height: 85vh; border-radius: 12px; background: #fff; color: #193651; box-shadow: 0 12px 40px rgb(0 0 0 / 40%); }
+    .history-box.routes-history-box { width: max-content; min-width: min(380px, 100%); max-width: 100%; }
+    .history-box header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px; border-bottom: 1px solid #e2e8ef; }
+    .history-box h2 { margin: 0; font-size: 0.9rem; }
+    .history-close { width: 30px; height: 30px; padding: 0; border: 1px solid #d5dee8; border-radius: 7px; background: #fff; color: #b42318; cursor: pointer; font-size: 1.1rem; font-weight: 800; line-height: 1; }
+    .history-close:hover { border-color: #b42318; background: #fdecea; }
+    .history-scroll { overflow: auto; padding: 0 16px 16px; }
+    .history-scroll table { width: 100%; border-collapse: collapse; font-size: 0.7rem; }
+    .history-scroll table.routes-history-table { width: max-content; max-width: 100%; }
+    .history-scroll .routes-history-table th:first-child, .history-scroll .routes-history-table td:first-child { white-space: nowrap; }
+    .history-scroll th, .history-scroll td { padding: 6px 8px; border-bottom: 1px solid #e2e8ef; text-align: left; vertical-align: top; }
+    .history-scroll th { position: sticky; top: 0; background: #102b46; color: #fff; white-space: nowrap; }
+    .history-scroll tfoot td { border-top: 2px solid #102b46; background: #eaf5f6; font-weight: 800; }
+    .history-scroll tfoot td:first-child { text-align: right; }
+    .history-scroll .inspection-done { color: #087c35; }
+    .history-scroll .inspection-stopped { color: #596873; }
+    .history-scroll .inspection-missing { color: #b42318; }
+    .history-empty { margin: 16px 0 0; font-size: 0.75rem; }
+    .summary-box { width: min(640px, 100%); }
+    .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-top: 14px; }
+    .summary-card { padding: 10px 12px; border: 1px solid #e2e8ef; border-radius: 10px; background: #f8fafc; }
+    .summary-card span { display: block; color: #5b7288; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; }
+    .summary-card strong { display: block; margin-top: 2px; font-size: 1rem; }
+    .summary-sub { margin: 16px 0 6px; font-size: 0.75rem; text-transform: uppercase; color: #5b7288; }
+    .summary-notes { margin: 0; font-size: 0.78rem; line-height: 1.5; }
+    .summary-box footer { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; padding: 12px 16px; border-top: 1px solid #e2e8ef; }
+    .summary-box footer button { min-height: 32px; padding: 6px 14px; border: 1px solid #d5dee8; border-radius: 7px; background: #fff; color: #193651; cursor: pointer; font-weight: 650; font-size: 0.7rem; }
+    .summary-box footer .summary-history, .summary-box footer .summary-routes { border-color: #087e8b; background: #087e8b; color: #fff; }
+    .summary-box footer .summary-close:hover { border-color: #b42318; background: #fdecea; color: #b42318; }
+    .point.state-high, .point.health-red { animation: glow-high 1.4s ease-in-out infinite; }
+    .point.state-pending, .point.health-yellow { animation: glow-b3 1.4s ease-in-out infinite; }
+    @keyframes glow-high { 0%, 100% { box-shadow: 0 0 2px 0 #ff1f1f, 0 0 4px 1px rgb(255 31 31 / 30%); } 50% { box-shadow: 0 0 10px 3px #ff1f1f, 0 0 24px 9px rgb(255 31 31 / 85%); } }
+    @keyframes glow-b3 { 0%, 100% { box-shadow: 0 0 2px 0 #ffd400, 0 0 4px 1px rgb(255 212 0 / 30%); } 50% { box-shadow: 0 0 10px 3px #ffd400, 0 0 24px 9px rgb(255 212 0 / 85%); } }
+    @media (prefers-reduced-motion: reduce) { .point.state-high, .point.state-pending, .point.health-red, .point.health-yellow { animation: none; } }
+    .point .shutdown-wrench { position: absolute; left: 10px; top: -11px; width: 18px; height: 18px; color: #596873; filter: drop-shadow(0 0 2px #fff) drop-shadow(0 0 2px #fff); pointer-events: none; }
+    .note-tip { position: fixed; z-index: 50; max-width: 360px; max-height: 70vh; overflow: auto; padding: 8px 10px; border-radius: 8px; background: rgb(16 43 70 / 96%); color: #fff; font-size: 0.68rem; line-height: 1.35; box-shadow: 0 6px 20px rgb(0 0 0 / 35%); }
+    .note-tip[hidden] { display: none; }
+    .note-tip dl { display: grid; grid-template-columns: auto 1fr; gap: 1px 8px; margin: 6px 0 0; padding-top: 6px; border-top: 1px solid rgb(255 255 255 / 25%); }
+    .note-tip dt { color: #9fc3e0; font-weight: 700; }
+    .note-tip dd { margin: 0; overflow-wrap: anywhere; }
+    .note-tip .reliability-tip { margin: 6px 0 0; padding-top: 6px; border-top: 1px solid rgb(255 255 255 / 25%); overflow-wrap: anywhere; }
+    .note-tip .inspection-done { color: #81f0a3; }
+    .note-tip .inspection-stopped { color: #bfc9d2; }
+    .note-tip .inspection-missing { color: #ff9a94; }
+    .point.dragging { cursor: grabbing; }
+    .point-label { position: absolute; left: 50%; top: 100%; margin-top: 4px; padding: 0; transform: translateX(-50%); background: transparent; color: #d5eadd; text-shadow: 0 0 3px #315d42, 0 0 5px #315d42; font-size: 0.65rem; font-weight: 700; line-height: 1.3; white-space: nowrap; cursor: pointer; }
+    .ghost { position: absolute; display: none; width: 18px; height: 18px; margin: -9px 0 0 -9px; border: 2px solid #d5eadd; border-radius: 50%; background: rgb(106 156 125 / 60%); box-shadow: 0 0 5px 1px rgb(65 112 81 / 45%); pointer-events: none; }
+    .empty { display: grid; min-height: 280px; place-items: center; color: #67788e; font-size: 0.8rem; text-align: center; }
+    .empty[hidden] { display: none; }
+    .points-list { display: none; }
+    .points-list li { display: inline-flex; align-items: center; gap: 4px; padding: 2px 4px 2px 8px; border: 1px solid #c3cfdb; border-radius: 99px; background: #f8fafc; color: #193651; font-size: 0.68rem; font-weight: 700; }
+    .points-list li.selected { border-color: #f79009; background: #fff4e0; }
+    .points-list button { width: 18px; height: 18px; padding: 0; border: 0; border-radius: 50%; background: transparent; color: #b42318; cursor: pointer; font-weight: 800; line-height: 1; }
+    .points-list button:hover { background: #fdecea; }
+    .message-dialog { width: min(760px, calc(100% - 24px)); max-height: 90vh; padding: 0; border: 0; border-radius: 12px; color: #193651; box-shadow: 0 12px 40px rgb(0 0 0 / 40%); }
+    .message-dialog::backdrop { background: rgb(16 43 70 / 55%); }
+    .message-dialog header, .message-dialog footer { display: flex; align-items: center; gap: 8px; padding: 12px 16px; }
+    .message-dialog header { border-bottom: 1px solid #e2e8ef; }
+    .message-dialog h2 { margin: 0; font-size: 0.9rem; }
+    .message-dialog header button { margin-left: auto; }
+    .message-content { display: grid; gap: 12px; padding: 16px; }
+    .message-dialog fieldset { display: grid; gap: 6px; margin: 0; padding: 10px; border: 1px solid #d5dee8; border-radius: 7px; }
+    .message-dialog legend { font-weight: 700; }
+    .contact-form { display: flex; flex-wrap: wrap; align-items: end; gap: 8px; }
+    .contact-form label { display: grid; gap: 3px; flex: 1 1 180px; }
+    .message-dialog input:not([type="checkbox"]), .message-dialog textarea { width: 100%; padding: 7px; border: 1px solid #d5dee8; border-radius: 7px; font: inherit; }
+    .message-dialog button, .message-dialog a { padding: 6px 10px; border: 1px solid #d5dee8; border-radius: 7px; background: #fff; color: #193651; font: inherit; cursor: pointer; }
+    .message-dialog button:hover, .message-dialog a:hover { border-color: #087e8b; }
+    .message-dialog footer { flex-wrap: wrap; border-top: 1px solid #e2e8ef; }
+    .message-dialog textarea { min-height: 150px; resize: vertical; }
+    .contact-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+    .contact-row label { flex: 1; min-width: 180px; }
+    .message-status { margin: 0; color: #b42318; }
+    .message-links { display: flex; flex-wrap: wrap; gap: 8px; }
+    #status { margin: 8px 2px 0; color: #52647a; font-size: 0.7rem; }
+    #status[data-state="error"] { color: #b42318; }
+    @media (max-width: 900px) { .topbar { grid-template-columns: 1fr; } .topbar-title { grid-column: 1; grid-row: auto; margin-left: 0; } .top-actions { justify-self: start; } }
+    :root { color: #263634; background: #f3f5f3; }
+    .topbar { zoom: 1; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 12px; min-height: 48px; padding: 6px clamp(14px, 2.4vw, 32px); background: #142c2a; }
+    .brand { gap: 8px; }
+    .brand-mark { width: 28px; height: 28px; border-radius: 5px; background: #287c70; }
+    .brand-name { font-size: 0.68rem; font-weight: 750; text-transform: uppercase; }
+    .brand-caption { margin-top: 2px; color: #a7c0bb; font-size: 0.48rem; }
+    .topbar-title { grid-column: 2; grid-row: 1; justify-self: center; margin: 0; font-size: 1.15rem; font-weight: 750; text-align: center; white-space: nowrap; }
+    .top-actions { grid-column: 3; grid-row: 1; flex-wrap: nowrap; gap: 5px; }
+    .top-actions .nav-link, .top-actions button, .top-actions a { width: auto; height: 28px; min-height: 28px; padding: 4px 8px; border-color: #53726c; border-radius: 4px; font-size: 0.62rem; }
+    .page-nav-inner { width: min(1800px, 100%); }
+    .page-tab { min-height: 34px; padding: 0 12px; border-bottom-width: 2px; font-size: 0.68rem; }
+    .layout { padding-top: 12px; }
+    @media (max-width: 760px) {
+      .topbar { grid-template-columns: minmax(0, 1fr) auto; }
+      .brand { grid-column: 1; grid-row: 1; }
+      .topbar-title { grid-column: 1 / -1; grid-row: 2; justify-self: center; font-size: 1rem; }
+      .top-actions { grid-column: 2; grid-row: 1; max-width: 52vw; overflow-x: auto; }
+    }
+    @media (max-width: 440px) {
+      .topbar { gap: 7px 10px; padding: 6px 10px; }
+      .brand-name { font-size: 0.62rem; }
+      .brand-caption { font-size: 0.44rem; }
+      .topbar-title { font-size: 0.85rem; }
+      .page-tab { padding: 0 10px; }
+    }
+    .refresh-control:has(> #refresh-progress) { display: flex; align-items: center; gap: 5px; }
+    #refresh-progress { position: relative; inset: auto; display: none; flex: 0 0 40px; width: 40px; height: 40px; margin: 0; place-items: center; color: #fff; font-size: 0.62rem; }
+    #refresh-progress:not([data-state="idle"]) { display: grid; }
+    #refresh-progress .refresh-progress-label { position: relative; z-index: 1; font-weight: 700; }
+    #refresh-progress .refresh-progress-track { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; background: none; }
+    #refresh-progress .refresh-progress-track::before { content: ""; display: block; width: 100%; height: 100%; background: center / contain no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3Cpath id='p' d='M50 6v11' stroke='%2318d9c2' stroke-width='9' stroke-linecap='round'/%3E%3C/defs%3E%3Cuse href='%23p' opacity='.18'/%3E%3Cuse href='%23p' transform='rotate(30 50 50)' opacity='.25'/%3E%3Cuse href='%23p' transform='rotate(60 50 50)' opacity='.32'/%3E%3Cuse href='%23p' transform='rotate(90 50 50)' opacity='.39'/%3E%3Cuse href='%23p' transform='rotate(120 50 50)' opacity='.46'/%3E%3Cuse href='%23p' transform='rotate(150 50 50)' opacity='.53'/%3E%3Cuse href='%23p' transform='rotate(180 50 50)' opacity='.6'/%3E%3Cuse href='%23p' transform='rotate(210 50 50)' opacity='.67'/%3E%3Cuse href='%23p' transform='rotate(240 50 50)' opacity='.74'/%3E%3Cuse href='%23p' transform='rotate(270 50 50)' opacity='.81'/%3E%3Cuse href='%23p' transform='rotate(300 50 50)' opacity='.9'/%3E%3Cuse href='%23p' transform='rotate(330 50 50)'/%3E%3C/svg%3E"); }
+    #refresh-progress[data-state="running"] .refresh-progress-track::before { animation: iw28-spin 1s steps(12) infinite; }
+    #refresh-progress[data-state="error"] .refresh-progress-label { color: #ffaaa4; }
+    #refresh-progress .refresh-progress-value { display: none; }
+    @keyframes iw28-spin { to { transform: rotate(360deg); } }
+    @media (prefers-reduced-motion: reduce) { #refresh-progress[data-state="running"] .refresh-progress-track::before { animation: none; } }
+  </style>
+  <script src="/sidebar.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><img src="/rims-one-logo.png" alt="RIMS One — Robotic Integrated Maintenance System One" style="display:block;width:min(180px, 100%);height:auto"></div>
+    <h1 class="topbar-title">SISTEMA INTEGRADO DE MANUTENÇÃO ROBÓTICA</h1>
+    <div class="top-actions">
+      <div class="refresh-control">
+        <button class="nav-link" id="refresh" type="button">SAP (IW28)</button>
+        <div class="refresh-progress" id="refresh-progress" data-state="idle" title="Estimativa durante a execução; 100% somente após conclusão">
+          <span class="refresh-progress-label" id="refresh-progress-label">0%</span>
+          <div class="refresh-progress-track" role="progressbar" aria-label="Progresso da atualização IW28" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+            <div class="refresh-progress-value" id="refresh-progress-value"></div>
+          </div>
+        </div>
+      </div>
+      <div class="refresh-control">
+        <button class="nav-link" id="itss-refresh" type="button" title="Executar exportação ITSS pelo SAP GUI.">SAP (ITSS)</button>
+        <div class="refresh-progress" id="itss-progress" data-state="idle" title="Estimativa durante a execução; 100% somente após conclusão"><span class="refresh-progress-label" role="status" aria-live="polite">0%</span><div class="refresh-progress-track" role="progressbar" aria-label="Progresso da atualização ITSS" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="refresh-progress-value"></div></div></div>
+      </div>
+      <div class="refresh-control">
+        <button class="nav-link" id="upload-routes" type="button" title="Carregar planilha de rotas (.xlsx)">XLS (ROTAS)</button>
+        <div class="refresh-progress" id="routes-progress" data-state="idle" title="Progresso real do envio do arquivo">
+          <span class="refresh-progress-label" id="routes-progress-label" role="status" aria-live="polite">0%</span>
+          <div class="refresh-progress-track" role="progressbar" aria-label="Progresso do carregamento da planilha de rotas" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+            <div class="refresh-progress-value" id="routes-progress-value"></div>
+          </div>
+        </div>
+      </div>
+      <input id="routes-file" type="file" accept=".xlsx" hidden>
+    </div>
+  </header>
+
+  <nav class="page-nav" aria-label="Navegação principal">
+    <div class="page-nav-inner">
+      <a class="page-tab" href="/">Painel de notas</a>
+      <a class="page-tab" href="/dashboard">Dashboard</a>
+      <a class="page-tab" href="/gantt">Gantt semanal</a>
+      <a class="page-tab" href="/kanban">Kanban</a>
+      <a class="page-tab" href="/nivelamento">Nivelamento</a>
+      <a class="page-tab" href="/confiabilidade" aria-current="page">Confiabilidade</a>
+    </div>
+  </nav>
+
+  <main class="layout">
+    <section class="controls" aria-label="Área e ações">
+      <label class="field">Área<select id="area"></select></label>
+      <button class="primary" id="upload" type="button">Carregar imagem</button>
+      <input id="file" type="file" accept="image/png,image/jpeg,image/gif,image/webp" hidden>
+      <button class="danger" id="delete-image" type="button">Excluir imagem</button>
+      <button id="add-point" type="button" aria-pressed="false">Adicionar ponto de controle</button>
+      <button id="fullscreen" type="button" title="Exibir a imagem em tela inteira (Esc para sair)">Tela inteira</button>
+      <button id="upload-codes" type="button">Carregar tabela de códigos</button>
+      <a class="button-link" id="download-codes" href="/api/confiabilidade/codes.xlsx" download aria-disabled="true">Baixar tabela de códigos</a>
+      <label class="field">Início de safra<input type="datetime-local" id="harvest-start"></label>
+      <label class="field">Fim de safra<input type="datetime-local" id="harvest-end"></label>
+      <label class="field">Data atual<input type="date" id="selected-date" required></label>
+      <button id="messages-open" type="button"><svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" focusable="false"><path fill="currentColor" d="M12 2a9.8 9.8 0 0 0-8.4 14.85L2.4 22l5.3-1.38A10 10 0 1 0 12 2Zm0 17.9a8 8 0 0 1-4.08-1.12l-.29-.17-3.15.82.84-3.07-.19-.31A8 8 0 1 1 12 19.9Zm4.4-5.98c-.24-.12-1.43-.71-1.65-.79-.22-.08-.38-.12-.54.12-.16.24-.62.79-.76.95-.14.16-.28.18-.52.06-.24-.12-1.02-.38-1.94-1.2-.72-.64-1.21-1.43-1.35-1.67-.14-.24-.02-.37.1-.49.11-.11.24-.28.36-.42.12-.14.16-.24.24-.4.08-.16.04-.3-.02-.42-.06-.12-.54-1.3-.74-1.78-.2-.47-.4-.4-.54-.41h-.46c-.16 0-.42.06-.64.3-.22.24-.84.82-.84 2s.86 2.32.98 2.48c.12.16 1.69 2.58 4.1 3.62.57.25 1.02.4 1.37.5.58.18 1.1.15 1.51.09.46-.07 1.43-.58 1.63-1.14.2-.56.2-1.04.14-1.14-.06-.1-.22-.16-.46-.28Z"/></svg> WhatsApp</button>
+      <input id="codes-file" type="file" accept=".xlsx" hidden>
+    </section>
+    <section class="stage-wrap" id="stage-wrap" aria-label="Imagem de processo">
+      <section class="point-editor" id="point-editor" hidden aria-label="Código do ponto selecionado">
+        <strong id="editor-id"></strong>
+        <label class="field">Código<input id="editor-code" list="codes-list" autocomplete="off" placeholder="Selecione ou digite o código"></label>
+        <span id="editor-tag"></span>
+        <datalist id="codes-list"></datalist>
+        <button type="button" id="editor-close" class="editor-close" aria-label="Fechar caixa de código" title="Fechar">×</button>
+      </section>
+      <div class="empty" id="empty">Nenhuma imagem carregada para esta área.</div>
+      <div class="viewport" id="viewport">
+        <div class="stage" id="stage">
+          <img id="image" alt="Imagem de processo da área selecionada" draggable="false">
+          <div class="ghost" id="ghost"></div>
+        </div>
+      </div>
+      <div class="view-panel" id="view-panel" hidden>
+        <div class="view-controls" role="group" aria-label="Visualização dos pontos de controle">
+          <button id="view-occurrences" type="button" aria-pressed="true">Ocorrências</button>
+          <button id="view-lubrication" type="button" disabled title="Carregue a planilha XLS (ROTAS) para consultar as inspeções desta semana.">Lubrificação</button>
+          <button id="view-checklist" type="button" disabled title="Carregue a planilha XLS (ROTAS) para consultar as inspeções desta semana.">Check List</button>
+          <button id="view-predictive" type="button" disabled title="Carregue a planilha XLS (ROTAS) para consultar as inspeções desta semana.">Preditiva</button>
+          <button id="view-health" type="button" aria-pressed="false">Saúde do Ativo</button>
+        </div>
+        <p class="hint" id="routes-legend" hidden>Verde: inspeção realizada. Vermelho: rota sem registro de realização. Cinza: parado, sem rota prevista até a data selecionada nesta semana ou avaliação indisponível. Em situações mistas, prevalece vermelho, depois cinza.</p>
+      </div>
+      <ul class="points-list" id="points-list" aria-label="Pontos de controle"></ul>
+      <div class="zoom-bar" id="zoom-bar" hidden aria-label="Zoom da imagem">
+        <button type="button" id="zoom-out" aria-label="Reduzir zoom" title="Reduzir zoom">−</button>
+        <input type="text" id="zoom-value" inputmode="numeric" value="100%" aria-label="Zoom em porcentagem" title="Digite o zoom (100 a 400)">
+        <button type="button" id="zoom-in" aria-label="Aumentar zoom" title="Aumentar zoom">+</button>
+      </div>
+    </section>
+    <p id="status" role="status"></p>
+    <footer aria-label="Informações do painel">
+      <p class="hint" id="hint"></p>
+      <p class="hint" id="codes-info"></p>
+      <p class="hint" id="routes-info" role="status"></p>
+    </footer>
+  </main>
+
+  <dialog class="message-dialog" id="messages-dialog" aria-labelledby="messages-title">
+    <header><h2 id="messages-title">Mensagens via WhatsApp</h2><button id="messages-close" type="button" aria-label="Fechar">×</button></header>
+    <div class="message-content">
+      <fieldset><legend>Contatos</legend>
+        <form class="contact-form" id="contact-form">
+          <label>Nome<input id="contact-name" maxlength="100" required></label>
+          <label>WhatsApp com DDI e DDD<input id="contact-phone" type="tel" placeholder="5511999999999" maxlength="25" required></label>
+          <button type="submit" id="contact-save">Adicionar</button>
+          <button type="button" id="contact-cancel" hidden>Cancelar edição</button>
+        </form>
+        <div id="contact-list"></div>
+        <small>Os contatos ficam armazenados neste navegador e computador.</small>
+      </fieldset>
+      <fieldset id="message-types"><legend>Informações para envio</legend>
+        <label><input type="checkbox" value="alarms"> Lista de Conjuntos em Alarmes</label>
+        <label><input type="checkbox" value="scheduled"> Lista de Serviços Programados</label>
+        <label><input type="checkbox" value="reliability"> Lista de Ativos com Baixa Confiabilidade</label>
+      </fieldset>
+      <label>Pré-visualização da mensagem<textarea id="message-preview" readonly></textarea></label>
+      <p class="message-status" id="message-status" role="status" aria-live="polite"></p>
+      <div class="message-links" id="message-links"></div>
+    </div>
+    <footer><button id="message-send" type="button">Enviar</button><button id="message-copy" type="button">Copiar mensagem</button><span>Enviar abre as conversas selecionadas com a mensagem pronta; confirme o envio no WhatsApp.</span></footer>
+  </dialog>
+
+  <script>
+    const areaSelect = document.getElementById("area");
+    const fileInput = document.getElementById("file");
+    const uploadButton = document.getElementById("upload");
+    const deleteButton = document.getElementById("delete-image");
+    const addButton = document.getElementById("add-point");
+    const stage = document.getElementById("stage");
+    const image = document.getElementById("image");
+    const ghost = document.getElementById("ghost");
+    const empty = document.getElementById("empty");
+    const pointsList = document.getElementById("points-list");
+    const hint = document.getElementById("hint");
+    const statusLine = document.getElementById("status");
+    const STORAGE_KEY = "confiabilidade-area";
+
+    let areas = [];
+    let codes = [];
+    let routeRecords = [];
+    let loadedRoutes = null;
+    let itssByTagAndType = new Map();
+    let itssError = "Carregando inspeções ITSS.";
+    let activeTechnique = "";
+    let codesFile = "";
+    let codesUpdated = "";
+    const codesButton = document.getElementById("upload-codes");
+    const codesInput = document.getElementById("codes-file");
+    const codesInfo = document.getElementById("codes-info");
+    const routesButton = document.getElementById("upload-routes");
+    const routesInput = document.getElementById("routes-file");
+    const routesInfo = document.getElementById("routes-info");
+    const routesProgress = document.getElementById("routes-progress");
+    const routesProgressLabel = document.getElementById("routes-progress-label");
+    const routesProgressTrack = routesProgress.querySelector('[role="progressbar"]');
+    const routesProgressValue = document.getElementById("routes-progress-value");
+    const codesList = document.getElementById("codes-list");
+    const editor = document.getElementById("point-editor");
+    const editorId = document.getElementById("editor-id");
+    const editorCode = document.getElementById("editor-code");
+    const editorTag = document.getElementById("editor-tag");
+    let placing = false;
+    let selectedId = null;
+    let editingId = null;
+    let activeView = "occurrences";
+    let notesAvailable = false;
+    let lastTap = { id: null, time: 0, count: 0 };
+
+    const currentArea = () => areas.find((area) => area.id === areaSelect.value);
+    const pointNumber = (id) => Number(id.slice(1));
+    const pointId = (number) => `P${String(number).padStart(2, "0")}`;
+
+    function setStatus(message, error = false) {
+      statusLine.dataset.state = error ? "error" : "";
+      statusLine.textContent = message;
+    }
+
+    async function send(url, options) {
+      const response = await fetch(url, { method: "POST", ...options });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.message || "Não foi possível concluir a operação.");
+      return result;
+    }
+
+    function setPlacing(value) {
+      placing = value;
+      addButton.setAttribute("aria-pressed", String(value));
+      stage.classList.toggle("placing", value);
+      if (!value) ghost.style.display = "none";
+      updateHint();
+    }
+
+    function updateHint() {
+      const area = currentArea();
+      if (!area?.hasImage) hint.textContent = "Selecione uma área e carregue uma imagem de processo para posicionar pontos de controle.";
+      else if (placing) hint.textContent = "Mova o círculo sobre a imagem e clique para posicionar o ponto. Pressione Esc para cancelar.";
+      else hint.textContent = "Arraste um ponto para reposicioná-lo. Dê dois cliques no ponto para informar o código. Use o × da lista (ou a tecla Delete com o ponto selecionado) para removê-lo.";
+    }
+
+    const stageWrap = document.getElementById("stage-wrap");
+    const zoomBar = document.getElementById("zoom-bar");
+    const zoomIn = document.getElementById("zoom-in");
+    const zoomOut = document.getElementById("zoom-out");
+    const zoomValue = document.getElementById("zoom-value");
+    const ZOOM_MIN = 1, ZOOM_MAX = 4, ZOOM_STEP = 0.25;
+    let zoom = 1;
+    function applyZoom() {
+      image.style.width = image.style.maxWidth = image.style.maxHeight = "";
+      stage.style.maxWidth = "";
+      if (zoom !== 1) {
+        const base = image.getBoundingClientRect().width;
+        image.style.maxWidth = "none";
+        image.style.maxHeight = "none";
+        image.style.width = `${base * zoom}px`;
+        stage.style.maxWidth = "none";
+      }
+      zoomValue.value = `${Math.round(zoom * 100)}%`;
+      zoomOut.disabled = zoom <= ZOOM_MIN;
+      zoomIn.disabled = zoom >= ZOOM_MAX;
+    }
+    function setZoom(value) {
+      zoom = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, value));
+      applyZoom();
+    }
+    function commitZoomInput() {
+      const typed = parseFloat(zoomValue.value.replace(",", ".").replace(/[^\d.]/g, ""));
+      if (Number.isFinite(typed)) setZoom(typed / 100); else applyZoom();
+    }
+    zoomValue.addEventListener("keydown", (event) => {
+      event.stopPropagation();
+      if (event.key === "Enter") { commitZoomInput(); zoomValue.blur(); }
+      else if (event.key === "Escape") { applyZoom(); zoomValue.blur(); }
+    });
+    zoomValue.addEventListener("change", commitZoomInput);
+    zoomValue.addEventListener("focus", () => zoomValue.select());
+    zoomIn.addEventListener("click", () => setZoom(zoom + ZOOM_STEP));
+    zoomOut.addEventListener("click", () => setZoom(zoom - ZOOM_STEP));
+    image.addEventListener("load", () => { zoom = 1; applyZoom(); });
+    document.addEventListener("fullscreenchange", () => setZoom(1));
+
+    function render() {
+      clearTimeout(hideTipTimer);
+      noteTip.hidden = true;
+      const area = currentArea();
+      const hasImage = Boolean(area?.hasImage);
+      empty.hidden = hasImage;
+      stage.classList.toggle("visible", hasImage);
+      zoomBar.hidden = !hasImage;
+      document.getElementById("view-panel").hidden = !hasImage;
+      deleteButton.disabled = !hasImage;
+      fullscreenButton.disabled = !hasImage;
+      addButton.disabled = !hasImage;
+      if (!hasImage) setPlacing(false);
+      if (hasImage) {
+        const source = `/api/confiabilidade/image?area=${encodeURIComponent(area.id)}&v=${area.version}`;
+        if (image.getAttribute("src") !== source) image.src = source;
+      } else {
+        image.removeAttribute("src");
+      }
+      stage.querySelectorAll(".point").forEach((node) => node.remove());
+      pointsList.replaceChildren();
+      if (!hasImage) { updateEditor(); updateHint(); return; }
+      if (!area.points.some((point) => point.id === selectedId)) selectedId = null;
+      area.points.forEach((point) => {
+        const node = document.createElement("div");
+        const { state, shutdown } = activeView === "health"
+          ? healthState(point)
+          : activeView === "routes"
+            ? inspectionState(point)
+            : pointState(point);
+        node.className = "point" + (point.id === selectedId ? " selected" : "") + (activeView === "occurrences" && state === "ok" ? " no-occurrences" : activeView === "health" ? ` health-${state}` : state === "ok" ? "" : ` state-${state}`);
+        node.dataset.state = state;
+        node.dataset.id = point.id;
+        node.style.left = `${point.x}%`;
+        node.style.top = `${point.y}%`;
+        node.tabIndex = 0;
+        node.title = "";
+        if (activeView === "routes") {
+          const descriptions = { "route-done": "inspeção realizada", "route-missing": "rota sem registro de realização", "no-inspection": "rota parada ou sem avaliação disponível" };
+          node.setAttribute("aria-label", `${point.id}: ${descriptions[state]} nesta semana`);
+        } else if (activeView === "occurrences") {
+          const descriptions = { high: "nota aberta de prioridade Alta", pending: "nota aberta sem prioridade Alta", ok: "sem notas abertas", unknown: "notas ou TAG indisponíveis" };
+          node.setAttribute("aria-label", `${point.id}: ${descriptions[state]}${shutdown ? ", com parada" : ""}`);
+        }
+        if (activeView === "occurrences" && shutdown) node.insertAdjacentHTML("afterbegin", WRENCH_SVG);
+        const label = document.createElement("span");
+        label.className = "point-label";
+        label.textContent = point.id;
+        node.append(label);
+        stage.append(node);
+
+        const item = document.createElement("li");
+        item.className = point.id === selectedId ? "selected" : "";
+        item.append(document.createTextNode(pointText(point)));
+        const remove = document.createElement("button");
+        remove.type = "button";
+        remove.textContent = "×";
+        remove.title = `Remover ${point.id}`;
+        remove.setAttribute("aria-label", `Remover ${point.id}`);
+        remove.addEventListener("click", () => removePoint(point.id));
+        item.append(remove);
+        pointsList.append(item);
+      });
+      updateEditor();
+      updateHint();
+    }
+
+    const codeTag = (code) => codes.find((entry) => entry.code === code)?.tag || "";
+    let notesByLocation = [];
+    let iw28Records = [];
+    const norm = (value) => String(value || "").trim().toUpperCase();
+    const field = (record, names, fallback = "") => {
+      for (const name of names) {
+        const value = String(record.sourceColumns?.[name] || "").trim();
+        if (value) return value;
+      }
+      return String(fallback || "").trim();
+    };
+
+    function pointNotes(point) {
+      const tag = norm(codeTag(point.code));
+      if (!tag) return [];
+      return notesByLocation.filter((note) => note.location === tag || note.location.startsWith(`${tag}-`));
+    }
+
+    function pointState(point) {
+      if (!notesAvailable || !norm(codeTag(point.code))) return { state: "unknown", notes: [], shutdown: false };
+      const notes = pointNotes(point).filter((note) => note.status === "PEN" || note.status === "AND");
+      const state = notes.some((note) => note.priority === "ALTA") ? "high" : notes.length ? "pending" : "ok";
+      return { state, notes, shutdown: notes.some((note) => note.shutdown === "X") };
+    }
+
+    const ROUTE_ORDER_TYPES = { lubrication: "YB20", predictive: "YB10", checklist: "YBA9" };
+    const matchesRouteTechnique = (record, technique) =>
+      Boolean(ROUTE_ORDER_TYPES[technique]) && norm(record.orderType) === ROUTE_ORDER_TYPES[technique];
+
+    function pointRouteRecords(point, technique = activeTechnique) {
+      const code = norm(point.code);
+      return routeRecords.filter((record) =>
+        code && code === norm(record.code) && matchesRouteTechnique(record, technique)
+      );
+    }
+
+    function weekForDate(date) {
+      const start = new Date(`${date}T00:00:00Z`);
+      start.setUTCDate(start.getUTCDate() - ((start.getUTCDay() + 6) % 7));
+      const end = new Date(start);
+      end.setUTCDate(end.getUTCDate() + 6);
+      return { start: start.toISOString().slice(0, 10), end: end.toISOString().slice(0, 10) };
+    }
+
+    const localDateIso = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+    const selectedDate = document.getElementById("selected-date");
+    let referenceDay = localDateIso(new Date());
+    selectedDate.value = referenceDay;
+
+    function referenceInstant() {
+      const now = new Date();
+      const [year, month, day] = referenceDay.split("-").map(Number);
+      return new Date(year, month - 1, day, now.getHours(), now.getMinutes(), now.getSeconds(), now.getMilliseconds());
+    }
+
+    function currentWeek() {
+      return weekForDate(referenceDay);
+    }
+
+    function inspectionState(point) {
+      const week = currentWeek();
+      const records = pointRouteRecords(point);
+      const dates = [...new Set(records.flatMap((record) => record.dates || []))].sort();
+      const weekDates = dates.filter((date) => date >= week.start && date <= week.end);
+      const states = weekDates.filter((date) => date <= referenceDay)
+        .flatMap((date) => scheduledInspectionParts(point, date).slice(1).map((part) => part.state));
+      const state = states.includes("missing") ? "route-missing"
+        : states.includes("") || states.includes("stopped") || !states.length ? "no-inspection"
+        : "route-done";
+      return { state, dates, weekDates };
+    }
+
+    function visibleRouteDates(dates) {
+      const week = currentWeek();
+      const past = dates.filter((date) => date < week.start).slice(-2);
+      const current = dates.filter((date) => date >= week.start && date <= week.end);
+      const future = dates.filter((date) => date > week.end).slice(0, 2);
+      return [...past, ...current, ...future];
+    }
+
+    async function loadItssInspections() {
+      try {
+        const response = await fetch("/api/itss/inspections", { cache: "no-store" });
+        if (!response.headers.get("content-type")?.includes("application/json")) {
+          throw new Error("Reinicie o servidor pelo iniciar.bat para habilitar a leitura das inspeções ITSS.");
+        }
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.message || "Não foi possível consultar as inspeções ITSS.");
+        if (!Array.isArray(result.records)) throw new Error("A resposta ITSS não contém uma lista de inspeções válida.");
+        const index = new Map();
+        result.records.forEach((record) => {
+          const key = `${norm(record.tag)}\u0000${norm(record.orderType)}`;
+          if (!index.has(key)) index.set(key, []);
+          index.get(key).push(record);
+        });
+        itssByTagAndType = index;
+        itssError = "";
+      } catch (error) {
+        itssByTagAndType = new Map();
+        itssError = error.message;
+        setStatus(`ITSS: ${error.message}`, true);
+      }
+      if (activeView === "routes" && [...stage.querySelectorAll(".point")].some((node) => {
+        const point = currentArea()?.points.find((item) => item.id === node.dataset.id);
+        return point && inspectionState(point).state !== node.dataset.state;
+      })) render();
+    }
+
+    function appendItssInfo(point) {
+      const matchingRoutes = pointRouteRecords(point);
+      const detail = document.createElement("div");
+      if (itssError) detail.textContent = `ITSS indisponível: ${itssError}`;
+      else if (!point.code) detail.textContent = "Atribua um código ao ponto para consultar o ITSS.";
+      else if (!matchingRoutes.length) detail.textContent = "Nenhuma rota encontrada para este código e técnica.";
+      else if (matchingRoutes.some((record) => !norm(record.tag) || !norm(record.orderType))) {
+        detail.textContent = "Informe TAG e TIPO na planilha de rotas para consultar todas as inspeções.";
+      }
+      if (detail.textContent) noteTip.append(detail);
+      if (itssError) return;
+      const matches = [];
+      const seen = new Set();
+      matchingRoutes.forEach((record) => {
+        const tag = norm(record.tag), type = norm(record.orderType);
+        if (!tag || !type) return;
+        const entries = itssByTagAndType.get(`${tag}\u0000${type}`) || [];
+        entries.forEach((entry) => {
+          const key = JSON.stringify([norm(entry.tag), norm(entry.orderType), entry.date, entry.name, entry.status]);
+          if (!seen.has(key)) { seen.add(key); matches.push(entry); }
+        });
+      });
+      matches.sort((a, b) => b.date.localeCompare(a.date) || a.name.localeCompare(b.name));
+      if (matchingRoutes.length) {
+        const completed = matches.filter((entry) => entry.date <= referenceDay && (entry.status === "S" || entry.status === "N"));
+        const heading = document.createElement("div");
+        heading.textContent = "Última inspeção realizada:";
+        noteTip.append(heading);
+        if (!completed.length) {
+          const message = document.createElement("div");
+          message.textContent = "Nenhuma inspeção realizada encontrada até a data selecionada.";
+          noteTip.append(message);
+        } else {
+          const list = document.createElement("ul");
+          completed.filter((entry) => entry.date === completed[0].date).forEach((entry) => {
+            const item = document.createElement("li");
+            const status = entry.status === "N" ? "Inspeção realizada com equipamento parado" : "Inspeção realizada";
+            item.textContent = `${new Date(`${entry.date}T00:00:00`).toLocaleDateString("pt-BR")} · ${entry.name || "Nome não informado"} · ${status}`;
+            list.append(item);
+          });
+          noteTip.append(list);
+        }
+      }
+    }
+
+    function appendRouteEvaluation(point) {
+      const heading = document.createElement("div");
+      heading.textContent = "Avaliação das rotas previstas nesta semana:";
+      noteTip.append(heading);
+      if (itssError) {
+        const detail = document.createElement("div");
+        detail.textContent = `Não foi possível avaliar: ITSS indisponível (${itssError}).`;
+        noteTip.append(detail);
+        return;
+      }
+      const week = currentWeek();
+      const planned = new Map();
+      pointRouteRecords(point).forEach((record) => {
+        const dates = (record.dates || []).filter((date) => date >= week.start && date <= referenceDay);
+        if (!dates.length) return;
+        const tag = norm(record.tag);
+        if (!planned.has(tag)) planned.set(tag, new Set());
+        dates.forEach((date) => planned.get(tag).add(date));
+      });
+      if (!planned.size) {
+        const detail = document.createElement("div");
+        detail.textContent = "Nenhuma rota prevista nesta semana até a data selecionada para este ponto e técnica.";
+        noteTip.append(detail);
+        return;
+      }
+      const list = document.createElement("ul");
+      const type = ROUTE_ORDER_TYPES[activeTechnique];
+      planned.forEach((dates, tag) => {
+        const item = document.createElement("li");
+        const plannedDates = [...dates].sort().map((date) => new Date(`${date}T00:00:00`).toLocaleDateString("pt-BR")).join(", ");
+        const realized = tag ? (itssByTagAndType.get(`${tag}\u0000${type}`) || []).filter((entry) =>
+          entry.date >= week.start && entry.date <= referenceDay && (entry.status === "S" || entry.status === "N")
+        ) : [];
+        const realizedDates = [...new Set(realized.map((entry) => entry.date))].sort()
+          .map((date) => new Date(`${date}T00:00:00`).toLocaleDateString("pt-BR")).join(", ");
+        const outcome = !tag ? "Não avaliável: TAG ausente na planilha de rotas"
+          : realized.length ? `Realizada em ${realizedDates}` : "Sem registro de realização nesta semana";
+        item.textContent = `Prevista: ${plannedDates} · ${outcome}.`;
+        list.append(item);
+      });
+      noteTip.append(list);
+    }
+
+    const TIP_FIELDS = [
+      ["CenTrabRes", ["CenTrabRes"], "workCenter"],
+      ["Nota", ["Nota"], "note"],
+      ["Ordem", ["Ordem"], "order"],
+      ["Tp.", ["Tp."], "type"],
+      ["Prioridade", ["Prioridade", "Prior.", "Texto"], "priority"],
+      ["Parada", ["P", "Parada"], "shutdown"],
+      ["Criado em", ["Criado em"], ""],
+      ["Denominação do loc.instalação", ["Denominação do loc.instalação"], "installation"],
+      ["Descrição", ["Descrição"], "description"],
+      ["DuraçParad", ["DuraçParad"], "shutdownDuration"],
+      ["Iníc.nec.", ["Iníc.nec."], "desiredStart"],
+      ["Denominação executor", ["Denominação executor"], "executor"]
+    ];
+    const TYPE_TEXT = { B1: "B1 - Corretiva", B2: "B2 - Preditiva", B3: "B3 - Check List" };
+    const typeText = (value) => TYPE_TEXT[norm(value)] || value;
+    const HISTORY_COLUMNS = [
+      ["Criado em", ["Criado em"], ""],
+      ["CT_MECAN", ["CT_MECAN", "CT_Mecan", "CT_MECÂN", "CT MECAN", "CenTrabRes"], ""],
+      ["Nota", ["Nota"], "note"],
+      ["Tp.", ["Tp."], "type"],
+      ["Denominação do loc.instalação", ["Denominação do loc.instalação"], "installation"],
+      ["Denominação do objeto técnico", ["Denominação do objeto técnico"], "technicalObject"],
+      ["Descrição", ["Descrição"], "description"],
+      ["DuraçParad", ["DuraçParad"], "shutdownDuration"]
+    ];
+    const historyModal = document.createElement("div");
+    historyModal.className = "history-modal";
+    historyModal.hidden = true;
+    historyModal.innerHTML = '<div class="history-box" role="dialog" aria-modal="true" aria-labelledby="history-title"><header><h2 id="history-title"></h2><button type="button" class="history-close" aria-label="Fechar" title="Fechar">×</button></header><div class="history-scroll"></div></div>';
+    stageWrap.append(historyModal);
+    const historyTitle = historyModal.querySelector("#history-title");
+    const historyScroll = historyModal.querySelector(".history-scroll");
+
+    function hoursOf(text) {
+      const number = Number(String(text || "").replace(/[^0-9,.-]/g, "").replace(",", "."));
+      return Number.isFinite(number) ? number : 0;
+    }
+
+    function dateSortKey(text) {
+      const parts = String(text || "").match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
+      return parts ? `${parts[3]}${parts[2]}${parts[1]}` : "";
+    }
+
+    function closeHistory() { historyModal.hidden = true; }
+
+    const summaryModal = document.createElement("div");
+    summaryModal.className = "history-modal";
+    summaryModal.hidden = true;
+    summaryModal.innerHTML = '<div class="history-box summary-box" role="dialog" aria-modal="true" aria-labelledby="summary-title"><header><h2 id="summary-title"></h2></header><div class="history-scroll"><div class="summary-grid"></div><h3 class="summary-sub">Observações gerais sobre as condições históricas do conjunto</h3><p class="summary-notes"></p></div><footer><button type="button" class="summary-history">Histórico de notas ENC</button><button type="button" class="summary-routes">Histórico de Rotas</button><button type="button" class="summary-close">Fechar</button></footer></div>';
+    stageWrap.append(summaryModal);
+    const summaryTitle = summaryModal.querySelector("#summary-title");
+    const summaryGrid = summaryModal.querySelector(".summary-grid");
+    const summaryNotes = summaryModal.querySelector(".summary-notes");
+    let summaryPoint = null;
+
+    function closeSummary() { summaryModal.hidden = true; }
+
+    function locationName(tag) {
+      if (!tag) return "";
+      const note = notesByLocation.find((item) => (item.location === tag || item.location.startsWith(`${tag}-`)) && item.values["Denominação do loc.instalação"]);
+      return note ? note.values["Denominação do loc.instalação"] : "";
+    }
+
+    function encRows(point) {
+      const tag = norm(codeTag(point.code));
+      const rows = tag
+        ? notesByLocation.filter((note) => note.status === "ENC" && (note.location === tag || note.location.startsWith(`${tag}-`)))
+        : [];
+      rows.sort((a, b) => dateSortKey(b.values["Criado em"]).localeCompare(dateSortKey(a.values["Criado em"])));
+      return { tag, rows };
+    }
+
+    function parseNoteDate(text) {
+      const parts = String(text || "").match(/^(\d{2})[./](\d{2})[./](\d{4})$/);
+      if (!parts) return null;
+      const date = new Date(Date.UTC(Number(parts[3]), Number(parts[2]) - 1, Number(parts[1])));
+      return date.getUTCFullYear() === Number(parts[3]) && date.getUTCMonth() === Number(parts[2]) - 1 && date.getUTCDate() === Number(parts[1]) ? date : null;
+    }
+
+    const fmt = (value, digits = 0) => value.toLocaleString("pt-BR", { minimumFractionDigits: digits, maximumFractionDigits: digits });
+    function harvestPeriod() {
+      if (!harvestStart.value || !harvestEnd.value) {
+        return { error: "Informe o início e o fim da safra para calcular os indicadores." };
+      }
+      const start = new Date(harvestStart.value);
+      const end = new Date(harvestEnd.value);
+      if (!Number.isFinite(start.getTime()) || !Number.isFinite(end.getTime()) || end <= start) {
+        return { error: "O fim da safra deve ser posterior ao início." };
+      }
+      const now = referenceInstant();
+      if (now < start) return { error: "A data de referência é anterior ao início da safra; os indicadores estão indisponíveis." };
+      if (now >= end) return { error: "A data de referência é igual ou posterior ao fim da safra; os indicadores estão indisponíveis." };
+      return {
+        startDay: harvestStart.value.slice(0, 10),
+        endDay: referenceDay,
+        hours: (now - start) / 3600000,
+        missionHours: (end - now) / 3600000
+      };
+    }
+
+    function reliabilityMetrics(rows, period) {
+      const stops = rows.filter((note) => hoursOf(note.values["DuraçParad"]) > 0);
+      const downtime = stops.reduce((sum, note) => sum + hoursOf(note.values["DuraçParad"]), 0);
+      const periodHours = period.hours;
+      const mttr = stops.length ? downtime / stops.length : null;
+      const invalidDowntime = downtime > periodHours;
+      const mtbf = stops.length && !invalidDowntime ? (periodHours - downtime) / stops.length : null;
+      const disp = invalidDowntime ? null : stops.length ? mtbf / (mtbf + mttr) : 1;
+      const conf = invalidDowntime ? null : stops.length ? (mtbf > 0 ? Math.exp(-period.missionHours / mtbf) : 0) : 1;
+      return { stops, downtime, periodHours, mttr, mtbf, disp, conf, invalidDowntime };
+    }
+
+    function harvestRows(history, period) {
+      return history.filter((note) => {
+        const date = parseNoteDate(note.values["Criado em"]);
+        const day = date ? date.toISOString().slice(0, 10) : "";
+        return day && day >= period.startDay && day <= period.endDay;
+      });
+    }
+
+    function healthState(point) {
+      const period = harvestPeriod();
+      if (!notesAvailable || period.error) return { state: "unknown", confidence: null };
+      const { tag, rows: history } = encRows(point);
+      if (!tag) return { state: "unknown", confidence: null };
+      const rows = harvestRows(history, period);
+      if (!rows.length) return { state: "unknown", confidence: null };
+      const confidence = reliabilityMetrics(rows, period).conf;
+      if (confidence === null) return { state: "unknown", confidence: null };
+      return { state: confidence >= 0.7 ? "ok" : confidence >= 0.5 ? "yellow" : "red", confidence };
+    }
+
+    function reliabilityObservations(rows, m) {
+      if (!rows.length) return "Não há notas ENC com data de criação desde o início da safra até a data selecionada para este conjunto; não é possível avaliar o histórico.";
+      const lines = [`${rows.length} nota(s) atualmente ENC, criadas desde o início da safra até a data selecionada, com ${m.stops.length} parada(s) e ${fmt(m.downtime)} h de indisponibilidade acumulada.`];
+      if (m.invalidDowntime) lines.push("As horas de parada excedem o tempo decorrido desde o início da safra; MTBF, disponibilidade e confiabilidade não podem ser calculados.");
+      if (!m.stops.length) {
+        lines.push("Nenhuma parada registrada no período; a confiabilidade estimada é 100% pela regra atual.");
+      } else {
+        if (m.disp !== null) lines.push(m.disp >= 0.98 ? "Disponibilidade alta, dentro do esperado." : m.disp >= 0.95 ? "Disponibilidade moderada; acompanhar a recorrência das paradas." : "Disponibilidade baixa; recomenda-se análise de causa raiz.");
+        if (m.stops.length >= 3 && m.mtbf !== null && m.mtbf < 720) lines.push("Paradas frequentes (MTBF abaixo de 30 dias): indício de falha recorrente.");
+        if (m.mttr > 8) lines.push("Tempo médio de reparo elevado; avaliar disponibilidade de peças e equipe.");
+      }
+      const types = {};
+      rows.forEach((note) => { const t = typeText(note.values["Tp."]) || "Sem tipo"; types[t] = (types[t] || 0) + 1; });
+      lines.push(`Distribuição por tipo: ${Object.entries(types).map(([t, n]) => `${t} (${n})`).join(", ")}.`);
+      lines.push("CONF = exp(−tempo de missão restante / MTBF); MTTR é usado na disponibilidade.");
+      return lines.join(" ");
+    }
+
+    function openSummary(point, focusHistory = true) {
+      summaryPoint = point;
+      const { tag, rows: history } = encRows(point);
+      const period = harvestPeriod();
+      const available = notesAvailable && Boolean(tag);
+      const rows = !available || period.error ? [] : harvestRows(history, period);
+      const m = !available || period.error ? null : reliabilityMetrics(rows, period);
+      summaryTitle.textContent = `Confiabilidade · ${point.id}${tag ? ` · ${tag}` : ""}${locationName(tag) ? ` · ${locationName(tag)}` : ""}`;
+      const last = rows[0];
+      const items = [
+        ["Tempo decorrido", m ? `${fmt(m.periodHours, 1)} h` : "—"],
+        ["Tempo de missão restante", m ? `${fmt(period.missionHours, 1)} h` : "—"],
+        ["Paradas", available ? `${history.length}` : "—"],
+        ["MTBF", !m || m.mtbf === null ? "—" : `${fmt(m.mtbf)} h`],
+        ["MTTR", !m || m.mttr === null ? "—" : `${fmt(m.mttr)} h`],
+        ["DISP", !m || m.disp === null || !rows.length ? "—" : `${fmt(m.disp * 100)} %`],
+        ["CONF", !m || m.conf === null || !rows.length ? "—" : `${fmt(m.conf * 100, 2)} %`],
+        ["Última ocorrência e data", last ? `${last.values["Nota"] || "—"} · ${last.values["Criado em"] || "—"}` : "—"]
+      ];
+      summaryGrid.replaceChildren(...items.map(([label, value]) => {
+        const card = document.createElement("div");
+        card.className = "summary-card";
+        const span = document.createElement("span");
+        span.textContent = label;
+        const strong = document.createElement("strong");
+        strong.textContent = value;
+        card.append(span, strong);
+        return card;
+      }));
+      const explanation = !notesAvailable ? "Não foi possível carregar as notas IW28."
+        : !tag ? "Atribua um código com TAG ao ponto para ver os dados de confiabilidade."
+        : period.error ? period.error : reliabilityObservations(rows, m);
+      summaryNotes.textContent = `Paradas: total de notas ENC no histórico completo, independentemente da duração e do período de safra. ${explanation}`;
+      summaryModal.hidden = false;
+      if (focusHistory) summaryModal.querySelector(".summary-history").focus();
+    }
+
+    summaryModal.querySelector(".summary-close").addEventListener("click", closeSummary);
+    summaryModal.querySelector(".summary-history").addEventListener("click", () => {
+      const point = summaryPoint;
+      closeSummary();
+      if (point) openHistory(point);
+    });
+    summaryModal.querySelector(".summary-routes").addEventListener("click", () => {
+      const point = summaryPoint;
+      closeSummary();
+      if (point) openRouteHistory(point);
+    });
+    summaryModal.addEventListener("pointerdown", (event) => { if (event.target === summaryModal) closeSummary(); });
+
+    function openHistory(point) {
+      historyModal.querySelector(".history-box").classList.remove("routes-history-box");
+      const tag = norm(codeTag(point.code));
+      const rows = tag
+        ? notesByLocation.filter((note) => note.status === "ENC" && (note.location === tag || note.location.startsWith(`${tag}-`)))
+        : [];
+      rows.sort((a, b) => dateSortKey(b.values["Criado em"]).localeCompare(dateSortKey(a.values["Criado em"])));
+      historyTitle.textContent = `Histórico de notas encerradas (ENC) · ${point.id}${tag ? ` · ${tag}` : ""}${locationName(tag) ? ` · ${locationName(tag)}` : ""}`;
+      historyScroll.replaceChildren();
+      if (!rows.length) {
+        const empty = document.createElement("p");
+        empty.className = "history-empty";
+        empty.textContent = tag ? "Nenhuma nota ENC encontrada para este ponto." : "Atribua um código com TAG ao ponto para ver o histórico.";
+        historyScroll.append(empty);
+      } else {
+        const table = document.createElement("table");
+        const head = table.createTHead().insertRow();
+        HISTORY_COLUMNS.forEach(([label]) => {
+          const th = document.createElement("th");
+          th.textContent = label === "Tp." ? "TP." : label;
+          head.append(th);
+        });
+        const body = table.createTBody();
+        let total = 0;
+        rows.forEach((note) => {
+          const tr = body.insertRow();
+          HISTORY_COLUMNS.forEach(([label]) => {
+            tr.insertCell().textContent = label === "Tp." ? typeText(note.values[label]) : note.values[label] || "";
+          });
+          total += hoursOf(note.values["DuraçParad"]);
+        });
+        const foot = table.createTFoot().insertRow();
+        const label = foot.insertCell();
+        label.colSpan = HISTORY_COLUMNS.length - 1;
+        label.textContent = `Total de horas de parada (${rows.length} nota${rows.length > 1 ? "s" : ""})`;
+        foot.insertCell().textContent = total.toLocaleString("pt-BR", { maximumFractionDigits: 0 });
+        historyScroll.append(table);
+      }
+      historyModal.hidden = false;
+      historyModal.querySelector(".history-close").focus();
+    }
+
+    function openRouteHistory(point) {
+      historyModal.querySelector(".history-box").classList.add("routes-history-box");
+      const year = referenceDay.slice(0, 4);
+      const technique = activeView === "routes" ? activeTechnique : "";
+      const labels = { lubrication: "Lubrificação", checklist: "Check List", predictive: "Preditiva" };
+      historyTitle.textContent = `Histórico de Rotas ${year} · ${point.id}${labels[technique] ? ` · ${labels[technique]}` : ""}`;
+      historyScroll.replaceChildren();
+      const rows = technique
+        ? [...new Set(pointRouteRecords(point, technique).flatMap((record) => record.dates || []))]
+          .filter((date) => date.startsWith(`${year}-`)).sort()
+        : [];
+      if (!rows.length) {
+        const empty = document.createElement("p");
+        empty.className = "history-empty";
+        empty.textContent = !technique ? "Selecione Lubrificação, Check List ou Preditiva nos botões do painel para consultar o histórico."
+          : !point.code ? "Atribua um código ao ponto para consultar as rotas."
+          : !routesInfo.querySelector("a") ? routesInfo.textContent || "Carregando planilha de rotas."
+          : `Nenhuma rota de ${labels[technique]} prevista em ${year} para este ponto.`;
+        historyScroll.append(empty);
+      } else {
+        const table = document.createElement("table");
+        table.className = "routes-history-table";
+        const header = table.createTHead().insertRow();
+        ["Data prevista", "Inspeções realizadas", "Situação"].forEach((label) => {
+          const th = document.createElement("th");
+          th.textContent = label;
+          header.append(th);
+        });
+        const body = table.createTBody();
+        rows.forEach((date) => {
+          const tr = body.insertRow();
+          const parts = scheduledInspectionParts(point, date, technique);
+          tr.insertCell().textContent = parts[0].text;
+          const realizedCell = tr.insertCell();
+          const statusCell = tr.insertCell();
+          parts.slice(1).forEach(({ text, state }) => {
+            const completed = state === "done" || state === "stopped";
+            const status = document.createElement("div");
+            status.textContent = completed ? text.slice(text.indexOf(" · ") + 3) : text;
+            if (state) status.className = `inspection-${state}`;
+            if (completed) {
+              const date = document.createElement("div");
+              date.textContent = text.slice(0, text.indexOf(" · "));
+              date.className = `inspection-${state}`;
+              realizedCell.append(date);
+            } else {
+              const placeholder = document.createElement("div");
+              placeholder.textContent = "—";
+              realizedCell.append(placeholder);
+            }
+            statusCell.append(status);
+          });
+        });
+        historyScroll.append(table);
+      }
+      historyModal.hidden = false;
+      historyModal.querySelector(".history-close").focus();
+    }
+
+    historyModal.querySelector(".history-close").addEventListener("click", closeHistory);
+    historyModal.addEventListener("pointerdown", (event) => { if (event.target === historyModal) closeHistory(); });
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && !historyModal.hidden) { event.stopImmediatePropagation(); closeHistory(); }
+      else if (event.key === "Escape" && !summaryModal.hidden) { event.stopImmediatePropagation(); closeSummary(); }
+    }, true);
+
+    const noteTip = document.createElement("div");
+    noteTip.className = "note-tip";
+    noteTip.hidden = true;
+    stageWrap.append(noteTip);
+    let hideTipTimer = null;
+
+    function reliabilityTip(point) {
+      const period = harvestPeriod();
+      const { tag, rows: history } = encRows(point);
+      const rows = notesAvailable && tag && !period.error ? harvestRows(history, period) : [];
+      const m = rows.length ? reliabilityMetrics(rows, period) : null;
+      const last = rows[0];
+      const number = (value, digits = 0) => value === null || value === undefined ? "indisponível" : fmt(value, digits);
+      const percent = (value, digits = 0) => value === null || value === undefined ? "indisponível" : `${fmt(value * 100, digits)}%`;
+      const lastText = last ? `${last.values["Nota"] || "não informada"} · ${last.values["Criado em"] || "data não informada"}` : "indisponível";
+      const text = `Última ocorrência do ativo foi em (${lastText}), conjunto apresenta (${number(period.hours, 1)}) horas de trabalho com (${number(period.missionHours, 1)}) horas de trabalho restante até o final da safra. Teve (${number(m?.stops.length)}) ocorrências com tempo médio de reparo de (${number(m?.mttr)}) horas e intervalos entre falhas de (${number(m?.mtbf)}) horas. A disponibilidade do ativo está em (${percent(m?.disp)}) e a confiabilidade calculada para atingir o final da safra é de (${percent(m?.conf, 2)}).`;
+      const reason = !notesAvailable ? "Não foi possível carregar as notas IW28."
+        : !tag ? "Atribua um código com TAG ao ponto."
+        : period.error ? period.error
+        : !rows.length ? "Não há notas ENC no período para este conjunto."
+        : m.invalidDowntime ? "As horas de parada excedem o tempo decorrido; MTBF, disponibilidade e confiabilidade estão indisponíveis."
+        : !m.stops.length ? "Não há paradas registradas; MTTR e MTBF estão indisponíveis."
+        : "";
+      return reason ? `${text} ${reason}` : text;
+    }
+
+    function scheduledInspectionParts(point, date, technique = activeTechnique) {
+      const planned = new Date(`${date}T00:00:00`).toLocaleDateString("pt-BR");
+      const parts = [{ text: planned, state: "" }];
+      if (date > referenceDay) return parts;
+      if (itssError) {
+        parts.push({ text: `ITSS indisponível: ${itssError}`, state: "" });
+        return parts;
+      }
+      const week = weekForDate(date);
+      const routes = pointRouteRecords(point, technique).filter((record) => (record.dates || []).includes(date));
+      const entries = [];
+      const seen = new Set();
+      let missing = false;
+      routes.forEach((record) => {
+        const tag = norm(record.tag), type = norm(record.orderType);
+        if (!tag || !type) return;
+        const matching = (itssByTagAndType.get(`${tag}\u0000${type}`) || []).filter((entry) =>
+          entry.date >= week.start && entry.date <= week.end && entry.date <= referenceDay && (entry.status === "S" || entry.status === "N")
+        );
+        if (!matching.length) missing = true;
+        matching.forEach((entry) => {
+          const key = JSON.stringify([tag, type, entry.date, entry.name, entry.status]);
+          if (!seen.has(key)) { seen.add(key); entries.push(entry); }
+        });
+      });
+      entries.sort((a, b) => a.date.localeCompare(b.date) || a.status.localeCompare(b.status) || a.name.localeCompare(b.name));
+      entries.forEach((entry) => parts.push({
+        text: `${new Date(`${entry.date}T00:00:00`).toLocaleDateString("pt-BR")} · ${entry.status === "S" ? "Insp" : "Parado"}`,
+        state: entry.status === "S" ? "done" : "stopped"
+      }));
+      if (routes.some((record) => !norm(record.tag) || !norm(record.orderType))) {
+        parts.push({ text: "Associação indisponível: TAG ou TIPO ausente", state: "" });
+      }
+      if (missing) {
+        parts.push({ text: "Sem registro de realização", state: "missing" });
+      }
+      const states = new Set(parts.slice(1).map((part) => part.state));
+      if (states.size === 1 && !states.has("")) parts[0].state = parts[1].state;
+      return parts;
+    }
+
+    function showTip(node, event) {
+      const area = currentArea();
+      const point = area?.points.find((item) => item.id === node.dataset.id);
+      if (!point) { noteTip.hidden = true; return; }
+      const tag = norm(codeTag(point.code));
+      const location = notesByLocation.find((note) => note.location === tag && note.values["Denominação do loc.instalação"]);
+      const locationText = location ? location.values["Denominação do loc.instalação"] : "Não disponível";
+      noteTip.replaceChildren();
+      const locationLine = document.createElement("div");
+      locationLine.textContent = locationText;
+      noteTip.append(locationLine);
+      const finishTip = () => {
+        if (activeView === "health") {
+          const reliabilityLine = document.createElement("p");
+          reliabilityLine.className = "reliability-tip";
+          reliabilityLine.textContent = reliabilityTip(point);
+          noteTip.append(reliabilityLine);
+        }
+        noteTip.hidden = false;
+        moveTip(event);
+      };
+      if (activeView === "routes") {
+        const { dates } = inspectionState(point);
+        const technique = activeTechnique === "lubrication" ? "Lubrificação" : activeTechnique === "checklist" ? "Check List" : "Preditiva";
+        const detail = document.createElement("div");
+        detail.textContent = !point.code
+          ? `${point.id} · Atribua um código ao ponto para consultar as rotas.`
+          : dates.length
+          ? `${point.id} · ${technique} prevista em:`
+          : `${point.id} · Nenhuma data de ${technique.toLowerCase()} prevista na planilha.`;
+        noteTip.append(detail);
+        if (dates.length) {
+          const list = document.createElement("ul");
+          visibleRouteDates(dates).forEach((date) => {
+            const item = document.createElement("li");
+            scheduledInspectionParts(point, date).forEach(({ text, state }, index) => {
+              if (index) item.append(document.createTextNode(index === 1 ? " · " : "; "));
+              const part = document.createElement("span");
+              part.textContent = text;
+              if (state) part.className = `inspection-${state}`;
+              item.append(part);
+            });
+            list.append(item);
+          });
+          noteTip.append(list);
+        }
+        appendItssInfo(point);
+        appendRouteEvaluation(point);
+        finishTip();
+        return;
+      }
+      if (activeView === "health") {
+        const { confidence } = healthState(point);
+        const detail = document.createElement("div");
+        detail.textContent = confidence === null
+          ? `${point.id} · Confiabilidade indisponível. Verifique a safra, o TAG e as notas IW28.`
+          : `${point.id} · Confiabilidade: ${fmt(confidence * 100, 2)}%`;
+        noteTip.append(detail);
+        finishTip();
+        return;
+      }
+      const { notes } = pointState(point);
+      if (node.dataset.state === "unknown") {
+        const detail = document.createElement("div");
+        detail.textContent = "Notas IW28 ou TAG indisponíveis para avaliação.";
+        noteTip.append(detail);
+        finishTip();
+        return;
+      }
+      if (node.dataset.state === "ok") {
+        const detail = document.createElement("div");
+        detail.textContent = "Conjunto em Bom Estado!";
+        noteTip.append(detail);
+        finishTip();
+        return;
+      }
+      const head = document.createElement("strong");
+      head.textContent = `${point.id} · ${notes.length} nota(s)`;
+      noteTip.append(head);
+      notes.slice(0, 5).forEach((note) => {
+        const card = document.createElement("dl");
+        TIP_FIELDS.forEach(([label, , key]) => {
+          const value = label === "Tp." ? typeText(note.values[label]) : note.values[label];
+          if (!value) return;
+          const dt = document.createElement("dt");
+          dt.textContent = label;
+          const dd = document.createElement("dd");
+          dd.textContent = value;
+          card.append(dt, dd);
+        });
+        noteTip.append(card);
+      });
+      if (notes.length > 5) {
+        const more = document.createElement("em");
+        more.textContent = `+ ${notes.length - 5} nota(s)`;
+        noteTip.append(more);
+      }
+      finishTip();
+    }
+
+    function moveTip(event) {
+      if (noteTip.hidden) return;
+      const gap = 14;
+      const width = noteTip.offsetWidth, height = noteTip.offsetHeight;
+      let left = event.clientX + gap, top = event.clientY + gap;
+      if (left + width > window.innerWidth - 8) left = Math.max(8, event.clientX - width - gap);
+      if (top + height > window.innerHeight - 8) top = Math.max(8, window.innerHeight - height - 8);
+      noteTip.style.left = `${left}px`;
+      noteTip.style.top = `${top}px`;
+    }
+
+    stage.addEventListener("pointerover", (event) => {
+      const node = event.target.closest?.(".point");
+      if (node) {
+        clearTimeout(hideTipTimer);
+        showTip(node, event);
+      }
+    });
+    stage.addEventListener("pointermove", (event) => { if (event.target.closest?.(".point")) moveTip(event); });
+    stage.addEventListener("pointerout", (event) => {
+      const node = event.target.closest?.(".point");
+      if (node && !node.contains(event.relatedTarget)) hideTipTimer = setTimeout(() => { noteTip.hidden = true; }, 300);
+    });
+    noteTip.addEventListener("pointerenter", () => clearTimeout(hideTipTimer));
+    noteTip.addEventListener("pointerleave", () => { noteTip.hidden = true; });
+
+    const WRENCH_SVG = '<svg class="shutdown-wrench" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M22.7 19 13.6 9.9a5.5 5.5 0 0 0-7.5-6.8L9.6 6.6 6.6 9.6 3.1 6.1a5.5 5.5 0 0 0 6.8 7.5L19 22.7a1.5 1.5 0 0 0 2.1 0l1.6-1.6a1.5 1.5 0 0 0 0-2.1Z"/></svg>';
+    const pointText = (point) => (point.code ? `${point.id} · ${point.code}` : point.id);
+    const pointTitle = (point) => [pointText(point), codeTag(point.code)].filter(Boolean).join(" — ");
+
+    function updateEditor() {
+      const point = editingId === selectedId ? currentArea()?.points.find((item) => item.id === selectedId) : null;
+      editor.hidden = !point;
+      if (!point) return;
+      editorId.textContent = point.id;
+      editorCode.value = point.code || "";
+      const entry = codes.find((item) => item.code === point.code);
+      const extra = Object.entries(entry?.extra || {}).filter(([, value]) => value).map(([label, value]) => `${label}: ${value}`).join(" · ");
+      editorTag.textContent = codeTag(point.code) ? `Tag: ${codeTag(point.code)}${extra ? ` · ${extra}` : ""}` : (point.code ? "Código não encontrado na tabela carregada." : "");
+    }
+
+    function updateCodesInfo() {
+      codesButton.classList.toggle("loaded", codes.length > 0);
+      codesButton.title = codes.length ? "Tabela carregada. Clique para substituir." : "";
+      document.getElementById("download-codes").setAttribute("aria-disabled", String(!codes.length));
+      codesList.replaceChildren(...codes.map((entry) => {
+        const option = document.createElement("option");
+        option.value = entry.code;
+        option.label = entry.tag;
+        return option;
+      }));
+      codesInfo.textContent = codes.length
+        ? `Tabela de códigos: ${codesFile} · ${codes.length} códigos · atualizada em ${codesUpdated}`
+        : "Nenhuma tabela de códigos carregada (planilha .xlsx com as colunas Código ou Ponto, Tag e quaisquer colunas adicionais, que passam a fazer parte da tabela padrão).";
+    }
+
+    editorCode.addEventListener("change", async () => {
+      const point = currentArea()?.points.find((item) => item.id === selectedId);
+      if (!point) return;
+      const value = editorCode.value.trim();
+      if (value && codes.length && !codes.some((entry) => entry.code === value)) {
+        setStatus(`O código "${value}" não existe na tabela carregada.`, true);
+        editorCode.value = point.code || "";
+        return;
+      }
+      point.code = value;
+      render();
+      await savePoints();
+    });
+
+    codesButton.addEventListener("click", () => codesInput.click());
+    function showRoutesInfo(routes) {
+      if (routes && (!Array.isArray(routes.records) || routes.records.some((record) => typeof record.code !== "string" || !record.code.trim()))) {
+        throw new Error("Reinicie o servidor pelo iniciar.bat para habilitar a associação por código.");
+      }
+      routesInfo.replaceChildren();
+      loadedRoutes = routes;
+      routeRecords = routes && Array.isArray(routes.records) ? routes.records : [];
+      updateRouteButtons();
+      if (activeView === "routes") render();
+      if (!routes) {
+        routesInfo.textContent = "Nenhuma planilha de rotas carregada.";
+        return;
+      }
+      const week = currentWeek();
+      const weekText = `${new Date(`${week.start}T00:00:00`).toLocaleDateString("pt-BR")} a ${new Date(`${week.end}T00:00:00`).toLocaleDateString("pt-BR")}`;
+      routesInfo.append(document.createTextNode(`Planilha de rotas: ${routes.file} · ${routeRecords.length} combinações código/técnica · semana da data selecionada ${weekText} · `));
+      const link = document.createElement("a");
+      link.href = "/api/confiabilidade/routes/file";
+      link.download = routes.file;
+      link.textContent = "Baixar planilha";
+      routesInfo.append(link);
+    }
+
+    function updateRouteButtons() {
+      [
+        ["view-lubrication", "lubrication"],
+        ["view-checklist", "checklist"],
+        ["view-predictive", "predictive"]
+      ].forEach(([id, technique]) => {
+        const button = document.getElementById(id);
+        const available = routeRecords.some((record) => matchesRouteTechnique(record, technique));
+        button.disabled = !available;
+        button.title = available
+          ? "Mostrar a situação das rotas previstas na semana até a data selecionada."
+          : `O tipo ${ROUTE_ORDER_TYPES[technique]} não consta na planilha XLS (ROTAS) carregada.`;
+      });
+    }
+
+    async function loadRoutesInfo() {
+      const response = await fetch("/api/confiabilidade/routes", { cache: "no-store" });
+      if (!response.headers.get("content-type")?.includes("application/json")) {
+        throw new Error("Reinicie o servidor pelo iniciar.bat para habilitar o carregamento de rotas.");
+      }
+      if (response.status === 404) {
+        showRoutesInfo(null);
+        return;
+      }
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.message || "Não foi possível consultar a planilha de rotas.");
+      showRoutesInfo(result);
+    }
+
+    function setRoutesProgress(percent, state, label = `${percent}%`, message = "") {
+      routesProgress.dataset.state = state;
+      routesProgress.title = message || "Progresso real do envio do arquivo";
+      routesProgressLabel.textContent = label;
+      routesProgressTrack.setAttribute("aria-valuenow", String(percent));
+      routesProgressValue.style.width = `${percent}%`;
+    }
+
+    function uploadRoutesFile(file) {
+      return new Promise((resolve, reject) => {
+        const request = new XMLHttpRequest();
+        request.open("POST", "/api/confiabilidade/routes");
+        request.setRequestHeader("Content-Type", "application/octet-stream");
+        request.setRequestHeader("X-File-Name", encodeURIComponent(file.name));
+        request.upload.addEventListener("progress", (event) => {
+          if (event.lengthComputable && event.total > 0) {
+            const percent = Math.min(95, Math.floor(event.loaded / event.total * 95));
+            setRoutesProgress(percent, "running");
+          } else {
+            setRoutesProgress(0, "running", "Enviando");
+          }
+        });
+        request.addEventListener("load", () => {
+          if (!request.getResponseHeader("Content-Type")?.includes("application/json")) {
+            reject(new Error("Reinicie o servidor pelo iniciar.bat para habilitar o carregamento de rotas."));
+            return;
+          }
+          let result;
+          try {
+            result = JSON.parse(request.responseText);
+          } catch {
+            reject(new Error("O servidor retornou uma resposta inválida ao carregar a planilha."));
+            return;
+          }
+          if (request.status < 200 || request.status >= 300) {
+            reject(new Error(result.message || "Não foi possível carregar a planilha de rotas."));
+            return;
+          }
+          resolve(result);
+        });
+        request.addEventListener("error", () => reject(new Error("Falha de comunicação durante o envio da planilha.")));
+        request.addEventListener("abort", () => reject(new Error("O envio da planilha foi cancelado.")));
+        request.send(file);
+      });
+    }
+
+    routesButton.addEventListener("click", () => routesInput.click());
+    routesInput.addEventListener("change", async () => {
+      const file = routesInput.files[0];
+      routesInput.value = "";
+      if (!file) return;
+      if (file.size > 10 * 1024 * 1024) { setStatus("A planilha de rotas excede 10 MB.", true); return; }
+      if (routesInfo.querySelector("a") && !confirm("Substituir a planilha de rotas carregada?")) return;
+      routesButton.disabled = true;
+      setRoutesProgress(0, "running");
+      setStatus("Enviando planilha de rotas...");
+      try {
+        const result = await uploadRoutesFile(file);
+        showRoutesInfo(result);
+        setRoutesProgress(100, "done", "100%", `Planilha ${result.file} carregada.`);
+        setStatus(`Planilha "${result.file}" carregada: ${result.count} combinações código/técnica e ${result.scheduleCount} marcações de inspeção.`);
+      } catch (error) {
+        setRoutesProgress(0, "error", "Falha", error.message);
+        setStatus(error.message, true);
+      } finally {
+        routesButton.disabled = false;
+      }
+    });
+    document.getElementById("editor-close").addEventListener("click", () => {
+      editingId = null;
+      render();
+    });
+    codesInput.addEventListener("change", async () => {
+      const file = codesInput.files[0];
+      codesInput.value = "";
+      if (!file) return;
+      try {
+        const result = await send("/api/confiabilidade/codes", {
+          headers: { "Content-Type": "application/octet-stream", "X-File-Name": encodeURIComponent(file.name) },
+          body: file
+        });
+        await load(areaSelect.value);
+        setStatus(`${result.count} códigos carregados de "${file.name}"${result.columns?.length ? ` · colunas adicionais: ${result.columns.join(", ")}` : ""}.`);
+      } catch (error) {
+        setStatus(error.message, true);
+      }
+    });
+
+    async function savePoints() {
+      const area = currentArea();
+      try {
+        await send(`/api/confiabilidade/points?area=${encodeURIComponent(area.id)}`, {
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ points: area.points })
+        });
+        setStatus("Pontos de controle salvos.");
+      } catch (error) {
+        setStatus(error.message, true);
+      }
+    }
+
+    async function removePoint(id) {
+      const area = currentArea();
+      area.points = area.points.filter((point) => point.id !== id);
+      if (selectedId === id) { selectedId = null; editingId = null; }
+      render();
+      await savePoints();
+    }
+
+    function relativePosition(event) {
+      const rect = image.getBoundingClientRect();
+      const x = Math.min(100, Math.max(0, ((event.clientX - rect.left) / rect.width) * 100));
+      const y = Math.min(100, Math.max(0, ((event.clientY - rect.top) / rect.height) * 100));
+      return { x: Math.round(x * 1000) / 1000, y: Math.round(y * 1000) / 1000 };
+    }
+
+    stage.addEventListener("pointermove", (event) => {
+      if (!placing) return;
+      const { x, y } = relativePosition(event);
+      ghost.style.left = `${x}%`;
+      ghost.style.top = `${y}%`;
+      ghost.style.display = "block";
+    });
+    stage.addEventListener("pointerleave", () => { ghost.style.display = "none"; });
+
+    stage.addEventListener("click", async (event) => {
+      if (!placing || event.target.closest(".point")) return;
+      const area = currentArea();
+      const next = Math.max(0, ...area.points.map((point) => pointNumber(point.id))) + 1;
+      const { x, y } = relativePosition(event);
+      const point = { id: pointId(next), x, y };
+      area.points.push(point);
+      selectedId = point.id;
+      setPlacing(false);
+      render();
+      await savePoints();
+      setStatus(`Ponto ${point.id} adicionado.`);
+    });
+
+    stage.addEventListener("pointerdown", (event) => {
+      const node = event.target.closest(".point");
+      if (!node || placing) return;
+      event.preventDefault();
+      const area = currentArea();
+      const point = area.points.find((item) => item.id === node.dataset.id);
+      selectedId = point.id;
+      const onLabel = Boolean(event.target.closest(".point-label"));
+      const now = Date.now();
+      const count = lastTap.id === point.id && lastTap.label === onLabel && now - lastTap.time < 450 ? lastTap.count + 1 : 1;
+      lastTap = count >= 2 ? { id: null, time: 0, count: 0, label: onLabel } : { id: point.id, time: now, count, label: onLabel };
+      editingId = !onLabel && count === 2 ? point.id : null;
+      stage.querySelectorAll(".point").forEach((other) => other.classList.toggle("selected", other === node));
+      updateEditor();
+      if (onLabel && count === 2) openSummary(point);
+      node.classList.add("dragging");
+      node.setPointerCapture(event.pointerId);
+      let moved = false;
+      const onMove = (moveEvent) => {
+        moved = true;
+        lastTap = { id: null, time: 0, count: 0 };
+        Object.assign(point, relativePosition(moveEvent));
+        node.style.left = `${point.x}%`;
+        node.style.top = `${point.y}%`;
+      };
+      const onUp = async () => {
+        node.removeEventListener("pointermove", onMove);
+        node.removeEventListener("pointerup", onUp);
+        node.removeEventListener("pointercancel", onUp);
+        node.classList.remove("dragging");
+        if (moved) {
+          render();
+          await savePoints();
+        }
+      };
+      node.addEventListener("pointermove", onMove);
+      node.addEventListener("pointerup", onUp);
+      node.addEventListener("pointercancel", onUp);
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && placing) setPlacing(false);
+      else if (event.key === "Escape" && selectedId) { selectedId = null; editingId = null; render(); }
+      if (event.key === "Delete" && selectedId && !["INPUT", "SELECT", "TEXTAREA", "BUTTON"].includes(document.activeElement?.tagName)) removePoint(selectedId);
+    });
+
+    addButton.addEventListener("click", () => setPlacing(!placing));
+    const fullscreenButton = document.getElementById("fullscreen");
+    fullscreenButton.addEventListener("click", async () => {
+      try {
+        await document.getElementById("stage-wrap").requestFullscreen();
+      } catch (error) {
+        setStatus("Não foi possível abrir a tela inteira neste navegador.", true);
+      }
+    });
+    areaSelect.addEventListener("change", () => {
+      localStorage.setItem(STORAGE_KEY, areaSelect.value);
+      selectedId = null;
+      editingId = null;
+      setPlacing(false);
+      render();
+    });
+
+    uploadButton.addEventListener("click", () => fileInput.click());
+    fileInput.addEventListener("change", async () => {
+      const file = fileInput.files[0];
+      fileInput.value = "";
+      const area = currentArea();
+      if (!file || !area) return;
+      if (file.size > 15 * 1024 * 1024) { setStatus("A imagem excede 15 MB.", true); return; }
+      if (area.hasImage && !confirm(`Substituir a imagem atual de "${area.name}"? Os pontos de controle serão mantidos.`)) return;
+      try {
+        await send(`/api/confiabilidade/image?area=${encodeURIComponent(area.id)}`, {
+          headers: { "Content-Type": "application/octet-stream" },
+          body: file
+        });
+        await load(area.id);
+        setStatus(`Imagem de "${area.name}" carregada.`);
+      } catch (error) {
+        setStatus(error.message, true);
+      }
+    });
+
+    deleteButton.addEventListener("click", async () => {
+      const area = currentArea();
+      if (!area?.hasImage) return;
+      if (!confirm(`Excluir a imagem de "${area.name}"? Os pontos de controle desta área também serão removidos.`)) return;
+      try {
+        await send(`/api/confiabilidade/image/delete?area=${encodeURIComponent(area.id)}`, { body: "{}" });
+        await load(area.id);
+        setStatus(`Imagem de "${area.name}" excluída.`);
+      } catch (error) {
+        setStatus(error.message, true);
+      }
+    });
+
+    async function loadPendingLocations() {
+      try {
+        const response = await fetch("/api/data?source=iw28", { cache: "no-store" });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message || "Não foi possível carregar as notas IW28.");
+        if (!Array.isArray(data.records)) throw new Error("A resposta IW28 não contém uma lista de notas válida.");
+        const notes = [];
+        data.records.forEach((record) => {
+          const status = norm(record.status || field(record, ["Status sistema", "Status do sistema", "StatSist", "Status"]));
+          const location = norm(field(record, ["Local de instalação"]));
+          if (!location || (status !== "PEN" && status !== "AND" && status !== "ENC")) return;
+          const priority = norm(record.priority || field(record, ["Texto", "Prioridade", "Prior."]));
+          const shutdown = norm(field(record, ["P", "Parada"], record.shutdown));
+          const values = {};
+          TIP_FIELDS.forEach(([label, names, key]) => {
+            values[label] = field(record, names, key ? record[key] : "");
+          });
+          HISTORY_COLUMNS.forEach(([label, names, key]) => {
+            if (!(label in values)) values[label] = field(record, names, key ? record[key] : "");
+          });
+          notes.push({ status, location, priority, shutdown, type: norm(values["Tp."]), values });
+        });
+        notesByLocation = notes;
+        iw28Records = data.records;
+        notesAvailable = true;
+        render();
+        if (messagesDialog.open) updateMessagePreview();
+      } catch (error) {
+        notesAvailable = false;
+        render();
+        if (messagesDialog.open) updateMessagePreview();
+        setStatus(`Não foi possível atualizar as notas IW28: ${error.message}`, true);
+      }
+    }
+
+    async function load(selected) {
+      try {
+        const response = await fetch("/api/confiabilidade", { cache: "no-store" });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message || "Não foi possível carregar as áreas.");
+        areas = data.areas;
+        codes = data.codes || [];
+        codesFile = data.codesFile || "";
+        codesUpdated = data.codesUpdated || "";
+        updateCodesInfo();
+        const wanted = selected || areaSelect.value || localStorage.getItem(STORAGE_KEY);
+        areaSelect.replaceChildren(...areas.map((area) => new Option(area.name, area.id)));
+        areaSelect.value = areas.some((area) => area.id === wanted) ? wanted : areas[0].id;
+        render();
+      } catch (error) {
+        setStatus(error.message, true);
+      }
+    }
+
+    const refreshButton = document.querySelector("#refresh");
+    const refreshProgress = document.querySelector("#refresh-progress");
+    const refreshProgressLabel = document.querySelector("#refresh-progress-label");
+    const refreshProgressTrack = refreshProgress.querySelector('[role="progressbar"]');
+    const refreshProgressValue = document.querySelector("#refresh-progress-value");
+    let refreshStartedAt = 0;
+    let refreshTimer = null;
+
+    function setRefreshProgress(value, state, label = `${value}%`) {
+      const progress = Math.max(0, Math.min(100, value));
+      refreshProgress.dataset.state = state;
+      refreshProgressLabel.textContent = label;
+      refreshProgressTrack.setAttribute("aria-valuenow", String(progress));
+      refreshProgressValue.style.width = `${progress}%`;
+    }
+
+    function updateEstimatedProgress() {
+      if (!refreshStartedAt) refreshStartedAt = Date.now();
+      const estimate = Math.min(95, Math.floor(((Date.now() - refreshStartedAt) / 60000) * 95));
+      setRefreshProgress(estimate, "running");
+    }
+
+    function finishRefresh(label) {
+      refreshTimer = null;
+      refreshStartedAt = 0;
+      refreshButton.disabled = false;
+      if (label) setRefreshProgress(0, "error", label);
+    }
+
+    async function pollRefresh(resumeOnly = false) {
+      try {
+        const response = await fetch("/api/status", { cache: "no-store" });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.message || "Não foi possível consultar a execução SAP.");
+        if (result.state === "queued" || result.state === "running") {
+          refreshButton.disabled = true;
+          updateEstimatedProgress();
+          refreshTimer = window.setTimeout(pollRefresh, 1000);
+        } else if (result.state === "done" && !resumeOnly) {
+          setRefreshProgress(100, "done");
+          finishRefresh();
+          loadPendingLocations();
+        } else {
+          finishRefresh(result.state === "error" && !resumeOnly ? "Falha" : "");
+        }
+      } catch (error) {
+        finishRefresh("Falha");
+        refreshProgress.title = error.message;
+      }
+    }
+
+    refreshButton.addEventListener("click", async () => {
+      refreshButton.disabled = true;
+      refreshStartedAt = Date.now();
+      setRefreshProgress(0, "running");
+      try {
+        const response = await fetch("/api/run", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: "{}"
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.message || "Não foi possível iniciar a exportação.");
+        if (refreshTimer) window.clearTimeout(refreshTimer);
+        refreshTimer = window.setTimeout(pollRefresh, 1000);
+      } catch (error) {
+        finishRefresh("Falha");
+        refreshProgress.title = error.message;
+      }
+    });
+
+    const harvestStart = document.getElementById("harvest-start");
+    const harvestEnd = document.getElementById("harvest-end");
+    const occurrenceViewButton = document.getElementById("view-occurrences");
+    const healthViewButton = document.getElementById("view-health");
+    const inspectionViewButtons = [
+      ["view-lubrication", "lubrication"],
+      ["view-checklist", "checklist"],
+      ["view-predictive", "predictive"]
+    ];
+    function setView(view, technique = "") {
+      activeView = view;
+      activeTechnique = technique;
+      occurrenceViewButton.setAttribute("aria-pressed", String(view === "occurrences"));
+      healthViewButton.setAttribute("aria-pressed", String(view === "health"));
+      document.getElementById("routes-legend").hidden = view !== "routes";
+      inspectionViewButtons.forEach(([id, value]) => {
+        document.getElementById(id).setAttribute("aria-pressed", String(view === "routes" && technique === value));
+      });
+      noteTip.hidden = true;
+      render();
+    }
+    occurrenceViewButton.addEventListener("click", () => setView("occurrences"));
+    healthViewButton.addEventListener("click", () => setView("health"));
+    inspectionViewButtons.forEach(([id, technique]) => {
+      document.getElementById(id).addEventListener("click", () => setView("routes", technique));
+    });
+    selectedDate.addEventListener("change", () => {
+      if (!selectedDate.value || !selectedDate.validity.valid) {
+        selectedDate.value = referenceDay;
+        setStatus("Informe uma data de referência válida.", true);
+        return;
+      }
+      referenceDay = selectedDate.value;
+      if (loadedRoutes) showRoutesInfo(loadedRoutes);
+      if (activeView !== "routes" || !loadedRoutes) render();
+      if (!summaryModal.hidden && summaryPoint) openSummary(summaryPoint, false);
+      if (!historyModal.hidden && historyModal.querySelector(".history-box").classList.contains("routes-history-box") && summaryPoint) openRouteHistory(summaryPoint);
+      const period = harvestPeriod();
+      setStatus(period.error || "Data de referência atualizada.", Boolean(period.error));
+    });
+    [[harvestStart, "confiabilidade-safra-inicio"], [harvestEnd, "confiabilidade-safra-fim"]].forEach(([input, key]) => {
+      input.value = localStorage.getItem(key) || "";
+      input.addEventListener("change", () => {
+        localStorage.setItem(key, input.value);
+        const period = harvestPeriod();
+        if (period.error) {
+          setStatus(period.error, true);
+        } else {
+          setStatus("Período de safra atualizado.");
+        }
+        if (activeView === "health") render();
+        if (!summaryModal.hidden && summaryPoint) openSummary(summaryPoint, false);
+      });
+    });
+
+    const messagesDialog = document.getElementById("messages-dialog");
+    const messageStatus = document.getElementById("message-status");
+    const messagePreview = document.getElementById("message-preview");
+    const messageLinks = document.getElementById("message-links");
+    const contactForm = document.getElementById("contact-form");
+    const contactName = document.getElementById("contact-name");
+    const contactPhone = document.getElementById("contact-phone");
+    const contactList = document.getElementById("contact-list");
+    const contactCancel = document.getElementById("contact-cancel");
+    const CONTACTS_KEY = "confiabilidade-whatsapp-contatos";
+    let contacts = [];
+    let contactsReady = false;
+    let editingContact = null;
+    let selectedContacts = new Set();
+
+    function messageError(text) {
+      messageStatus.textContent = text;
+    }
+
+    function loadContacts() {
+      try {
+        const stored = localStorage.getItem(CONTACTS_KEY);
+        const parsed = stored === null ? [] : JSON.parse(stored);
+        if (!Array.isArray(parsed) || parsed.some((item) => !item || typeof item.id !== "string" || typeof item.name !== "string" || !item.name.trim() || typeof item.phone !== "string" || !/^[1-9]\d{7,14}$/.test(item.phone))) {
+          throw new Error("O cadastro de contatos está em formato inválido.");
+        }
+        contacts = parsed;
+        contactsReady = true;
+        renderContacts();
+      } catch (error) {
+        contactsReady = false;
+        messageError(`Não foi possível carregar os contatos: ${error.message}`);
+      }
+    }
+
+    function saveContacts(next) {
+      try {
+        localStorage.setItem(CONTACTS_KEY, JSON.stringify(next));
+        contacts = next;
+        return true;
+      } catch (error) {
+        messageError(`Não foi possível salvar os contatos: ${error.message}`);
+        return false;
+      }
+    }
+
+    function resetContactForm() {
+      editingContact = null;
+      contactForm.reset();
+      document.getElementById("contact-save").textContent = "Adicionar";
+      contactCancel.hidden = true;
+    }
+
+    function renderContacts() {
+      contactList.replaceChildren();
+      if (!contacts.length) {
+        contactList.textContent = "Nenhum contato cadastrado.";
+        return;
+      }
+      contacts.forEach((contact) => {
+        const row = document.createElement("div");
+        row.className = "contact-row";
+        const label = document.createElement("label");
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.checked = selectedContacts.has(contact.id);
+        checkbox.addEventListener("change", () => {
+          if (checkbox.checked) selectedContacts.add(contact.id); else selectedContacts.delete(contact.id);
+          messageLinks.replaceChildren();
+          messageError("");
+        });
+        label.append(checkbox, document.createTextNode(` ${contact.name} · +${contact.phone}`));
+        const edit = document.createElement("button");
+        edit.type = "button";
+        edit.textContent = "Editar";
+        edit.setAttribute("aria-label", `Editar ${contact.name}`);
+        edit.addEventListener("click", () => {
+          editingContact = contact.id;
+          contactName.value = contact.name;
+          contactPhone.value = contact.phone;
+          document.getElementById("contact-save").textContent = "Salvar";
+          contactCancel.hidden = false;
+          contactName.focus();
+        });
+        const remove = document.createElement("button");
+        remove.type = "button";
+        remove.textContent = "Excluir";
+        remove.setAttribute("aria-label", `Excluir ${contact.name}`);
+        remove.addEventListener("click", () => {
+          if (!confirm(`Excluir o contato ${contact.name}?`)) return;
+          if (!saveContacts(contacts.filter((item) => item.id !== contact.id))) return;
+          selectedContacts.delete(contact.id);
+          if (editingContact === contact.id) resetContactForm();
+          messageLinks.replaceChildren();
+          messageError("");
+          renderContacts();
+        });
+        row.append(label, edit, remove);
+        contactList.append(row);
+      });
+    }
+
+    contactForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      if (!contactsReady) { messageError("O cadastro de contatos está indisponível; corrija o problema antes de salvar."); return; }
+      const name = contactName.value.trim();
+      const rawPhone = contactPhone.value.trim();
+      const phone = rawPhone.replace(/[\s()+.-]/g, "");
+      if (!name || !/^[1-9]\d{7,14}$/.test(phone)) {
+        messageError("Informe nome e telefone válido com DDI e DDD, contendo 8 a 15 dígitos.");
+        return;
+      }
+      if (contacts.some((item) => item.phone === phone && item.id !== editingContact)) {
+        messageError("Este número já está cadastrado.");
+        return;
+      }
+      const contact = { id: editingContact || crypto.randomUUID(), name, phone };
+      const next = editingContact ? contacts.map((item) => item.id === editingContact ? contact : item) : [...contacts, contact];
+      if (!saveContacts(next)) return;
+      resetContactForm();
+      messageLinks.replaceChildren();
+      messageError("");
+      renderContacts();
+    });
+    contactCancel.addEventListener("click", resetContactForm);
+
+    function messageValue(record, key, columns) {
+      return String(record[key] || "").trim() || field(record, columns);
+    }
+
+    function messageDate(value) {
+      const text = String(value || "").trim();
+      if (/^\d{4}-\d{2}-\d{2}$/.test(text)) {
+        const date = new Date(`${text}T00:00:00Z`);
+        return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === text ? text : "";
+      }
+      const parsed = parseNoteDate(text);
+      return parsed ? parsed.toISOString().slice(0, 10) : "";
+    }
+
+    function messageRecord(record, scheduled) {
+      const get = (key, columns) => messageValue(record, key, columns) || "Não informado";
+      const fields = [
+        ["Nota", get("note", ["Nota"])],
+        ["Ordem", get("order", ["Ordem"])],
+        ["Tipo", get("type", ["Tp."])],
+        ["Denominação do Loc. Instalação", field(record, ["Denominação do loc.instalação"]) || "Não informado"],
+        ["Descrição", get("description", ["Descrição"])],
+        ["DuraçParad", get("shutdownDuration", ["DuraçParad"])]
+      ];
+      if (scheduled) {
+        fields.push(["Executor", get("executor", ["Denominação executor", "Recebedor"])]);
+        const start = messageValue(record, "desiredStart", ["Iníc.nec."]);
+        const end = messageValue(record, "desiredCompletion", ["Concl.desj"]);
+        fields.push(["Período", `${start || "não informado"} a ${end || "não informado"}`]);
+      }
+      return fields.map(([label, value]) => `${label}: ${value}`).join("\n");
+    }
+
+    function scheduledInWeek(record, week) {
+      const order = String(record.order || "").trim().replace(/[.,\s]/g, "");
+      if (!/^\d+$/.test(order) || Number(order) <= 10) return false;
+      let start = messageDate(messageValue(record, "desiredStart", ["Iníc.nec."]));
+      let end = messageDate(messageValue(record, "desiredCompletion", ["Concl.desj"]));
+      if (!start && !end) return false;
+      if (!start) start = end;
+      if (!end || end < start) end = start;
+      return start <= week.end && end >= week.start;
+    }
+
+    function buildMessage() {
+      const selected = [...document.querySelectorAll('#message-types input:checked')].map((input) => input.value);
+      if (!selected.length) throw new Error("Selecione ao menos uma situação para gerar a mensagem.");
+      if (!notesAvailable) throw new Error("As notas IW28 estão indisponíveis; não é possível gerar a mensagem.");
+      const area = currentArea();
+      if (!area || !area.points.length) throw new Error("A área selecionada não possui pontos de controle.");
+      const tags = [...new Set(area.points.map((point) => norm(codeTag(point.code))).filter(Boolean))];
+      if (!tags.length) throw new Error("Nenhum ponto da área possui código com TAG válido.");
+      const unlinked = area.points.filter((point) => !norm(codeTag(point.code))).length;
+      const matchesArea = (record) => {
+        const location = norm(field(record, ["Local de instalação"]));
+        return tags.some((tag) => location === tag || location.startsWith(`${tag}-`));
+      };
+      const open = iw28Records.filter((record) => {
+        const status = norm(record.status || field(record, ["Status sistema", "Status do sistema", "StatSist", "Status"]));
+        return (status === "PEN" || status === "AND") && matchesArea(record);
+      });
+      const week = currentWeek();
+      const formatDay = (day) => day.split("-").reverse().join("/");
+      const sections = [`Área: ${area.name}\nData de referência: ${formatDay(referenceDay)}`];
+      if (unlinked) sections.push(`Atenção: ${unlinked} ponto(s) sem TAG válido não foram avaliados.`);
+      if (selected.includes("alarms")) {
+        sections.push(`*Lista de Conjuntos em Alarmes*\n${open.length ? open.map((record) => messageRecord(record, false)).join("\n\n") : "Nenhuma nota aberta encontrada."}`);
+      }
+      if (selected.includes("scheduled")) {
+        const scheduled = open.filter((record) => scheduledInWeek(record, week));
+        const withoutDates = open.filter((record) => {
+          const order = String(record.order || "").trim().replace(/[.,\s]/g, "");
+          return /^\d+$/.test(order) && Number(order) > 10 && !messageDate(messageValue(record, "desiredStart", ["Iníc.nec."])) && !messageDate(messageValue(record, "desiredCompletion", ["Concl.desj"]));
+        }).length;
+        sections.push(`*Lista de Serviços Programados* (${formatDay(week.start)} a ${formatDay(week.end)})\n${scheduled.length ? scheduled.map((record) => messageRecord(record, true)).join("\n\n") : "Nenhum serviço programado encontrado na semana."}${withoutDates ? `\n${withoutDates} serviço(s) sem data válida não foram incluídos.` : ""}`);
+      }
+      if (selected.includes("reliability")) {
+        const period = harvestPeriod();
+        if (period.error) throw new Error(period.error);
+        const low = [];
+        let unavailable = 0;
+        area.points.forEach((point) => {
+          const result = healthState(point);
+          if (result.confidence === null) { unavailable++; return; }
+          if (result.confidence < 0.7) low.push(`Ponto: ${point.id}\nDenominação do Loc. Instalação: ${locationName(norm(codeTag(point.code))) || "Não disponível"}\nConf: ${fmt(result.confidence * 100, 2)}%`);
+        });
+        sections.push(`*Lista de Ativos com Baixa Confiabilidade*\n${low.length ? low.join("\n\n") : "Nenhum ponto com confiabilidade calculada abaixo de 70%."}${unavailable ? `\n${unavailable} ponto(s) com confiabilidade indisponível não foram avaliados.` : ""}`);
+      }
+      return sections.join("\n\n");
+    }
+
+    function updateMessagePreview() {
+      messageLinks.replaceChildren();
+      if (!contactsReady) return;
+      try {
+        messagePreview.value = buildMessage();
+        messageError("");
+      } catch (error) {
+        messagePreview.value = "";
+        messageError(error.message);
+      }
+    }
+
+    document.getElementById("messages-open").addEventListener("click", () => {
+      selectedContacts = new Set();
+      resetContactForm();
+      messageLinks.replaceChildren();
+      messagePreview.value = "";
+      messageError("");
+      loadContacts();
+      messagesDialog.showModal();
+      if (contactsReady) updateMessagePreview();
+    });
+    document.getElementById("messages-close").addEventListener("click", () => messagesDialog.close());
+    document.getElementById("message-types").addEventListener("change", updateMessagePreview);
+    document.getElementById("message-copy").addEventListener("click", async () => {
+      if (!messagePreview.value) { messageError("Gere uma pré-visualização antes de copiar."); return; }
+      try {
+        await navigator.clipboard.writeText(messagePreview.value);
+        messageError("Mensagem copiada. Cole-a na conversa aberta e confirme o envio no WhatsApp.");
+      } catch (error) {
+        messageError(`Não foi possível copiar automaticamente: ${error.message}. Selecione e copie o texto da pré-visualização.`);
+        messagePreview.focus();
+        messagePreview.select();
+      }
+    });
+    document.getElementById("message-send").addEventListener("click", () => {
+      updateMessagePreview();
+      if (!contactsReady || !messagePreview.value) return;
+      const recipients = contacts.filter((contact) => selectedContacts.has(contact.id));
+      if (!recipients.length) { messageError("Selecione ao menos um contato."); return; }
+      const encoded = encodeURIComponent(messagePreview.value);
+      const prefilled = encoded.length <= 6000;
+      let blocked = false;
+      messageLinks.replaceChildren();
+      recipients.forEach((contact) => {
+        const link = document.createElement("a");
+        link.href = `https://wa.me/${contact.phone}${prefilled ? `?text=${encoded}` : ""}`;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        link.textContent = `Abrir conversa: ${contact.name}`;
+        messageLinks.append(link);
+        const chat = window.open(link.href, "_blank");
+        if (chat) chat.opener = null;
+        else blocked = true;
+      });
+      if (!prefilled) {
+        messageError("As conversas foram abertas, mas a mensagem é longa demais para preenchimento automático. Copie a pré-visualização, cole-a em cada conversa e confirme o envio no WhatsApp.");
+      } else if (blocked) {
+        messageError("O navegador bloqueou uma ou mais conversas. Use os links abaixo e confirme o envio no WhatsApp.");
+      } else {
+        messageError("As conversas foram abertas com a mensagem pronta. Confirme o envio em cada conversa no WhatsApp.");
+      }
+    });
+
+    load();
+    loadItssInspections();
+    window.addEventListener("itss-updated", loadItssInspections);
+    window.setInterval(loadItssInspections, 60000);
+    loadRoutesInfo().catch((error) => {
+      routesInfo.textContent = `Planilha de rotas: ${error.message}`;
+      setStatus(routesInfo.textContent, true);
+    });
+    loadPendingLocations();
+    window.setInterval(() => {
+      loadPendingLocations();
+      if (!summaryModal.hidden && summaryPoint) openSummary(summaryPoint, false);
+    }, 60000);
+    pollRefresh(true);
+  </script>
+  <script src="/itss.js"></script>
+</body>
+</html>

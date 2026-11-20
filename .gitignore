@@ -1,0 +1,20 @@
+# Operational exports and planning workbooks
+*.csv
+*.xls
+*.xlsx
+*.xlsm
+Arquivos/
+Módulo Planejamento e Programação/SAP GUI/
+
+# Local SAP PM planning data
+Módulo Planejamento e Programação/SAP PM Web/planejamento.json
+Módulo Planejamento e Programação/SAP PM Web/nivelamento.json
+Módulo Planejamento e Programação/SAP PM Web/confiabilidade/*.json
+Módulo Planejamento e Programação/teste 1
+
+# Login module currently contains hard-coded default credentials and its own Git history
+Tela Acesso/
+
+# Python-generated files
+__pycache__/
+*.py[cod]

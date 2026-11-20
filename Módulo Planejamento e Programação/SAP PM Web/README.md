@@ -1,14 +1,18 @@
-# Planejamento SAP PM
+# RIMS One
 
-Aplicação local para visualizar exportações SAP PM, pesquisar notas e ordens,
-consultar executantes e registrar ajustes de planejamento.
+Servidor local de acesso ao Planejamento SAP PM e ao Gerenciamento de Parada.
 
 ## Acesso
 
 1. Abra o SAP GUI e conecte-se ao ambiente correto.
 2. Execute `iniciar.bat` nesta pasta.
-3. Acesse <http://127.0.0.1:8765/> no navegador.
-4. A página principal permanece em <http://127.0.0.1:8765/>. Acesse o painel de
+3. Na primeira execução, crie a conta administrativa no terminal. A senha é
+   solicitada sem aparecer na tela e deve ter pelo menos 12 caracteres.
+4. Acesse <http://127.0.0.1:8765/login> e entre com a conta criada.
+5. Após autenticar, escolha **Gerenciamento de Parada** ou
+   **Planejamento e Programação**. A raiz
+   <http://127.0.0.1:8765/> e as respectivas APIs também exigem sessão.
+6. No Planejamento SAP PM, acesse o painel de
    gráficos em <http://127.0.0.1:8765/dashboard>; use **Painel de notas** para
    voltar à tabela original. O Gantt semanal está em
    <http://127.0.0.1:8765/gantt>; navegue entre os painéis pela faixa de abas
@@ -30,18 +34,18 @@ consultar executantes e registrar ajustes de planejamento.
    erro ou confirmação incerta, confira a nota no SAP antes de tentar novamente.
    Ao gravar, encerrar ou reabrir pelo Gantt, a janela do SAP é minimizada
    durante o scripting.
-5. Selecione uma exportação, pesquise os registros e use **Ajustar** para
+7. Selecione uma exportação, pesquise os registros e use **Ajustar** para
    ajustar executante, prioridade, início e conclusão desejados, duração,
    indicação de parada e descrição. Ao salvar, confirme a gravação no SAP.
-6. Marque uma ou mais linhas pela bandeira e use **Ajuste em Massa** ao lado
+8. Marque uma ou mais linhas pela bandeira e use **Ajuste em Massa** ao lado
    dos filtros para aplicar os valores do formulário a todas as notas marcadas.
    As gravações são sequenciais; em caso de falha, o processo para na primeira
    nota não confirmada e mantém essa nota e as seguintes marcadas. Para iniciar
    uma gravação em massa com segurança, deixe o SAP na tela Easy Access.
-7. Use **Exportar planejamento** para baixar a lista ajustada em CSV.
-8. Para consultar colunas fora da área visível, use a barra horizontal acima
+9. Use **Exportar planejamento** para baixar a lista ajustada em CSV.
+10. Para consultar colunas fora da área visível, use a barra horizontal acima
    da tabela; ela acompanha a rolagem da própria tabela.
-9. Filtre a lista por centro de trabalho, tipo de nota, parada, datas desejadas,
+11. Filtre a lista por centro de trabalho, tipo de nota, parada, datas desejadas,
    executante, status do sistema ou prioridade. Cada filtro permite selecionar
    várias opções; use a bandeira antes de **CenTrabRes** para marcar linhas.
 

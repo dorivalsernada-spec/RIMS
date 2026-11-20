@@ -1,16 +1,58 @@
 import http.client
 import json
 import subprocess
+import tempfile
 import threading
 import unittest
+from pathlib import Path
 from unittest.mock import patch
 
 import server
 
 
 class Iw22StatusTests(unittest.TestCase):
+    def test_first_run_creates_an_admin_without_reprompting(self):
+        with tempfile.TemporaryDirectory() as directory:
+            with patch.object(
+                server, "AUTH_DB", Path(directory) / "auth.sqlite3"
+            ), patch(
+                "builtins.input", side_effect=["x", "setup-admin"]
+            ) as prompt, patch.object(
+                server.getpass,
+                "getpass",
+                side_effect=["short", "setup-password-2026", "setup-password-2026"],
+            ), patch("builtins.print"):
+                server.setup_initial_admin()
+                server.setup_initial_admin()
+                with server.auth_connection() as database:
+                    user = database.execute(
+                        "SELECT password_salt, password_hash, is_admin FROM users"
+                    ).fetchone()
+                self.assertEqual(prompt.call_count, 2)
+                self.assertTrue(user["is_admin"])
+                self.assertTrue(server.verify_password(
+                    "setup-password-2026",
+                    user["password_salt"],
+                    user["password_hash"],
+                ))
+
     @classmethod
     def setUpClass(cls):
+        cls.auth_dir = tempfile.TemporaryDirectory()
+        cls.auth_db_patch = patch.object(
+            server, "AUTH_DB", Path(cls.auth_dir.name) / "auth.sqlite3"
+        )
+        cls.auth_db_patch.start()
+        server.initialize_auth_store()
+        server.create_auth_user(
+            "test-admin",
+            "Test Admin",
+            "test-password-long-enough",
+            "9999-12-31",
+            True,
+            True,
+        )
+        cls.session = server.issue_session("test-admin")
         cls.httpd = server.ThreadingHTTPServer(("127.0.0.1", 0), server.Handler)
         cls.port = cls.httpd.server_address[1]
         cls.port_patch = patch.object(server, "PORT", cls.port)
@@ -24,6 +66,10 @@ class Iw22StatusTests(unittest.TestCase):
         cls.thread.join()
         cls.httpd.server_close()
         cls.port_patch.stop()
+        with server.SESSION_LOCK:
+            server.SESSIONS.pop(cls.session, None)
+        cls.auth_db_patch.stop()
+        cls.auth_dir.cleanup()
 
     def post(self, payload):
         connection = http.client.HTTPConnection("127.0.0.1", self.port, timeout=5)
@@ -32,10 +78,185 @@ class Iw22StatusTests(unittest.TestCase):
                 "POST",
                 "/api/iw22/status",
                 json.dumps(payload),
-                {"Content-Type": "application/json", "Origin": f"http://127.0.0.1:{self.port}"},
+                {
+                    "Content-Type": "application/json",
+                    "Origin": f"http://127.0.0.1:{self.port}",
+                    "Cookie": f"{server.SESSION_COOKIE}={self.session}",
+                },
             )
             response = connection.getresponse()
             return response.status, json.loads(response.read())
+        finally:
+            connection.close()
+
+    def test_login_session_and_protected_routes(self):
+        connection = http.client.HTTPConnection("127.0.0.1", self.port, timeout=5)
+        try:
+            connection.request("GET", "/login")
+            response = connection.getresponse()
+            self.assertEqual(response.status, 200)
+            self.assertIn("text/html", response.getheader("Content-Type"))
+            response.read()
+
+            connection.request("GET", "/background.png")
+            response = connection.getresponse()
+            self.assertEqual(response.status, 200)
+            self.assertEqual(response.getheader("Content-Type"), "image/png")
+            response.read()
+
+            connection.request("GET", "/")
+            response = connection.getresponse()
+            self.assertEqual(response.status, 303)
+            self.assertEqual(response.getheader("Location"), "/login")
+            response.read()
+
+            connection.request("GET", "/paradas/")
+            response = connection.getresponse()
+            self.assertEqual(response.status, 303)
+            self.assertEqual(response.getheader("Location"), "/login")
+            response.read()
+
+            connection.request("GET", "/api/auth/status")
+            response = connection.getresponse()
+            self.assertEqual(response.status, 200)
+            self.assertFalse(json.loads(response.read())["authenticated"])
+
+            body = json.dumps({
+                "username": "test-admin",
+                "password": "test-password-long-enough",
+            })
+            connection.request(
+                "POST",
+                "/api/auth/login",
+                body,
+                {
+                    "Content-Type": "application/json",
+                    "Origin": f"http://127.0.0.1:{self.port}",
+                },
+            )
+            response = connection.getresponse()
+            self.assertEqual(response.status, 200)
+            cookie = response.getheader("Set-Cookie")
+            self.assertIn("HttpOnly", cookie)
+            self.assertTrue(json.loads(response.read())["isAdmin"])
+
+            connection.request(
+                "GET",
+                "/paradas/",
+                headers={"Cookie": cookie.split(";", 1)[0]},
+            )
+            response = connection.getresponse()
+            self.assertEqual(response.status, 200)
+            self.assertIn("text/html", response.getheader("Content-Type"))
+            self.assertIn("Manutenção Entressafra", response.read().decode("utf-8"))
+        finally:
+            connection.close()
+
+    def test_admin_can_migrate_legacy_users_without_storing_plaintext(self):
+        connection = http.client.HTTPConnection("127.0.0.1", self.port, timeout=5)
+        try:
+            payload = {
+                "users": [{
+                    "fullName": "Usuário antigo",
+                    "username": "usuário antigo",
+                    "password": "senha-antiga",
+                    "validity": "9999-12-31",
+                    "status": "Habilitado",
+                    "isAdmin": False,
+                }]
+            }
+            connection.request(
+                "POST",
+                "/api/auth/migrate",
+                json.dumps(payload),
+                {
+                    "Content-Type": "application/json",
+                    "Origin": f"http://127.0.0.1:{self.port}",
+                    "Cookie": f"{server.SESSION_COOKIE}={self.session}",
+                },
+            )
+            response = connection.getresponse()
+            self.assertEqual(response.status, 200)
+            self.assertEqual(json.loads(response.read())["imported"], 1)
+
+            with server.auth_connection() as database:
+                row = database.execute(
+                    "SELECT password_hash FROM users WHERE username = ?",
+                    ("usuário antigo",),
+                ).fetchone()
+            self.assertNotEqual(row["password_hash"], b"senha-antiga")
+        finally:
+            connection.close()
+
+    def test_admin_created_user_can_access_modules_but_not_admin_api(self):
+        connection = http.client.HTTPConnection("127.0.0.1", self.port, timeout=5)
+        try:
+            connection.request(
+                "POST",
+                "/api/auth/users",
+                json.dumps({
+                    "action": "create",
+                    "fullName": "Usuário comum",
+                    "username": "usuario_comum",
+                    "password": "senha-forte-para-teste",
+                    "validity": "9999-12-31",
+                    "status": "Habilitado",
+                }),
+                {
+                    "Content-Type": "application/json",
+                    "Origin": f"http://127.0.0.1:{self.port}",
+                    "Cookie": f"{server.SESSION_COOKIE}={self.session}",
+                },
+            )
+            response = connection.getresponse()
+            self.assertEqual(response.status, 201)
+            response.read()
+
+            connection.request(
+                "POST",
+                "/api/auth/login",
+                json.dumps({
+                    "username": "usuario_comum",
+                    "password": "senha-forte-para-teste",
+                }),
+                {
+                    "Content-Type": "application/json",
+                    "Origin": f"http://127.0.0.1:{self.port}",
+                },
+            )
+            response = connection.getresponse()
+            self.assertEqual(response.status, 200)
+            self.assertFalse(json.loads(response.read())["isAdmin"])
+            cookie = response.getheader("Set-Cookie").split(";", 1)[0]
+
+            connection.request("GET", "/paradas/", headers={"Cookie": cookie})
+            response = connection.getresponse()
+            self.assertEqual(response.status, 200)
+            response.read()
+
+            connection.request("GET", "/api/auth/users", headers={"Cookie": cookie})
+            response = connection.getresponse()
+            self.assertEqual(response.status, 403)
+            response.read()
+        finally:
+            connection.close()
+
+    def test_protected_api_rejects_missing_session(self):
+        connection = http.client.HTTPConnection("127.0.0.1", self.port, timeout=5)
+        try:
+            body = json.dumps({"source": "iw28", "id": "test", "action": "close"})
+            connection.request(
+                "POST",
+                "/api/iw22/status",
+                body,
+                {
+                    "Content-Type": "application/json",
+                    "Origin": f"http://127.0.0.1:{self.port}",
+                },
+            )
+            response = connection.getresponse()
+            self.assertEqual(response.status, 401)
+            response.read()
         finally:
             connection.close()
 

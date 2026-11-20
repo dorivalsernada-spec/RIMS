@@ -9,11 +9,16 @@ Módulo Planejamento e Programação/SAP GUI/
 # Local SAP PM planning data
 Módulo Planejamento e Programação/SAP PM Web/planejamento.json
 Módulo Planejamento e Programação/SAP PM Web/nivelamento.json
+Módulo Planejamento e Programação/SAP PM Web/rims_auth.sqlite3
 Módulo Planejamento e Programação/SAP PM Web/confiabilidade/*.json
 Módulo Planejamento e Programação/teste 1
 
-# Login module currently contains hard-coded default credentials and its own Git history
-Tela Acesso/
+# Publish only the server-backed login and its migration guide, not legacy files
+Tela Acesso/*
+!Tela Acesso/login.html
+!Tela Acesso/background.png
+!Tela Acesso/README.md
+!Tela Acesso/GUIA_DE_USO.md
 
 # Python-generated files
 __pycache__/

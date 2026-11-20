@@ -1,25 +1,44 @@
 import base64
 import csv
+import getpass
 import hashlib
+import hmac
 import io
 import json
+import mimetypes
 import re
+import secrets
+import sqlite3
 import subprocess
 import threading
+import time
 import unicodedata
 import uuid
 import zipfile
+from contextlib import contextmanager
 import xml.etree.ElementTree as ET
 from xml.sax.saxutils import escape
 from datetime import datetime, timedelta
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from http.cookies import CookieError, SimpleCookie
 from urllib.parse import parse_qs, unquote, urlparse
 
 
 ROOT = Path(__file__).resolve().parent
+PROJECT_ROOT = ROOT.parents[1]
 HOST = "127.0.0.1"
 PORT = 8765
+LOGIN_HTML = PROJECT_ROOT / "Tela Acesso" / "login.html"
+LOGIN_BACKGROUND = PROJECT_ROOT / "Tela Acesso" / "background.png"
+SHUTDOWN_ROOT = PROJECT_ROOT / "Módulo Gerenciamento de Parada"
+AUTH_DB = ROOT / "rims_auth.sqlite3"
+SESSION_COOKIE = "rims_session"
+SESSION_TTL_SECONDS = 8 * 60 * 60
+PASSWORD_HASH_ITERATIONS = 310_000
+SESSIONS = {}
+SESSION_LOCK = threading.Lock()
+AUTH_LOCK = threading.Lock()
 SCRIPT = ROOT / "iw28.vbs"
 IW22_SCRIPT = ROOT / "iw22.vbs"
 IW22_STATUS_SCRIPT = ROOT / "iw22_status.vbs"
@@ -71,6 +90,7 @@ ITSS_STATE = {"state": "idle", "message": "Pronto para executar a rotina ITSS."}
 PLAN_LOCK = threading.Lock()
 SAP_WRITE_LOCK = threading.Lock()
 SAP_PRIORITY_KEYS = {"Alta": "2", "Média": "3", "Baixa": "4"}
+USER_STATUS = {"Habilitado": 1, "Desabilitado": 0}
 STATUS_CODES = {
     "MSEN": "ENC",
     "MSEN ORDA": "ENC",
@@ -81,6 +101,147 @@ STATUS_CODES = {
     "MEAB MSPR ORDA": "AND",
     "MSPR": "PEN",
 }
+
+
+@contextmanager
+def auth_connection():
+    connection = sqlite3.connect(AUTH_DB, timeout=5)
+    connection.row_factory = sqlite3.Row
+    try:
+        with connection:
+            yield connection
+    finally:
+        connection.close()
+
+
+def initialize_auth_store():
+    with auth_connection() as connection:
+        connection.execute(
+            """CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY,
+                username TEXT NOT NULL UNIQUE,
+                full_name TEXT NOT NULL,
+                password_salt BLOB NOT NULL,
+                password_hash BLOB NOT NULL,
+                validity TEXT NOT NULL,
+                enabled INTEGER NOT NULL,
+                is_admin INTEGER NOT NULL
+            )"""
+        )
+        connection.execute(
+            "CREATE TABLE IF NOT EXISTS auth_meta (key TEXT PRIMARY KEY, value TEXT NOT NULL)"
+        )
+
+
+def hash_password(password, salt=None):
+    salt = salt or secrets.token_bytes(16)
+    digest = hashlib.pbkdf2_hmac(
+        "sha256", password.encode("utf-8"), salt, PASSWORD_HASH_ITERATIONS
+    )
+    return salt, digest
+
+
+def verify_password(password, salt, expected_hash):
+    _, digest = hash_password(password, salt)
+    return hmac.compare_digest(digest, expected_hash)
+
+
+def create_auth_user(username, full_name, password, validity, enabled, is_admin):
+    salt, password_hash = hash_password(password)
+    with auth_connection() as connection:
+        connection.execute(
+            """INSERT INTO users
+               (username, full_name, password_salt, password_hash, validity, enabled, is_admin)
+               VALUES (?, ?, ?, ?, ?, ?, ?)""",
+            (username, full_name, salt, password_hash, validity, int(enabled), int(is_admin)),
+        )
+
+
+def setup_initial_admin():
+    initialize_auth_store()
+    with auth_connection() as connection:
+        if connection.execute("SELECT 1 FROM users LIMIT 1").fetchone():
+            return
+
+    print("Primeiro acesso ao RIMS One: crie a conta administrativa.")
+    while True:
+        username = input("Usuário administrador (mínimo 3 caracteres): ").strip()
+        if valid_username(username):
+            break
+        print("Use de 3 a 64 letras, números, ponto, hífen ou sublinhado.")
+    while True:
+        password = getpass.getpass("Senha administrativa (12 a 256 caracteres): ")
+        if 12 <= len(password) <= 256:
+            confirmation = getpass.getpass("Confirme a senha: ")
+            if password == confirmation:
+                break
+            print("As senhas não conferem.")
+        else:
+            print("A senha deve ter entre 12 e 256 caracteres.")
+    create_auth_user(username, username, password, "9999-12-31", True, True)
+    print("Conta administrativa criada.")
+
+
+def session_token(handler):
+    cookie = SimpleCookie()
+    try:
+        cookie.load(handler.headers.get("Cookie", ""))
+    except CookieError:
+        return None
+    morsel = cookie.get(SESSION_COOKIE)
+    return morsel.value if morsel else None
+
+
+def authenticated_user(handler):
+    token = session_token(handler)
+    if not token:
+        return None
+    now = time.time()
+    with SESSION_LOCK:
+        for expired in [key for key, value in SESSIONS.items() if value[1] <= now]:
+            del SESSIONS[expired]
+        username, expires_at = SESSIONS.get(token, (None, 0))
+    if not username or expires_at <= now:
+        return None
+    with auth_connection() as connection:
+        user = connection.execute(
+            "SELECT id, username, full_name, validity, enabled, is_admin FROM users WHERE username = ?",
+            (username,),
+        ).fetchone()
+    if not user or not user["enabled"] or user["validity"] < datetime.now().date().isoformat():
+        with SESSION_LOCK:
+            SESSIONS.pop(token, None)
+        return None
+    return user
+
+
+def issue_session(username):
+    token = secrets.token_urlsafe(32)
+    with SESSION_LOCK:
+        SESSIONS[token] = (username, time.time() + SESSION_TTL_SECONDS)
+    return token
+
+
+def session_cookie(token, max_age=SESSION_TTL_SECONDS):
+    return (
+        f"{SESSION_COOKIE}={token}; HttpOnly; SameSite=Strict; Path=/; Max-Age={max_age}"
+    )
+
+
+def valid_username(username):
+    return (
+        isinstance(username, str)
+        and re.fullmatch(r"[A-Za-z0-9_.-]{3,64}", username) is not None
+    )
+
+
+def valid_legacy_username(username):
+    return (
+        isinstance(username, str)
+        and 1 <= len(username) <= 64
+        and username == username.strip()
+        and all(character.isprintable() for character in username)
+    )
 
 
 def normalize_status(value):
@@ -922,6 +1083,279 @@ class Handler(BaseHTTPRequestHandler):
         body = json.dumps(data, ensure_ascii=False).encode("utf-8")
         self.send_body(status_code, body, "application/json; charset=utf-8")
 
+    def send_json_with_cookie(self, status_code, data, cookie):
+        body = json.dumps(data, ensure_ascii=False).encode("utf-8")
+        self.send_response(status_code)
+        self.send_header("Content-Type", "application/json; charset=utf-8")
+        self.send_header("Content-Length", str(len(body)))
+        self.send_header("Cache-Control", "no-store")
+        self.send_header("X-Content-Type-Options", "nosniff")
+        self.send_header("Set-Cookie", cookie)
+        self.end_headers()
+        self.wfile.write(body)
+
+    def redirect(self, location):
+        self.send_response(303)
+        self.send_header("Location", location)
+        self.send_header("Cache-Control", "no-store")
+        self.send_header("Content-Length", "0")
+        self.end_headers()
+
+    def require_auth(self):
+        if authenticated_user(self):
+            return True
+        path = urlparse(self.path).path
+        if path.startswith("/api/"):
+            self.send_json(401, {"message": "Faça login para acessar este recurso."})
+        else:
+            self.redirect("/login")
+        return False
+
+    def read_auth_json(self, max_bytes=1024 * 1024):
+        if self.headers.get("Origin") != f"http://{HOST}:{PORT}":
+            raise ValueError("Origem da requisição inválida.")
+        if self.headers.get("Content-Type", "").split(";", 1)[0] != "application/json":
+            raise ValueError("O formato da requisição deve ser JSON.")
+        try:
+            length = int(self.headers.get("Content-Length", "0"))
+        except ValueError as error:
+            raise ValueError("Tamanho da requisição inválido.") from error
+        if length <= 0 or length > max_bytes:
+            raise ValueError("Conteúdo inválido ou maior que o limite permitido.")
+        try:
+            return json.loads(self.rfile.read(length))
+        except (json.JSONDecodeError, UnicodeDecodeError) as error:
+            raise ValueError("O corpo da requisição contém JSON inválido.") from error
+
+    def handle_auth_login(self):
+        try:
+            payload = self.read_auth_json(4096)
+        except ValueError as error:
+            self.send_json(400, {"message": str(error)})
+            return
+        if (
+            not isinstance(payload, dict)
+            or set(payload) != {"username", "password"}
+            or not isinstance(payload["username"], str)
+            or not isinstance(payload["password"], str)
+            or len(payload["username"]) > 64
+            or len(payload["password"]) > 256
+        ):
+            self.send_json(400, {"message": "Informe usuário e senha válidos."})
+            return
+
+        with auth_connection() as connection:
+            user = connection.execute(
+                "SELECT username, password_salt, password_hash, validity, enabled, is_admin FROM users WHERE username = ?",
+                (payload["username"].strip(),),
+            ).fetchone()
+        if not user or not verify_password(
+            payload["password"], user["password_salt"], user["password_hash"]
+        ):
+            self.send_json(401, {"message": "Usuário ou senha incorretos."})
+            return
+        if not user["enabled"]:
+            self.send_json(403, {"message": "Acesso desabilitado. Contate o administrador."})
+            return
+        if user["validity"] < datetime.now().date().isoformat():
+            self.send_json(403, {"message": "A validade do cadastro expirou. Contate o administrador."})
+            return
+
+        token = issue_session(user["username"])
+        self.send_json_with_cookie(
+            200,
+            {
+                "ok": True,
+                "username": user["username"],
+                "isAdmin": bool(user["is_admin"]),
+            },
+            session_cookie(token),
+        )
+
+    def handle_auth_users(self, payload):
+        current_user = authenticated_user(self)
+        if not current_user or not current_user["is_admin"]:
+            self.send_json(403, {"message": "Somente um administrador pode gerenciar usuários."})
+            return
+        if not isinstance(payload, dict):
+            self.send_json(400, {"message": "Dados do usuário inválidos."})
+            return
+
+        action = payload.get("action")
+        if action == "create":
+            username = payload.get("username")
+            full_name = payload.get("fullName")
+            password = payload.get("password")
+            validity = payload.get("validity")
+            status = payload.get("status")
+            if (
+                not valid_username(username)
+                or not isinstance(full_name, str)
+                or not full_name.strip()
+                or len(full_name) > 160
+                or not isinstance(password, str)
+                or len(password) < 12
+                or len(password) > 256
+                or not isinstance(validity, str)
+                or not isinstance(status, str)
+                or status not in USER_STATUS
+            ):
+                self.send_json(400, {"message": "Preencha os campos corretamente. A senha deve ter ao menos 12 caracteres."})
+                return
+            try:
+                datetime.strptime(validity, "%Y-%m-%d")
+                create_auth_user(
+                    username,
+                    full_name.strip(),
+                    password,
+                    validity,
+                    USER_STATUS[status],
+                    False,
+                )
+            except ValueError:
+                self.send_json(400, {"message": "Informe uma validade válida."})
+                return
+            except sqlite3.IntegrityError:
+                self.send_json(409, {"message": "Este usuário já existe."})
+                return
+            self.send_json(201, {"ok": True})
+            return
+
+        user_id = payload.get("id")
+        if not isinstance(user_id, int) or isinstance(user_id, bool):
+            self.send_json(400, {"message": "Identificador de usuário inválido."})
+            return
+        with auth_connection() as connection:
+            user = connection.execute(
+                "SELECT id, username, is_admin, enabled FROM users WHERE id = ?", (user_id,)
+            ).fetchone()
+            if not user:
+                self.send_json(404, {"message": "Usuário não encontrado."})
+                return
+            if action == "delete":
+                if user["username"] == current_user["username"]:
+                    self.send_json(400, {"message": "Não é possível excluir a própria conta."})
+                    return
+                if user["is_admin"] and connection.execute(
+                    "SELECT COUNT(*) FROM users WHERE is_admin = 1"
+                ).fetchone()[0] <= 1:
+                    self.send_json(400, {"message": "Não é possível excluir o último administrador."})
+                    return
+                connection.execute("DELETE FROM users WHERE id = ?", (user_id,))
+            elif action == "status":
+                enabled = payload.get("enabled")
+                if not isinstance(enabled, bool):
+                    self.send_json(400, {"message": "Status de acesso inválido."})
+                    return
+                if user["username"] == current_user["username"] and not enabled:
+                    self.send_json(400, {"message": "Não é possível desabilitar a própria conta."})
+                    return
+                if user["is_admin"] and not enabled and connection.execute(
+                    "SELECT COUNT(*) FROM users WHERE is_admin = 1 AND enabled = 1"
+                ).fetchone()[0] <= 1:
+                    self.send_json(400, {"message": "Não é possível desabilitar o último administrador ativo."})
+                    return
+                connection.execute(
+                    "UPDATE users SET enabled = ? WHERE id = ?", (int(enabled), user_id)
+                )
+            else:
+                self.send_json(400, {"message": "Ação de usuário inválida."})
+                return
+        self.send_json(200, {"ok": True})
+
+    def handle_legacy_user_migration(self, payload):
+        current_user = authenticated_user(self)
+        if not current_user or not current_user["is_admin"]:
+            self.send_json(403, {"message": "Somente um administrador pode importar usuários."})
+            return
+        legacy_users = payload.get("users") if isinstance(payload, dict) else None
+        if not isinstance(legacy_users, list) or len(legacy_users) > 500:
+            self.send_json(400, {"message": "A lista de usuários antigos é inválida."})
+            return
+        with AUTH_LOCK, auth_connection() as connection:
+            if connection.execute(
+                "SELECT 1 FROM auth_meta WHERE key = 'legacy_users_migrated'"
+            ).fetchone():
+                self.send_json(409, {"message": "A migração de usuários já foi realizada."})
+                return
+            imported = 0
+            skipped = 0
+            for legacy_user in legacy_users:
+                if not isinstance(legacy_user, dict):
+                    skipped += 1
+                    continue
+                username = legacy_user.get("username")
+                password = legacy_user.get("password")
+                full_name = legacy_user.get("fullName") or username
+                validity = legacy_user.get("validity")
+                status = legacy_user.get("status")
+                is_admin = legacy_user.get("isAdmin") is True
+                if (
+                    not valid_legacy_username(username)
+                    or not isinstance(password, str)
+                    or not password
+                    or len(password) > 256
+                    or not isinstance(full_name, str)
+                    or len(full_name) > 160
+                    or not isinstance(validity, str)
+                    or not isinstance(status, str)
+                    or status not in USER_STATUS
+                ):
+                    skipped += 1
+                    continue
+                try:
+                    datetime.strptime(validity, "%Y-%m-%d")
+                except ValueError:
+                    skipped += 1
+                    continue
+                salt, password_hash = hash_password(password)
+                try:
+                    connection.execute(
+                        """INSERT INTO users
+                           (username, full_name, password_salt, password_hash, validity, enabled, is_admin)
+                           VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                        (
+                            username,
+                            full_name.strip() or username,
+                            salt,
+                            password_hash,
+                            validity,
+                            USER_STATUS[status],
+                            int(is_admin),
+                        ),
+                    )
+                    imported += 1
+                except sqlite3.IntegrityError:
+                    skipped += 1
+            if imported:
+                connection.execute(
+                    "INSERT INTO auth_meta (key, value) VALUES ('legacy_users_migrated', '1')"
+                )
+        self.send_json(200, {"imported": imported, "skipped": skipped})
+
+    def send_shutdown_asset(self, path):
+        relative_path = unquote(path[len("/paradas/"):]) or "index.html"
+        target = (SHUTDOWN_ROOT / relative_path).resolve()
+        root = SHUTDOWN_ROOT.resolve()
+        if target != root and root not in target.parents:
+            self.send_error(403)
+            return
+        if not target.is_file():
+            self.send_error(404)
+            return
+        content_type = mimetypes.guess_type(target.name)[0] or "application/octet-stream"
+        if content_type.startswith("text/") or content_type in (
+            "application/javascript",
+            "application/json",
+        ):
+            content_type += "; charset=utf-8"
+        try:
+            body = target.read_bytes()
+        except OSError as error:
+            self.send_json(500, {"message": f"Não foi possível carregar o módulo: {error}"})
+            return
+        self.send_body(200, body, content_type)
+
     def is_local_request(self):
         return (
             self.client_address[0] in ("127.0.0.1", "::1")
@@ -934,6 +1368,63 @@ class Handler(BaseHTTPRequestHandler):
             return
 
         path = urlparse(self.path).path
+        if path == "/login":
+            try:
+                self.send_body(200, LOGIN_HTML.read_bytes(), "text/html; charset=utf-8")
+            except OSError as error:
+                self.send_json(500, {"message": f"Não foi possível carregar a tela de acesso: {error}"})
+            return
+        if path == "/background.png":
+            try:
+                self.send_body(200, LOGIN_BACKGROUND.read_bytes(), "image/png")
+            except OSError as error:
+                self.send_json(500, {"message": f"Não foi possível carregar a imagem da tela de acesso: {error}"})
+            return
+        if path == "/api/auth/status":
+            user = authenticated_user(self)
+            self.send_json(
+                200,
+                {
+                    "authenticated": bool(user),
+                    "username": user["username"] if user else "",
+                    "isAdmin": bool(user["is_admin"]) if user else False,
+                },
+            )
+            return
+        if not self.require_auth():
+            return
+        if path == "/api/auth/users":
+            user = authenticated_user(self)
+            if not user or not user["is_admin"]:
+                self.send_json(403, {"message": "Somente um administrador pode gerenciar usuários."})
+                return
+            with auth_connection() as connection:
+                users = connection.execute(
+                    "SELECT id, username, full_name, validity, enabled, is_admin FROM users ORDER BY username"
+                ).fetchall()
+            self.send_json(
+                200,
+                {
+                    "users": [
+                        {
+                            "id": item["id"],
+                            "username": item["username"],
+                            "fullName": item["full_name"],
+                            "validity": item["validity"],
+                            "status": "Habilitado" if item["enabled"] else "Desabilitado",
+                            "isAdmin": bool(item["is_admin"]),
+                        }
+                        for item in users
+                    ]
+                },
+            )
+            return
+        if path == "/paradas":
+            self.redirect("/paradas/")
+            return
+        if path.startswith("/paradas/"):
+            self.send_shutdown_asset(path)
+            return
         if path == "/":
             self.send_body(200, INDEX.read_bytes(), "text/html; charset=utf-8")
         elif path == "/dashboard":
@@ -1276,6 +1767,38 @@ class Handler(BaseHTTPRequestHandler):
             self.send_error(403)
             return
         path = urlparse(self.path).path
+        if path == "/api/auth/login":
+            self.handle_auth_login()
+            return
+        if path == "/api/auth/logout":
+            token = session_token(self)
+            if token:
+                with SESSION_LOCK:
+                    SESSIONS.pop(token, None)
+            self.send_json_with_cookie(
+                200,
+                {"ok": True},
+                session_cookie("", 0),
+            )
+            return
+        if not self.require_auth():
+            return
+        if path == "/api/auth/users":
+            try:
+                payload = self.read_auth_json(16 * 1024)
+            except ValueError as error:
+                self.send_json(400, {"message": str(error)})
+                return
+            self.handle_auth_users(payload)
+            return
+        if path == "/api/auth/migrate":
+            try:
+                payload = self.read_auth_json()
+            except ValueError as error:
+                self.send_json(400, {"message": str(error)})
+                return
+            self.handle_legacy_user_migration(payload)
+            return
         if path == "/api/nivelamento":
             self.handle_nivelamento_upload()
             return
@@ -1497,11 +2020,22 @@ class Handler(BaseHTTPRequestHandler):
 
 
 if __name__ == "__main__":
-    if not SCRIPT.is_file() or not INDEX.is_file() or not DASHBOARD.is_file() or not GANTT.is_file() or not KANBAN.is_file() or not NIVELAMENTO.is_file() or not CONFIABILIDADE.is_file():
-        raise FileNotFoundError("Os arquivos index.html, dashboard.html, gantt.html e iw28.vbs devem estar na mesma pasta do servidor.")
+    if (
+        not SCRIPT.is_file()
+        or not INDEX.is_file()
+        or not DASHBOARD.is_file()
+        or not GANTT.is_file()
+        or not KANBAN.is_file()
+        or not NIVELAMENTO.is_file()
+        or not CONFIABILIDADE.is_file()
+        or not LOGIN_HTML.is_file()
+        or not (SHUTDOWN_ROOT / "index.html").is_file()
+    ):
+        raise FileNotFoundError("Verifique os arquivos da tela de acesso, dos módulos e do SAP PM.")
 
+    setup_initial_admin()
     server = ThreadingHTTPServer((HOST, PORT), Handler)
-    print(f"Serviço SAP PM disponível em http://{HOST}:{PORT}")
+    print(f"RIMS One disponível em http://{HOST}:{PORT}/login")
     try:
         server.serve_forever()
     except KeyboardInterrupt:

@@ -2,6 +2,11 @@
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8">
+  <script>
+    if (window.location.protocol === "file:") {
+      window.location.replace("http://127.0.0.1:8765/login");
+    }
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#17292a">
   <title>Manutenção Entressafra</title>

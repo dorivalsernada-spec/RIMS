@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RIMS One - Sistema de Acesso</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            background-image: url('background.png');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #ffffff;
+        }
+
+        .login-container {
+            background: rgba(0, 0, 0, 0.7);
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 8px 32px 0 rgba(0, 191, 255, 0.3);
+            max-width: 400px;
+            width: 100%;
+            border: 2px solid #00BFFF;
+            margin-top: auto;
+            margin-bottom: 80px;
+        }
+
+        .login-container h1 {
+            text-align: center;
+            color: #00BFFF;
+            margin-bottom: 15px;
+            font-size: 22px;
+        }
+
+        .form-group {
+            margin-bottom: 12px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 4px;
+            font-weight: 500;
+            color: #ffffff;
+            font-size: 13px;
+        }
+
+        .input-wrapper {
+            display: flex;
+            align-items: center;
+            border: 2px solid #00BFFF;
+            border-radius: 5px;
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 0 10px;
+            transition: all 0.3s ease;
+        }
+
+        .input-wrapper:focus-within {
+            box-shadow: 0 0 10px rgba(0, 191, 255, 0.5);
+            background-color: rgba(0, 191, 255, 0.1);
+        }
+
+        .input-icon {
+            color: #00BFFF;
+            margin-right: 8px;
+            font-size: 16px;
+            flex-shrink: 0;
+            filter: brightness(0) saturate(100%) invert(74%) sepia(97%) saturate(1200%) hue-rotate(174deg);
+            opacity: 0.9;
+        }
+
+        .input-wrapper input[type="text"],
+        .input-wrapper input[type="password"],
+        .input-wrapper input[type="email"],
+        .input-wrapper input[type="date"],
+        .input-wrapper select,
+        .input-wrapper textarea {
+            width: 100%;
+            padding: 8px 0;
+            border: none;
+            background-color: transparent;
+            color: #ffffff;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .input-wrapper input[type="text"]::placeholder,
+        .input-wrapper input[type="password"]::placeholder,
+        .input-wrapper input[type="email"]::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .input-wrapper input[type="text"]:focus,
+        .input-wrapper input[type="password"]:focus,
+        .input-wrapper input[type="email"]:focus,
+        .input-wrapper input[type="date"]:focus,
+        .input-wrapper select:focus,
+        .input-wrapper textarea:focus {
+            outline: none;
+        }
+
+        .password-toggle-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+            width: 100%;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 10px;
+            top: 25%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #00BFFF;
+            cursor: pointer;
+            font-size: 14px;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+            height: 24px;
+            width: 24px;
+            z-index: 10;
+            pointer-events: auto;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            gap: 10px;
+        }
+
+        .checkbox-left {
+            display: flex;
+            align-items: center;
+        }
+
+        .checkbox-left input[type="checkbox"] {
+            margin-right: 6px;
+            cursor: pointer;
+            accent-color: #00BFFF;
+            width: 16px;
+            height: 16px;
+        }
+
+        .checkbox-left label {
+            margin: 0;
+            color: #ffffff;
+            font-weight: 400;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #00BFFF;
+            color: #000000;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 8px;
+        }
+
+        button:hover {
+            background-color: #0099cc;
+            box-shadow: 0 0 10px rgba(0, 191, 255, 0.5);
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        .link {
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .link a {
+            color: #00BFFF;
+            text-decoration: none;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .link a:hover {
+            text-decoration: underline;
+        }
+
+        .error-message {
+            color: #ff4444;
+            font-size: 14px;
+            margin-bottom: 15px;
+            text-align: center;
+            display: none;
+        }
+
+        .success-screen {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000000;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            gap: 18px;
+            z-index: 1000;
+        }
+
+        .success-screen h1 {
+            color: #00BFFF;
+            font-size: 36px;
+            text-align: center;
+        }
+
+        .success-screen p {
+            max-width: 520px;
+            padding: 0 20px;
+            color: #ffffff;
+            text-align: center;
+        }
+
+        .success-actions {
+            display: grid;
+            gap: 10px;
+            width: min(360px, calc(100% - 40px));
+        }
+
+        .success-actions a,
+        .success-actions button {
+            display: block;
+            width: 100%;
+            margin: 0;
+            padding: 12px;
+            border: 1px solid #00BFFF;
+            border-radius: 5px;
+            background: #00BFFF;
+            color: #000000;
+            font-size: 14px;
+            font-weight: bold;
+            text-align: center;
+            text-decoration: none;
+        }
+
+        .success-actions .secondary-action {
+            background: transparent;
+            color: #ffffff;
+        }
+
+        .admin-login {
+            display: none;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 8px 32px 0 rgba(0, 191, 255, 0.3);
+            max-width: 400px;
+            width: 100%;
+            border: 2px solid #00BFFF;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 999;
+        }
+
+        .admin-login input[type="text"],
+        .admin-login input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #00BFFF;
+            border-radius: 5px;
+            background-color: rgba(0, 0, 0, 0.5);
+            color: #ffffff;
+            font-size: 13px;
+            transition: all 0.3s ease;
+            margin-bottom: 8px;
+        }
+
+        .admin-login input[type="text"]::placeholder,
+        .admin-login input[type="password"]::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .admin-login input[type="text"]:focus,
+        .admin-login input[type="password"]:focus {
+            outline: none;
+            box-shadow: 0 0 10px rgba(0, 191, 255, 0.5);
+            background-color: rgba(0, 191, 255, 0.1);
+        }
+
+        .cadastro-screen {
+            display: none;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 8px 32px 0 rgba(0, 191, 255, 0.3);
+            max-width: 600px;
+            width: 100%;
+            border: 2px solid #00BFFF;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 999;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .cadastro-screen h1 {
+            color: #00BFFF;
+            margin-bottom: 30px;
+            font-size: 28px;
+        }
+
+        .cadastro-screen input[type="text"],
+        .cadastro-screen input[type="email"],
+        .cadastro-screen input[type="password"],
+        .cadastro-screen input[type="date"],
+        .cadastro-screen select,
+        .cadastro-screen textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #00BFFF;
+            border-radius: 5px;
+            background-color: rgba(0, 0, 0, 0.5);
+            color: #ffffff;
+            font-size: 13px;
+            transition: all 0.3s ease;
+            margin-bottom: 8px;
+        }
+
+        .cadastro-screen input[type="text"]::placeholder,
+        .cadastro-screen input[type="email"]::placeholder,
+        .cadastro-screen input[type="password"]::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .cadastro-screen input[type="text"]:focus,
+        .cadastro-screen input[type="email"]:focus,
+        .cadastro-screen input[type="password"]:focus,
+        .cadastro-screen input[type="date"]:focus,
+        .cadastro-screen select:focus,
+        .cadastro-screen textarea:focus {
+            outline: none;
+            box-shadow: 0 0 10px rgba(0, 191, 255, 0.5);
+            background-color: rgba(0, 191, 255, 0.1);
+        }
+
+        .users-list {
+            margin-top: 30px;
+            border-top: 2px solid #00BFFF;
+            padding-top: 20px;
+        }
+
+        .users-list h2 {
+            color: #00BFFF;
+            margin-bottom: 20px;
+        }
+
+        .user-row {
+            background: rgba(0, 191, 255, 0.1);
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            border-left: 4px solid #00BFFF;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr auto;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .user-row-info {
+            font-size: 14px;
+            color: #ffffff;
+        }
+
+        .user-row-label {
+            font-weight: bold;
+            color: #00BFFF;
+            font-size: 12px;
+        }
+
+        .user-row button {
+            padding: 8px 12px;
+            font-size: 12px;
+            margin: 0 2px;
+            width: auto;
+        }
+
+        .footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.8);
+            color: #ffffff;
+            font-size: 12px;
+            border-top: 2px solid #00BFFF;
+        }
+
+        @media (max-width: 600px) {
+            .login-container {
+                padding: 20px;
+                max-width: 90%;
+            }
+
+            .cadastro-screen {
+                max-width: 95%;
+                padding: 20px;
+            }
+
+            .user-row {
+                grid-template-columns: 1fr;
+            }
+
+            button {
+                padding: 10px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- TELA DE LOGIN -->
+    <div class="login-container" id="loginContainer">
+        <h1>Acesso ao Sistema</h1>
+        <div class="error-message" id="errorMessage"></div>
+        <p id="fileModeNotice" style="display: none; margin-bottom: 12px; color: #ffffff; font-size: 13px;">
+            Para acessar os módulos, inicie o servidor e entre por
+            <strong>http://127.0.0.1:8765/login</strong>. Este arquivo aberto diretamente não autentica sessões.
+        </p>
+        <button id="exportLegacyButton" type="button" onclick="exportLegacyUsers()" style="display: none; margin-bottom: 12px;">
+            Exportar cadastro antigo para migração
+        </button>
+        <button id="clearLegacyButton" type="button" class="secondary-action" onclick="clearLegacyUsers()" style="display: none; margin-bottom: 12px;">
+            Apagar cadastro antigo deste navegador
+        </button>
+
+        <div class="form-group">
+            <label for="username">Usuário</label>
+            <div class="input-wrapper">
+                <span class="input-icon">👤</span>
+                <input type="text" id="username" placeholder="Digite seu usuário">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="password">Senha</label>
+            <div class="input-wrapper">
+                <span class="input-icon">🔐</span>
+                <div class="password-toggle-wrapper">
+                    <input type="password" id="password" placeholder="••••••••">
+                    <button type="button" class="toggle-password" id="togglePassword">👁️</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="checkbox-group">
+            <div class="checkbox-left">
+                <input type="checkbox" id="rememberMe">
+                <label for="rememberMe">Lembrar-me</label>
+            </div>
+            <a onclick="forgotPassword()">Esqueceu sua senha?</a>
+        </div>
+
+        <button id="loginButton" onclick="login()">Entrar</button>
+        <button onclick="showAdminLogin()" style="margin-top: 8px; background-color: rgba(0, 191, 255, 0.2); border: 2px solid #00BFFF; color: #ffffff;">Cadastrar Usuários</button>
+
+        <div class="link">
+            <a onclick="showAdminLogin()">Não possui uma conta? Solicitar acesso</a>
+        </div>
+    </div>
+
+    <!-- TELA DE SUCESSO -->
+    <div class="success-screen" id="successScreen">
+        <h1>Login realizado</h1>
+        <p>Seu acesso foi autenticado pelo servidor. Escolha um módulo:</p>
+        <div class="success-actions">
+            <a href="/paradas/">Gerenciamento de Parada</a>
+            <a href="/">Planejamento e Programação</a>
+            <button id="manageUsersButton" class="secondary-action" type="button" onclick="showAdminLogin()" style="display: none;">Gerenciar usuários</button>
+            <button class="secondary-action" type="button" onclick="logout()">Sair</button>
+        </div>
+    </div>
+
+    <!-- LOGIN ADMINISTRADOR -->
+    <div class="admin-login" id="adminLoginScreen">
+        <h1>Login Administrador</h1>
+        <div class="error-message" id="adminErrorMessage"></div>
+
+        <div class="form-group">
+            <label for="adminUsername">Usuário Admin</label>
+            <input type="text" id="adminUsername" placeholder="Digite usuário do admin">
+        </div>
+
+        <div class="form-group">
+            <label for="adminPassword">Senha Admin</label>
+            <input type="password" id="adminPassword" placeholder="Digite senha do admin">
+        </div>
+
+        <button onclick="validateAdmin()">Validar</button>
+        <button onclick="backToLogin()">Voltar</button>
+    </div>
+
+    <!-- TELA DE CADASTRO -->
+    <div class="cadastro-screen" id="cadastroScreen">
+        <h1>Cadastro de Usuários</h1>
+
+        <div class="form-group">
+            <label for="fullName">Nome Completo *</label>
+            <input type="text" id="fullName" placeholder="João Silva Santos">
+        </div>
+
+        <div class="form-group">
+            <label for="newUsername">Usuário para Login *</label>
+            <input type="text" id="newUsername" placeholder="usuario_login">
+        </div>
+
+        <div class="form-group">
+            <label for="newPassword">Senha *</label>
+            <input type="password" id="newPassword" placeholder="Mínimo 12 caracteres">
+        </div>
+
+        <div class="form-group">
+            <label for="validity">Validade do Cadastro (data) *</label>
+            <input type="date" id="validity">
+        </div>
+
+        <div class="form-group">
+            <label for="status">Status de Acesso *</label>
+            <select id="status">
+                <option value="Habilitado">Habilitado</option>
+                <option value="Desabilitado">Desabilitado</option>
+            </select>
+        </div>
+
+        <button onclick="saveUser()">Salvar Usuário</button>
+        <button id="legacyImportButton" type="button" class="secondary-action" onclick="chooseLegacyUsersFile()" style="display: none;">Importar cadastro antigo</button>
+        <input id="legacyImportFile" type="file" accept="application/json,.json" hidden>
+        <button onclick="backToLogin()">Voltar para Login</button>
+
+        <div class="users-list">
+            <h2>Usuários Cadastrados</h2>
+            <div id="usersList"></div>
+        </div>
+    </div>
+
+    <!-- RODAPÉ -->
+    <div class="footer">
+        © 2024 RIMS One • Versão 1.5.2 • Todos os direitos reservados
+    </div>
+
+    <script>
+        const fileMode = window.location.protocol === 'file:';
+        let currentUser = null;
+
+        async function requestJson(path, options) {
+            const requestOptions = Object.assign(
+                { credentials: 'same-origin' },
+                options || {}
+            );
+            requestOptions.headers = Object.assign(
+                {},
+                requestOptions.headers || {},
+                requestOptions.body ? { 'Content-Type': 'application/json' } : {}
+            );
+            const response = await fetch(path, requestOptions);
+            let data = {};
+            try {
+                data = await response.json();
+            } catch (error) {
+                throw new Error('O servidor retornou uma resposta inválida.');
+            }
+            if (!response.ok) {
+                throw new Error(data.message || 'Não foi possível concluir a operação.');
+            }
+            return data;
+        }
+
+        function showLoginError(message) {
+            const errorMessage = document.getElementById('errorMessage');
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+        }
+
+        function showSuccess(user) {
+            currentUser = user;
+            document.getElementById('loginContainer').style.display = 'none';
+            document.getElementById('adminLoginScreen').style.display = 'none';
+            document.getElementById('cadastroScreen').style.display = 'none';
+            document.getElementById('successScreen').style.display = 'flex';
+            document.getElementById('manageUsersButton').style.display = user.isAdmin ? 'block' : 'none';
+        }
+
+        async function login() {
+            if (fileMode) {
+                showLoginError('Abra o sistema por http://127.0.0.1:8765/login para autenticar o acesso.');
+                return;
+            }
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            const errorMessage = document.getElementById('errorMessage');
+            errorMessage.style.display = 'none';
+            if (!username || !password) {
+                showLoginError('Por favor, preencha usuário e senha.');
+                return;
+            }
+            const button = document.getElementById('loginButton');
+            button.disabled = true;
+            try {
+                const user = await requestJson('/api/auth/login', {
+                    method: 'POST',
+                    body: JSON.stringify({ username, password })
+                });
+                if (document.getElementById('rememberMe').checked) {
+                    localStorage.setItem('rememberUsername', username);
+                } else {
+                    localStorage.removeItem('rememberUsername');
+                }
+                document.getElementById('password').value = '';
+                showSuccess(user);
+            } catch (error) {
+                showLoginError(error.message);
+            } finally {
+                button.disabled = false;
+            }
+        }
+
+        document.getElementById('togglePassword').addEventListener('click', function() {
+            const passwordInput = document.getElementById('password');
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            this.textContent = type === 'password' ? '👁️' : '👁️‍🗨️';
+        });
+
+        function showAdminLogin() {
+            if (!currentUser || !currentUser.isAdmin) {
+                showLoginError('Apenas administradores podem gerenciar usuários.');
+                return;
+            }
+            document.getElementById('successScreen').style.display = 'none';
+            document.getElementById('cadastroScreen').style.display = 'block';
+            document.getElementById('legacyImportButton').style.display = 'block';
+            loadUsersList();
+        }
+
+        async function validateAdmin() {
+            const username = document.getElementById('adminUsername').value.trim();
+            const password = document.getElementById('adminPassword').value;
+            const errorMessage = document.getElementById('adminErrorMessage');
+            try {
+                const user = await requestJson('/api/auth/login', {
+                    method: 'POST',
+                    body: JSON.stringify({ username, password })
+                });
+                if (!user.isAdmin) {
+                    throw new Error('A conta informada não é administradora.');
+                }
+                showSuccess(user);
+                showAdminLogin();
+            } catch (error) {
+                errorMessage.textContent = error.message;
+                errorMessage.style.display = 'block';
+            }
+        }
+
+        async function saveUser() {
+            const fullName = document.getElementById('fullName').value.trim();
+            const newUsername = document.getElementById('newUsername').value.trim();
+            const newPassword = document.getElementById('newPassword').value;
+            const validity = document.getElementById('validity').value;
+            const status = document.getElementById('status').value;
+            if (!fullName || !newUsername || !newPassword || !validity) {
+                alert('Preencha nome, usuário, senha e validade.');
+                return;
+            }
+            if (newPassword.length < 12) {
+                alert('A senha deve ter no mínimo 12 caracteres.');
+                return;
+            }
+            try {
+                await requestJson('/api/auth/users', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: 'create',
+                        fullName,
+                        username: newUsername,
+                        password: newPassword,
+                        validity,
+                        status
+                    })
+                });
+                alert('Usuário cadastrado com sucesso.');
+                clearCadastroForm();
+                await loadUsersList();
+            } catch (error) {
+                alert(error.message);
+            }
+        }
+
+        async function loadUsersList() {
+            const usersList = document.getElementById('usersList');
+            usersList.replaceChildren();
+            try {
+                const data = await requestJson('/api/auth/users');
+                data.users.forEach(function(user) {
+                    const row = document.createElement('div');
+                    row.className = 'user-row';
+                    [
+                        ['Nome', user.fullName],
+                        ['Usuário', user.username],
+                        ['Validade', user.validity],
+                        ['Status', user.status]
+                    ].forEach(function(field) {
+                        const column = document.createElement('div');
+                        const label = document.createElement('div');
+                        label.className = 'user-row-label';
+                        label.textContent = field[0];
+                        const value = document.createElement('div');
+                        value.className = 'user-row-info';
+                        value.textContent = field[1];
+                        column.append(label, value);
+                        row.appendChild(column);
+                    });
+                    const actions = document.createElement('div');
+                    const statusButton = document.createElement('button');
+                    statusButton.type = 'button';
+                    statusButton.textContent = user.status === 'Habilitado' ? 'Desabilitar' : 'Habilitar';
+                    statusButton.addEventListener('click', function() {
+                        updateUser({ action: 'status', id: user.id, enabled: user.status !== 'Habilitado' });
+                    });
+                    const deleteButton = document.createElement('button');
+                    deleteButton.type = 'button';
+                    deleteButton.textContent = 'Deletar';
+                    deleteButton.addEventListener('click', function() {
+                        deleteUser(user.id);
+                    });
+                    actions.append(statusButton, deleteButton);
+                    row.appendChild(actions);
+                    usersList.appendChild(row);
+                });
+            } catch (error) {
+                usersList.textContent = error.message;
+            }
+        }
+
+        async function updateUser(payload) {
+            try {
+                await requestJson('/api/auth/users', {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+                await loadUsersList();
+            } catch (error) {
+                alert(error.message);
+            }
+        }
+
+        async function deleteUser(userId) {
+            if (!confirm('Tem certeza que deseja deletar este usuário?')) {
+                return;
+            }
+            await updateUser({ action: 'delete', id: userId });
+        }
+
+        function chooseLegacyUsersFile() {
+            document.getElementById('legacyImportFile').click();
+        }
+
+        async function importLegacyUsers(event) {
+            const file = event.target.files[0];
+            event.target.value = '';
+            if (!file) {
+                return;
+            }
+            if (file.size > 1024 * 1024) {
+                alert('O arquivo de migração excede o limite de 1 MB.');
+                return;
+            }
+            try {
+                const legacyData = JSON.parse(await file.text());
+                const result = await requestJson('/api/auth/migrate', {
+                    method: 'POST',
+                    body: JSON.stringify(legacyData)
+                });
+                alert('Migração concluída: ' + result.imported + ' usuário(s) importado(s), ' + result.skipped + ' ignorado(s). Apague o arquivo exportado.');
+                await loadUsersList();
+            } catch (error) {
+                alert(error.message);
+            }
+        }
+
+        function exportLegacyUsers() {
+            let users = [];
+            try {
+                users = JSON.parse(localStorage.getItem('rimsOneUsers') || '[]');
+            } catch (error) {
+                alert('Não foi possível ler o cadastro antigo deste navegador.');
+                return;
+            }
+            if (!Array.isArray(users) || users.length === 0) {
+                alert('Nenhum cadastro antigo foi encontrado neste navegador.');
+                return;
+            }
+            if (!confirm('O arquivo conterá nomes de usuário e senhas do cadastro antigo. Guarde-o com segurança e apague-o depois da importação. Continuar?')) {
+                return;
+            }
+            const exportUsers = users.map(function(user) {
+                return {
+                    fullName: user.fullName,
+                    username: user.username,
+                    password: user.password,
+                    validity: user.validity,
+                    status: user.status,
+                    isAdmin: user.isAdmin === true
+                };
+            });
+            const file = new Blob(
+                [JSON.stringify({ users: exportUsers })],
+                { type: 'application/json' }
+            );
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(file);
+            link.download = 'rims-usuarios-antigos.json';
+            link.click();
+            setTimeout(function() {
+                URL.revokeObjectURL(link.href);
+            }, 1000);
+        }
+
+        function clearLegacyUsers() {
+            if (!confirm('Apagar os usuários e senhas antigos armazenados neste navegador? Faça isso somente após confirmar a migração.')) {
+                return;
+            }
+            localStorage.removeItem('rimsOneUsers');
+            localStorage.removeItem('rememberUsername');
+            alert('Cadastro antigo removido deste navegador.');
+        }
+
+        function clearCadastroForm() {
+            document.getElementById('fullName').value = '';
+            document.getElementById('newUsername').value = '';
+            document.getElementById('newPassword').value = '';
+            document.getElementById('validity').value = '';
+            document.getElementById('status').value = 'Habilitado';
+        }
+
+        function backToLogin() {
+            if (currentUser) {
+                document.getElementById('cadastroScreen').style.display = 'none';
+                document.getElementById('successScreen').style.display = 'flex';
+                return;
+            }
+            document.getElementById('loginContainer').style.display = 'block';
+            document.getElementById('adminLoginScreen').style.display = 'none';
+            document.getElementById('cadastroScreen').style.display = 'none';
+            document.getElementById('errorMessage').style.display = 'none';
+            document.getElementById('adminErrorMessage').style.display = 'none';
+        }
+
+        async function logout() {
+            try {
+                await requestJson('/api/auth/logout', { method: 'POST' });
+            } catch (error) {
+                showLoginError(error.message);
+            }
+            currentUser = null;
+            document.getElementById('successScreen').style.display = 'none';
+            document.getElementById('loginContainer').style.display = 'block';
+        }
+
+        function forgotPassword() {
+            alert('Para recuperar sua senha, entre em contato com o administrador do sistema.');
+        }
+
+        document.getElementById('legacyImportFile').addEventListener('change', importLegacyUsers);
+        window.addEventListener('load', async function() {
+            if (fileMode) {
+                document.getElementById('fileModeNotice').style.display = 'block';
+                document.getElementById('exportLegacyButton').style.display = 'block';
+                document.getElementById('clearLegacyButton').style.display = 'block';
+                document.getElementById('loginButton').disabled = true;
+                document.getElementById('manageUsersButton').style.display = 'none';
+                return;
+            }
+            const rememberUsername = localStorage.getItem('rememberUsername');
+            if (rememberUsername) {
+                document.getElementById('username').value = rememberUsername;
+                document.getElementById('rememberMe').checked = true;
+            }
+            try {
+                const status = await requestJson('/api/auth/status');
+                if (status.authenticated) {
+                    showSuccess({ username: status.username, isAdmin: status.isAdmin });
+                }
+            } catch (error) {
+                showLoginError(error.message);
+            }
+        });
+    </script>
+</body>
+</html>
